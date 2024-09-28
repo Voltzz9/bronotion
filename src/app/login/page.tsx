@@ -19,7 +19,6 @@ export default function LoginPage() {
     
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
-        alert(`Email: ${email}, Password: ${password}`)
     }
     
     return (
@@ -33,7 +32,7 @@ export default function LoginPage() {
 
         <footer className="bg-gray-800 text-white py-4">
             <div className="container mx-auto px-4 text-center">
-            &copy; 2023 CollabNotes. All rights reserved.
+            &copy; 2024 Bronotion. All rights reserved.
             </div>
         </footer>
         </div>

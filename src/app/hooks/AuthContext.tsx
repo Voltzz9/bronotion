@@ -2,20 +2,20 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const AuthContext = createContext<{ isAuthenticated: boolean; setIsAuthenticated: React.Dispatch<React.SetStateAction<boolean>> }>({
-    isAuthenticated: true,  // Hardcoded to true, change this for actually logging in
+    isAuthenticated: false,  // Hardcoded to true, change this for actually logging in
     setIsAuthenticated: () => {},
 });
 
 import { ReactNode } from 'react';
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-    const [isAuthenticated, setIsAuthenticated] = useState(true); // Hardcoded to true
+    const [isAuthenticated, setIsAuthenticated] = useState(false); // Hardcoded to true
 
     useEffect(() => {
         // Logic to check if the user is authenticated (e.g., check local storage or make an API call)
         const checkAuthStatus = () => {
             // Example: Check if a token exists in local storage
-            const token = true; // localStorage.getItem('token');
+            const token = false; // localStorage.getItem('token');
             setIsAuthenticated(token); // Set to true if token exists
             console.log('Auth status checked:', token);
         };

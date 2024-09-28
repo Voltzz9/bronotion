@@ -93,7 +93,7 @@ export default function HomePage() {
             ))}
           </div>
           <div className="mt-8 pt-8 border-t border-accent text-center">
-            <p>&copy; 2023 CollabNotes. All rights reserved.</p>
+            <p>&copy; 2024 Bronotion. All rights reserved.</p>
           </div>
         </div>
       </footer>

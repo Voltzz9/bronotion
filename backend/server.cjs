@@ -1,10 +1,13 @@
 import express from 'express';
 import pgp from 'pg-promise';
 import bcrypt from 'bcrypt'; // For password hashing
+const cors = require('cors');
 
 const db = pgp()('postgres://admin:admin@localhost:5432/bronotion');
 const app = express();
 const PORT = 5433;
+
+app.use(cors());
 
 // Middleware to parse JSON
 app.use(express.json());

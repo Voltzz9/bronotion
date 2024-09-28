@@ -8,7 +8,7 @@ BEGIN
     RETURNING user_id INTO new_user_id;
 
     INSERT INTO manual_users (user_id, password_hash)
-    VALUES (new_user_id, crypt('admin_password', gen_salt('bf')));
+    VALUES (new_user_id, crypt('admin', gen_salt('bf')));
 
     -- User 2
     INSERT INTO users (username, email, avatar_url, is_OAuth, is_Manual)
