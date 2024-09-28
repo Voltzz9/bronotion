@@ -2,6 +2,8 @@
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import  Header  from '@/components/ui/header'
+import { CarouselLandingComponent } from '../components/carousel-landing'
+import './HomePage.css'
 
 export default function HomePage() {
   return (
@@ -9,20 +11,23 @@ export default function HomePage() {
       
       <Header />
 
-      <main className="flex-grow">
-        <section className="bg-muted py-20">
-          <div className="container mx-auto px-4 text-center">
-            <h1 className="text-4xl font-bold mb-4 text-secondary">Collaborate on Notes in Real-Time</h1>
-            <p className="text-xl mb-8 text-secondary">
-              Create, share, and edit notes with your team - all in one place.
-            </p>
-            <Link href="/notes">
-              <Button>
-              Try it out!
-              </Button>
-            </Link>
-          </div>
-        </section>
+      <main className="flex-grow pt-20">
+        <section className="bg-muted py-60">
+            <div className="container mx-auto px-4 text-center">
+              <h1 className="text-8xl font-bold mb-4 text-secondary">
+                <span className="underline-effect">Real-Time</span> note collaboration
+              </h1>
+              <p className="text-xl mb-8 text-secondary">
+                Create, share, and edit notes with your team - all in one place.
+              </p>
+              <Link href="/notes">
+                <Button>
+                  Try it out!
+                </Button>
+              </Link>
+            </div>
+          </section>
+      
 
         <section className="py-20 bg-muted">
           <div className="container mx-auto px-4">
@@ -53,6 +58,8 @@ export default function HomePage() {
           </div>
         </section>
       </main>
+
+      <CarouselLandingComponent /> 
 
       <footer className="bg-muted text-foreground py-8">
         <div className="container mx-auto px-4">
