@@ -1,0 +1,128 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #ffffff;
+  --foreground: #3e0d70;
+  --primary: #c29be9;
+  --secondary: #6289d8;
+  --accent: #d2bfe8;
+  --muted: #b2e0ff;
+  --button-bg: #E59BE9;
+  --button-text: #FFFFFF;
+  --link-color: #720cd1;
+  --border-color: #D862BC;
+  --highlight: #E59BE9;
+  --main: #1e106c;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: 'Arial', sans-serif;
+  line-height: 1.6;
+}
+
+a {
+  color: var(--link-color);
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+a:hover {
+  color: var(--secondary);
+}
+
+button {
+  background-color: var(--button-bg);
+  color: var(--button-text);
+  border: 2px solid var(--border-color);
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+button:hover {
+  background-color: var(--secondary);
+  color: var(--background);
+  border-color: var(--secondary);
+}
+
+input, textarea, select {
+  background-color: var(--background);
+  color: var(--foreground);
+  border: 2px solid var(--border-color);
+  padding: 10px;
+  border-radius: 5px;
+  transition: border-color 0.3s ease;
+}
+
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: var(--primary);
+  margin-bottom: 1rem;
+}
+
+section {
+  padding: 4rem 0;
+}
+
+header, footer {
+  background-color: var(--muted);
+  color: var(--foreground);
+  padding: 1rem 0;
+}
+
+/* Custom utility classes */
+.text-primary { color: var(--primary); }
+.text-secondary { color: var(--secondary); }
+.text-accent { color: var(--accent); }
+.bg-primary { background-color: var(--primary); }
+.bg-secondary { background-color: var(--secondary); }
+.bg-accent { background-color: var(--accent); }
+.border-primary { border-color: var(--primary); }
+.border-secondary { border-color: var(--secondary); }
+.border-accent { border-color: var(--accent); }
+
+.hover-bg-secondary:hover { background-color: var(--secondary); }
+.hover-text-primary:hover { color: var(--primary); }
+
+.glow {
+  text-shadow: 0 0 10px var(--primary);
+}
+
+.neon-border {
+  border: 2px solid var(--primary);
+  box-shadow: 0 0 10px var(--primary), inset 0 0 10px var(--primary);
+}
+
+.gradient-text {
+  background: linear-gradient(45deg, var(--primary), var(--secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.card {
+  background-color: var(--muted);
+  border-radius: 10px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2);
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
