@@ -12,14 +12,16 @@ psql bronotion
 ```sql
 CREATE USER admin WITH PASSWORD 'admin';
 ALTER ROLE admin WITH SUPERUSER;
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+quit;
 ```
 4. Run the following command to create the tables:
 ```bash
-psql -U admin -d bronotion -a -f ./backend/DDL.sql
+psql -U admin -d bronotion -a -f ./backend/DDL.sql;
 ```
 5. Run the following command to populate the tables:
 ```bash
-psql -U admin -d bronotion -a -f ./backend/DML.sql
+psql -U admin -d bronotion -a -f ./backend/DML.sql;
 ```
 
 
