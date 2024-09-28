@@ -202,6 +202,27 @@ app.delete('/notes/:noteId', async (req, res) => {
   }
 });
 
+// Fetch a single note
+app.get('/notes/:noteId', async (req, res) => {
+  try {
+    const noteId = parseInt(req.params.noteId);
+    const note = await db.one(
+      `SELECT note_id, title, content, tag_id, created_at, updated_at
+       FROM notes
+       WHERE note_id = $1 AND is_deleted = false`,
+      noteId
+    );
+    res.json(note);
+  } catch (error) {
+    console.error('Error fetching note:', error);
+    if (error.name === 'QueryResultError') {
+      res.status(404).json({ error: 'Note not found' });
+    } else {
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
+  }
+});
+
 
 
 app.listen(PORT, () => {

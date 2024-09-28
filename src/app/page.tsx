@@ -18,7 +18,7 @@ export default function HomePage() {
               <p className="text-xl mb-8 text-secondary">
                 Create, share, and edit notes with your team - all in one place.
               </p>
-              <Link href="/notes">
+              <Link href="/notes/1">
                 <Button>
                   Try it out!
                 </Button>
