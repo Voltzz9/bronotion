@@ -1,8 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import Link from 'next/link'    
-import exp from 'constants'
+import Header from '@/components/ui/header'
 
 export default function LoginPage() {
 
@@ -24,17 +23,8 @@ export default function LoginPage() {
     
     return (
         <div className="min-h-screen flex flex-col bg-gray-50">
-        <header className="bg-white shadow-sm">
-            <nav className="container mx-auto px-4 py-4 flex justify-between items-center">
-            <Link href="/" className="text-2xl font-bold text-blue-600">
-                CollabNotes
-            </Link>
-            <div className="space-x-4">
-                <Link href="/features" className="text-gray-600 hover:text-blue-600">Features</Link>
-                <Link href="/login" className="text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded">Login</Link>
-            </div>
-            </nav>
-        </header>
+        
+        <Header />
     
         <main className="flex-grow container mx-auto px-4 py-8">
             <div className="max-w-md mx-auto bg-white shadow-lg rounded-lg overflow-hidden">
