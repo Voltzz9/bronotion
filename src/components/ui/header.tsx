@@ -1,8 +1,12 @@
 import React from 'react';
 import Link from 'next/link';
-import {Button} from './button';
+import { usePathname } from 'next/navigation';
+import { Button } from './button';
 
 const Header: React.FC = () => {
+    const pathname = usePathname();
+    const isOnPage = pathname === '/';
+
     return (
         <header className="bg-accent shadow-sm">
             <nav className="container mx-auto px-4 py-4 flex justify-between items-center">
@@ -10,9 +14,11 @@ const Header: React.FC = () => {
                     Bronotion
                 </Link>
                 <div className="space-x-4">
-                    <Link href="/login">
-                        <Button>Login</Button>
-                    </Link>
+                    {isOnPage && (
+                        <Link href="/login">
+                            <Button>Login</Button>
+                        </Link>
+                    )}
                 </div>
             </nav>
         </header>
