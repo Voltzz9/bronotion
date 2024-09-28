@@ -1,11 +1,11 @@
 # Database Setup
 FIRST TIME SETUP:
-1. Ensure PostgreSQL is installed on your machine
+1. Ensure PostgreSQL is installed on your machine AND PostgreSQL is RUNNING on your machine.
 2. Create a database called `bronotion` with the following command:
 ```bash
 createdb bronotion
 ```
-3. Create admin user with the following commands:
+3. Create admin user and setup hash function with the following commands:
 ```bash
 psql bronotion
 ```
@@ -26,7 +26,8 @@ psql -U admin -d bronotion -a -f ./backend/DML.sql;
 
 
 ## Running the database
-1. Start the database with the following command in a seperate terminal:
+1. Ensure PostgreSQL is RUNNING on your machine.
+2. Start the database with the following command in a seperate terminal:
 ```bash
 yarn start:server
 ```
