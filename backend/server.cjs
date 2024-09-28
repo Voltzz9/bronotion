@@ -1,26 +1,80 @@
 import express from 'express';
-const pgp = require('pg-promise')(/* options */);
-const db = pgp('postgres://admin:admin@localhost:5432/bronotion');
+import pgp from 'pg-promise';
 
+const db = pgp()('postgres://admin:admin@localhost:5432/bronotion');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware to parse JSON requests
 app.use(express.json());
 
-// Test Hello World
-app.get('/', async (req, res) => {
-    try {
-        const user = await db.one('SELECT * FROM USERS');
-        console.log(user);
-        res.send('Hello, World!');
-    } catch (error) {
-        console.error('Error retrieving user:', error);
-        res.status(500).send('Internal Server Error');
-    }
+// Add a manual user
+app.post('/users', async (req, res) => {
+  try {
+    const { username, email, password } = req.body;
+    
+    // Start a transaction
+    const result = await db.tx(async t => {
+      // Insert into users table
+      const user = await t.one(
+        'INSERT INTO users (username, email, is_Manual) VALUES ($1, $2, $3) RETURNING user_id',
+        [username, email, true]
+      );
+      
+      // Insert into manual_users table
+      await t.none(
+        'INSERT INTO manual_users (user_id, password_hash) VALUES ($1, $2)',
+        [user.user_id, password] // Note: In a real application, you should hash the password
+      );
+      
+      return user;
+    });
+    
+    res.status(201).json({ message: 'User created successfully', userId: result.user_id });
+  } catch (error) {
+    console.error('Error creating user:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
 });
 
-// Start the server
+// View user info
+app.get('/users/:userId', async (req, res) => {
+  try {
+    const userId = parseInt(req.params.userId);
+    const user = await db.one(
+      `SELECT u.user_id, u.username, u.email, u.avatar_url, u.is_Manual, 
+              m.registration_date
+       FROM users u
+       LEFT JOIN manual_users m ON u.user_id = m.user_id
+       WHERE u.user_id = $1`,
+      userId
+    );
+    res.json(user);
+  } catch (error) {
+    console.error('Error retrieving user:', error);
+    if (error.name === 'QueryResultError') {
+      res.status(404).json({ error: 'User not found' });
+    } else {
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
+  }
+});
+
+// Delete user
+app.delete('/users/:userId', async (req, res) => {
+  try {
+    const userId = parseInt(req.params.userId);
+    const result = await db.result('DELETE FROM users WHERE user_id = $1', userId);
+    if (result.rowCount === 0) {
+      res.status(404).json({ error: 'User not found' });
+    } else {
+      res.json({ message: 'User deleted successfully' });
+    }
+  } catch (error) {
+    console.error('Error deleting user:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
+  console.log(`Server is running on http://localhost:${PORT}`);
 });

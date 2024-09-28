@@ -1,20 +1,40 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
-
-## Getting Started
-
-First, run the development server:
-
+# Database Setup
+FIRST TIME SETUP:
+1. Ensure PostgreSQL is installed on your machine
+2. Create a database called `bronotion` with the following command:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+createdb bronotion
+```
+3. Create admin user with the following commands:
+```bash
+psql bronotion
+```
+```sql
+CREATE USER admin WITH PASSWORD 'admin';
+ALTER ROLE admin WITH SUPERUSER;
+```
+4. Run the following command to create the tables:
+```bash
+psql -U admin -d bronotion -a -f ./backend/DDL.sql
+```
+5. Run the following command to populate the tables:
+```bash
+psql -U admin -d bronotion -a -f ./backend/DML.sql
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
