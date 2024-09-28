@@ -1,12 +1,17 @@
-import React, { useState } from 'react';
+'use client'
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { useAuth } from '@/app/hooks/AuthContext';
 
 export default function Component() {
+  const { isAuthenticated } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [isAnimating, setIsAnimating] = useState(false);
+  const router = useRouter();
 
   const toggleForm = () => {
     setIsAnimating(true);
@@ -50,9 +55,16 @@ export default function Component() {
               <Input id="confirmPassword" type="password" required />
             </div>
           )}
-          <Button type="submit" className="w-full">
-            {isLogin ? 'Login' : 'Sign Up'}
-          </Button>
+            <Button 
+              type="submit" 
+              className="w-full"
+              onClick={() => {
+                console.log(isAuthenticated);
+              if (isAuthenticated) router.push('/home');
+              }}
+            >
+              {isLogin ? 'Login' : 'Sign Up'}
+            </Button>
           <div className="text-center text-secondary">
             <Button variant="link" onClick={toggleForm}>
               {isLogin ? "Don't have an account? Sign Up" : "Already have an account? Login"}
