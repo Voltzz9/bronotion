@@ -5,7 +5,7 @@ import { Button } from './button';
 
 const Header: React.FC = () => {
     const pathname = usePathname();
-    const isOnPage = pathname === '/';
+    const isOnPage = pathname === '/' || pathname === '/notes';
 
     return (
         <header className="bg-accent shadow-sm">
