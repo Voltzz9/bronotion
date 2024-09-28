@@ -14,7 +14,7 @@ CREATE TABLE tags (
     name VARCHAR(50) NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT unique_tag_name UNIQUE (name)  -- Ensure tag names are unique
+    CONSTRAINT unique_tag_name UNIQUE (name)
 );
 
 -- Notes table
@@ -23,12 +23,12 @@ CREATE TABLE notes (
     title VARCHAR(255) NOT NULL,
     content TEXT,
     user_id INTEGER NOT NULL,
-    category_id INTEGER,  -- This is now referring to tags
+    tag_id INTEGER,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     is_deleted BOOLEAN NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
-    FOREIGN KEY (category_id) REFERENCES tags(tag_id) ON DELETE SET NULL  -- Update to reference the tags table
+    FOREIGN KEY (tag_id) REFERENCES tags(tag_id) ON DELETE SET NULL 
 );
 
 -- Shared_notes table (for note sharing functionality)

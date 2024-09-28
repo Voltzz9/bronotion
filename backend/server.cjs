@@ -9,6 +9,8 @@ const PORT = 5432;
 // Middleware to parse JSON
 app.use(express.json());
 
+// ********************************* User Routes *********************************
+
 // Add a manual user
 app.post('/create_user', async (req, res) => {
   try {
@@ -112,6 +114,27 @@ app.delete('/users/:userId', async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
+
+// ********************************* Note Routes *********************************
+
+// Create a new note
+app.post('/notes', async (req, res) => {
+  try {
+    const { title, content, user_id, category_id } = req.body;
+
+    const result = await db.one(
+      `INSERT INTO notes (title, content, user_id, category_id, is_deleted)
+       VALUES ($1, $2, $3, $4, $5) RETURNING note_id`,
+      [title, content, user_id, category_id, false]
+    );
+
+    res.status(201).json({ message: 'Note created successfully', noteId: result.note_id });
+  } catch (error) {
+    console.error('Error creating note:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
