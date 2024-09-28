@@ -33,8 +33,20 @@ yarn start:server
 ```
 This will start the database on port 5433 (because 5432 is the actual PostreSQL database).
 
-
-
+## Run the frontend
+1. Start the frontend with the following command in a seperate terminal:
+```bash
+yarn install
+```
+```bash
+yarn dev
+```
+This will start the frontend on port 3000.
+2. You can login with the following credentials:
+```bash
+email: admin@example.com
+password: admin
+```
 
 
 
