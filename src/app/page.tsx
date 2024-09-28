@@ -22,13 +22,15 @@ export default function HomePage() {
             <p className="text-xl mb-8 text-secondary">
               Create, share, and edit notes with your team - all in one place.
             </p>
-            <Button>
-              Get Started
-            </Button>
+            <Link href="/notes">
+              <Button>
+              Get Started without signup
+              </Button>
+            </Link>
           </div>
         </section>
 
-        <section className="py-20 bg-background">
+        <section className="py-20 bg-muted">
           <div className="container mx-auto px-4">
             <h2 className="text-3xl font-bold text-center mb-12 text-foreground">Why Choose CollabNotes?</h2>
             <div className="grid md:grid-cols-3 gap-8">
