@@ -3,14 +3,26 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #666464;
+  --background: #000000; /* Black background */
+  --foreground: #ff77ff; /* Bubblegum color for text */
+  --accent: #ff77ff; /* Bubblegum color for accents */
+  --button-bg: #444444; /* Dark grey background for buttons */
+  --button-text: #ff77ff; /* Bubblegum color for button text */
+  --link-color: #00ffff; /* Cyan blue color for links */
+  --border-color: #00ffff; /* Cyan blue color for borders */
+  --highlight: #00ffff; /* Cyan blue color for highlights */
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #1a0ea4;
+    --background: #000000; /* Black background */
+    --foreground: #ff77ff; /* Bubblegum color for text */
+    --accent: #ff77ff; /* Bubblegum color for accents */
+    --button-bg: #444444; /* Dark grey background for buttons */
+    --button-text: #ff77ff; /* Bubblegum color for button text */
+    --link-color: #00ffff; /* Cyan blue color for links */
+    --border-color: #00ffff; /* Cyan blue color for borders */
+    --highlight: #00ffff; /* Cyan blue color for highlights */
   }
 }
 
@@ -20,11 +32,50 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
-/* Target the section */
-section.py-20.custom{
-    background-color: #4d4d4d; /* Change to your desired background color */
-    color: #ffffff; /* Change to your desired font color */
-  }
+a {
+  color: var(--link-color);
+}
+
+button {
+  background-color: var(--button-bg);
+  color: var(--button-text);
+  border: 1px solid var(--border-color);
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: var(--foreground);
+  color: var(--background);
+}
+
+input, textarea {
+  background-color: var(--background);
+  color: var(--foreground);
+  border: 1px solid var(--border-color);
+  padding: 10px;
+  border-radius: 5px;
+}
+
+section.py-20.custom {
+  background-color: #333333; /* Dark grey background for section */
+  color: var(--foreground);
+}
+
+header, footer {
+  background-color: #222222; /* Slightly lighter black for header and footer */
+  color: var(--foreground);
+  padding: 20px;
+}
+
+.border-accent {
+  border-color: var(--accent);
+}
+
+.highlight {
+  color: var(--highlight);
+}
 
 @layer utilities {
   .text-balance {
