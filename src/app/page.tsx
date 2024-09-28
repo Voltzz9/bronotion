@@ -2,6 +2,8 @@
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import  Header  from '@/components/ui/header'
+import { CarouselLandingComponent } from '../components/carousel-landing'
+import './HomePage.css'
 
 export default function HomePage() {
   return (
@@ -11,18 +13,20 @@ export default function HomePage() {
 
       <main className="flex-grow pt-20">
         <section className="bg-muted py-60">
-          <div className="container mx-auto px-4 text-center">
-            <h1 className="text-6xl font-bold mb-4 text-secondary">Real-time note collaboration</h1>
-            <p className="text-xl mb-8 text-secondary">
-              Create, share, and edit notes with your team - all in one place.
-            </p>
-            <Link href="/notes">
-              <Button>
-                Try it out!
-              </Button>
-            </Link>
-          </div>
-        </section>
+            <div className="container mx-auto px-4 text-center">
+              <h1 className="text-8xl font-bold mb-4 text-secondary">
+                <span className="underline-effect">Real-Time</span> note collaboration
+              </h1>
+              <p className="text-xl mb-8 text-secondary">
+                Create, share, and edit notes with your team - all in one place.
+              </p>
+              <Link href="/notes">
+                <Button>
+                  Try it out!
+                </Button>
+              </Link>
+            </div>
+          </section>
       
 
         <section className="py-20 bg-muted">
@@ -55,81 +59,7 @@ export default function HomePage() {
         </section>
       </main>
 
-      <section className="py-20 bg-muted">
-          <div className="container mx-auto px-4">
-            <h2 className="text-3xl font-bold text-center mb-12 text-foreground">Why Choose CollabNotes?</h2>
-            <div className="grid md:grid-cols-3 gap-8">
-              {[
-          { icon: '🚀', title: 'Real-Time Collaboration', description: 'Work together with your team in real-time, seeing changes as they happen.', bgColor: 'bg-secondary' },
-          { icon: '🔒', title: 'Secure and Private', description: 'Your notes are encrypted and only accessible to those you choose to share with.', bgColor: 'bg-primary' },
-          { icon: '📱', title: 'Access Anywhere', description: 'Use CollabNotes on any device, with our web and mobile apps.', bgColor: 'bg-highlight' }
-              ].map((feature, index) => (
-          <div key={index} className={`text-center p-6 rounded-lg shadow-sm ${feature.bgColor}`}>
-            <div className="text-4xl mb-4">{feature.icon}</div>
-            <h3 className="text-xl font-semibold mb-2 text-primary">{feature.title}</h3>
-            <p className="text-foreground">{feature.description}</p>
-          </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="py-20 bg-muted">
-          <div className="container mx-auto px-4">
-            <h2 className="text-3xl font-bold text-center mb-12 text-foreground">Why Choose CollabNotes?</h2>
-            <div className="grid md:grid-cols-3 gap-8">
-              {[
-          { icon: '🚀', title: 'Real-Time Collaboration', description: 'Work together with your team in real-time, seeing changes as they happen.', bgColor: 'bg-secondary' },
-          { icon: '🔒', title: 'Secure and Private', description: 'Your notes are encrypted and only accessible to those you choose to share with.', bgColor: 'bg-primary' },
-          { icon: '📱', title: 'Access Anywhere', description: 'Use CollabNotes on any device, with our web and mobile apps.', bgColor: 'bg-highlight' }
-              ].map((feature, index) => (
-          <div key={index} className={`text-center p-6 rounded-lg shadow-sm ${feature.bgColor}`}>
-            <div className="text-4xl mb-4">{feature.icon}</div>
-            <h3 className="text-xl font-semibold mb-2 text-primary">{feature.title}</h3>
-            <p className="text-foreground">{feature.description}</p>
-          </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="py-20 bg-muted">
-          <div className="container mx-auto px-4">
-            <h2 className="text-3xl font-bold text-center mb-12 text-foreground">Why Choose CollabNotes?</h2>
-            <div className="grid md:grid-cols-3 gap-8">
-              {[
-          { icon: '🚀', title: 'Real-Time Collaboration', description: 'Work together with your team in real-time, seeing changes as they happen.', bgColor: 'bg-secondary' },
-          { icon: '🔒', title: 'Secure and Private', description: 'Your notes are encrypted and only accessible to those you choose to share with.', bgColor: 'bg-primary' },
-          { icon: '📱', title: 'Access Anywhere', description: 'Use CollabNotes on any device, with our web and mobile apps.', bgColor: 'bg-highlight' }
-              ].map((feature, index) => (
-          <div key={index} className={`text-center p-6 rounded-lg shadow-sm ${feature.bgColor}`}>
-            <div className="text-4xl mb-4">{feature.icon}</div>
-            <h3 className="text-xl font-semibold mb-2 text-primary">{feature.title}</h3>
-            <p className="text-foreground">{feature.description}</p>
-          </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="py-20 bg-muted">
-          <div className="container mx-auto px-4">
-            <h2 className="text-3xl font-bold text-center mb-12 text-foreground">Why Choose CollabNotes?</h2>
-            <div className="grid md:grid-cols-3 gap-8">
-              {[
-          { icon: '🚀', title: 'Real-Time Collaboration', description: 'Work together with your team in real-time, seeing changes as they happen.', bgColor: 'bg-secondary' },
-          { icon: '🔒', title: 'Secure and Private', description: 'Your notes are encrypted and only accessible to those you choose to share with.', bgColor: 'bg-primary' },
-          { icon: '📱', title: 'Access Anywhere', description: 'Use CollabNotes on any device, with our web and mobile apps.', bgColor: 'bg-highlight' }
-              ].map((feature, index) => (
-          <div key={index} className={`text-center p-6 rounded-lg shadow-sm ${feature.bgColor}`}>
-            <div className="text-4xl mb-4">{feature.icon}</div>
-            <h3 className="text-xl font-semibold mb-2 text-primary">{feature.title}</h3>
-            <p className="text-foreground">{feature.description}</p>
-          </div>
-              ))}
-            </div>
-          </div>
-        </section>
+      <CarouselLandingComponent /> 
 
       <footer className="bg-muted text-foreground py-8">
         <div className="container mx-auto px-4">
