@@ -1,81 +1,50 @@
 'use client'
-
-import React, { useState } from 'react'
-import Link from 'next/link'
+import React, { useEffect, useState } from 'react'
 import Header from '@/components/ui/header'
+import { marked } from 'marked';
+import DOMPurify from 'dompurify';
 
 export default function NotesPage() {
-  const [note, setNote] = useState('')
-  const [collaborators, setCollaborators] = useState(['Alice', 'Bob'])
-  const [showCollaboratorModal, setShowCollaboratorModal] = useState(false)
-  const [newCollaborator, setNewCollaborator] = useState('')
+  const [note, setNote] = useState(`# Rendered Markdown`)
+  const [parsedNote, setParsedNote] = useState('')
 
-  const handleNoteChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setNote(e.target.value)
-  }
+  useEffect(() => {
+    const sanitizedHtml = DOMPurify.sanitize(marked.parse(note));
+    setParsedNote(sanitizedHtml);
+  }, [note]);
 
-  const handleAddCollaborator = () => {
-    if (newCollaborator && !collaborators.includes(newCollaborator)) {
-      setCollaborators([...collaborators, newCollaborator])
-      setNewCollaborator('')
-      setShowCollaboratorModal(false)
-    }
+  const setNoteContent = (content: string) => {
+    setNote(content)
   }
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
-
       <Header></Header>
-      <main className="flex">
-
-        <div className="flex-grow container mx-auto px-4 py-4">
-          <div className="bg-white shadow-lg rounded-lg overflow-hidden">
-            <div className="p-4 bg-gray-100 border-b">
-              <input
-                type="text"
-                placeholder="Untitled Note"
-                className="text-2xl font-bold bg-transparent border-none outline-none w-full"
-              />
-            </div>
-            <div className="p-4">
-              <textarea
-                value={note}
-                onChange={handleNoteChange}
-                placeholder="Start typing your note here..."
-                className="w-full h-96 resize-none border-none outline-none"
-              />
-            </div>
+      <main className="flex flex-grow">
+        <div className="w-2/4 p-4 flex flex-col">
+          <div className="bg-white shadow-lg rounded-lg overflow-hidden flex-grow flex flex-col">
+            <textarea
+              value={note}
+              onChange={(e) => setNoteContent(e.target.value)}
+              placeholder="Start typing your note here..."
+              className="w-full h-full resize-none border-none outline-none p-4 flex-grow"
+            />
           </div>
         </div>
-
-
-        <div className="flex-grow container mx-auto px-4 py-4">
-          <div className="bg-white shadow-lg rounded-lg overflow-hidden text-center">
-            <div className="p-4 text-center">
-              <textarea
-                value={note}
-                onChange={handleNoteChange}
-                placeholder="MARKDOWN WILL RENDER HERE"
-                className="resize-none border-none outline-none"
-              />
-            </div>
+        <div className="w-2/4 p-4 flex flex-col">
+          <div className="bg-white shadow-lg rounded-lg overflow-hidden flex-grow flex flex-col">
+            <div
+              className="w-full h-full resize-none border-none outline-none p-4 flex-grow overflow-auto"
+              dangerouslySetInnerHTML={{ __html: parsedNote }}
+            />
           </div>
         </div>
-
-
-
-
       </main>
-
-
       <footer className="bg-gray-800 text-white py-4">
         <div className="container mx-auto px-4 text-center">
           <p>&copy; 2023 CollabNotes. All rights reserved.</p>
         </div>
       </footer>
-
-
-
     </div>
   )
 }
