@@ -4,7 +4,7 @@
 
 :root {
   --primary: #c29be9;
-  --secondary: #6289d8;
+  --secondary: #ceb2ff;
   --accent: #d2bfe8;
   --tertiary: #faf4ff;
   --muted: #b2e0ff;
@@ -25,28 +25,12 @@ body {
 a {
   color: var(--link-color);
   text-decoration: none;
-  transition: color 0.3s ease;
 }
 
 a:hover {
-  color: var(--secondary);
+  color: var(--primary);
 }
 
-button {
-  background-color: var(--button-bg);
-  color: var(--button-text);
-  border: 2px solid var(--border-color);
-  padding: 10px 20px;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-button:hover {
-  background-color: var(--secondary);
-  color: var(--background);
-  border-color: var(--secondary);
-}
 
 input, textarea, select {
   background-color: var(--background);
