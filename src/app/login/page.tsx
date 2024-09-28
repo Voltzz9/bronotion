@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react'
 import Header from '@/components/ui/header'
+import Login from '@/components/login'
 
 export default function LoginPage() {
 
@@ -27,38 +28,7 @@ export default function LoginPage() {
         <Header />
     
         <main className="flex-grow container mx-auto px-4 py-8">
-            <div className="max-w-md mx-auto bg-white shadow-lg rounded-lg overflow-hidden">
-            <div className="p-4 bg-gray-100 border-b">
-                <h1 className="text-2xl font-bold">Login</h1>
-            </div>
-            <form onSubmit={handleSubmit} className="p-4 space-y-4">
-                <div>
-                <label htmlFor="email" className="block text-gray-600">Email</label>
-                <input 
-                    type="email" 
-                    id="email" 
-                    value={email} 
-                    onChange={handleEmailChange} 
-                    className="w-full border border-gray-300 rounded px-3 py-2"
-                />
-                </div>
-                <div>
-                <label htmlFor="password" className="block text-gray-600">Password</label>
-                <input 
-                    type="password" 
-                    id="password" 
-                    value={password} 
-                    onChange={handlePasswordChange} 
-                    className="w-full border border-gray-300 rounded px-3 py-2"
-                />
-                </div>
-                <div>
-                <button type="submit" className="w-full bg-blue-600 text-white px-4 py-2 rounded">
-                    Login
-                </button>
-                </div>
-            </form>
-            </div>
+            <Login />
         </main>
 
         <footer className="bg-gray-800 text-white py-4">
