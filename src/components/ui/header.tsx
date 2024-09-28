@@ -1,3 +1,4 @@
+"use client"
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -5,7 +6,7 @@ import { Button } from './button';
 
 const Header: React.FC = () => {
     const pathname = usePathname();
-    const isOnPage = pathname === '/';
+    const isOnPage = pathname === '/' || pathname === '/notes';
 
     return (
         <header className="bg-accent shadow-sm">

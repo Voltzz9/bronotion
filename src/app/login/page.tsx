@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import Header from '@/components/ui/header'
-import Login from '@/components/login'
+import Login from '@/components/ui/login'
 
 export default function LoginPage() {
 

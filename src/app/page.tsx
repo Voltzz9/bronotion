@@ -18,7 +18,7 @@ export default function HomePage() {
             </p>
             <Link href="/notes">
               <Button>
-              Get Started without signup
+              Try it out!
               </Button>
             </Link>
           </div>
