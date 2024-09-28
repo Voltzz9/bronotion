@@ -23,11 +23,11 @@ psql -U admin -d bronotion -a -f ./backend/DML.sql
 ```
 
 
-
-
-
-
-
+## Running the database
+1. Start the database with the following command in a seperate terminal:
+```bash
+yarn start:server
+```
 
 
 

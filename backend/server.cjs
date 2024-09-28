@@ -1,17 +1,23 @@
 import express from 'express';
 import pgp from 'pg-promise';
+import bcrypt from 'bcrypt'; // For password hashing
 
 const db = pgp()('postgres://admin:admin@localhost:5432/bronotion');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Middleware to parse JSON
 app.use(express.json());
 
 // Add a manual user
-app.post('/users', async (req, res) => {
+app.post('/create_user', async (req, res) => {
   try {
     const { username, email, password } = req.body;
-    
+
+    // Hash the password before storing it
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+
     // Start a transaction
     const result = await db.tx(async t => {
       // Insert into users table
@@ -20,10 +26,10 @@ app.post('/users', async (req, res) => {
         [username, email, true]
       );
       
-      // Insert into manual_users table
+      // Insert into manual_users table with hashed password
       await t.none(
         'INSERT INTO manual_users (user_id, password_hash) VALUES ($1, $2)',
-        [user.user_id, password] // Note: In a real application, you should hash the password
+        [user.user_id, hashedPassword]
       );
       
       return user;
@@ -51,6 +57,38 @@ app.get('/users/:userId', async (req, res) => {
     res.json(user);
   } catch (error) {
     console.error('Error retrieving user:', error);
+    if (error.name === 'QueryResultError') {
+      res.status(404).json({ error: 'User not found' });
+    } else {
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
+  }
+});
+
+// Login user
+app.post('/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    // Fetch the user by email
+    const user = await db.one(
+      `SELECT u.user_id, u.username, u.email, u.is_Manual, m.password_hash
+       FROM users u
+       JOIN manual_users m ON u.user_id = m.user_id
+       WHERE u.email = $1 AND u.is_Manual = true`,
+      [email]
+    );
+
+    // Compare the password with the stored hash
+    const passwordMatch = await bcrypt.compare(password, user.password_hash);
+
+    if (passwordMatch) {
+      res.status(200).json({ message: 'Login successful', userId: user.user_id });
+    } else {
+      res.status(401).json({ error: 'Invalid email or password' });
+    }
+  } catch (error) {
+    console.error('Error logging in:', error);
     if (error.name === 'QueryResultError') {
       res.status(404).json({ error: 'User not found' });
     } else {
