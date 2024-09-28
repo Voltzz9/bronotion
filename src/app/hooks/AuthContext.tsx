@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const AuthContext = createContext<{ isAuthenticated: boolean; setIsAuthenticated: React.Dispatch<React.SetStateAction<boolean>> }>({
-    isAuthenticated: false,
+    isAuthenticated: true,  // Hardcoded to true, change this for actually logging in
     setIsAuthenticated: () => {},
 });
 
