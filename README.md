@@ -31,6 +31,7 @@ psql -U admin -d bronotion -a -f ./backend/DML.sql;
 ```bash
 yarn start:server
 ```
+This will start the database on port 5433 (because 5432 is the actual PostreSQL database).
 
 
 

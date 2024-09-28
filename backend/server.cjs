@@ -4,7 +4,7 @@ import bcrypt from 'bcrypt'; // For password hashing
 
 const db = pgp()('postgres://admin:admin@localhost:5432/bronotion');
 const app = express();
-const PORT = 5432;
+const PORT = 5433;
 
 // Middleware to parse JSON
 app.use(express.json());
