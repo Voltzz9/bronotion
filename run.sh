@@ -18,14 +18,21 @@ for port in "${ports[@]}"; do
     echo "No process found on port $port"
 done
 
-echo "Starting Docker Compose..."
+echo "Starting Docker Compose build..."
 
 # Build the Docker images
 docker-compose build
 
-# Start the database container
+echo "Starting the database service..."
+# Start the database container (db) first
 docker-compose up -d db
 
-# Start the rest of the services
-echo "Starting other services..."
-docker-compose up
+# Run the DDL.sql file to create the necessary tables
+echo "Running DDL.sql to create tables..."
+docker exec -i postgres-db psql -U admin -d bronotion -f /docker-entrypoint-initdb.d/DDL.sql
+
+# Now start the backend service
+echo "Starting the backend service..."
+docker-compose up -d backend
+
+echo "All services started and database initialized."

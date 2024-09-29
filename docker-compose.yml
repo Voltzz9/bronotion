@@ -26,8 +26,6 @@ services:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: admin
       POSTGRES_DB: bronotion
-    volumes:
-      - ./backend/sql:/docker-entrypoint-initdb.d
     ports:
       - "5432:5432"
     
