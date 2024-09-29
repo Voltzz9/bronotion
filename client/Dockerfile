@@ -1,5 +1,5 @@
 #Dockerfile
-FROM node:22.09-alpine
+FROM node:22-alpine
 
 # Create app directory
 WORKDIR /app
@@ -14,7 +14,5 @@ RUN yarn install
 
 # Bundle app source
 COPY . .
-
-EXPOSE 3000
 
 CMD ["yarn", "dev"]
