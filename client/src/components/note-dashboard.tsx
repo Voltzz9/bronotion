@@ -10,7 +10,7 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 import { PlusIcon, SearchIcon, CalendarIcon, UserIcon } from 'lucide-react'
 import Link from 'next/link'
 
-const URL = 'http://localhost:5433'; // TODO Change to environment var?
+const URL = process.env.NEXT_PUBLIC_API_URL;
 
 interface Note {
   id: string
