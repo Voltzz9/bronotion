@@ -426,7 +426,145 @@ app.delete('/notes/:noteId/active-editors/:userId', async (req, res) => {
   }
 });
 
+// ********************************* Tag Routes *********************************
 
+// Create a new tag
+app.post('/tags', async (req, res) => {
+  try {
+    const { name } = req.body;
+    
+    const result = await db.one(
+      `INSERT INTO tags (name)
+       VALUES ($1)
+       RETURNING tag_id, name`,
+      [name]
+    );
+
+    res.status(201).json({ message: 'Tag created successfully', tag: result });
+  } catch (error) {
+    console.error('Error creating tag:', error);
+    if (error.code === '23505') { // unique_violation
+      res.status(400).json({ error: 'Tag name already exists' });
+    } else {
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
+  }
+});
+
+// Get all tags
+app.get('/tags', async (req, res) => {
+  try {
+    const tags = await db.any('SELECT * FROM tags');
+    res.json(tags);
+  } catch (error) {
+    console.error('Error fetching tags:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// Update a tag
+app.put('/tags/:tagId', async (req, res) => {
+  try {
+    const tagId = parseInt(req.params.tagId);
+    const { name } = req.body;
+
+    const result = await db.result(
+      'UPDATE tags SET name = $1 WHERE tag_id = $2',
+      [name, tagId]
+    );
+
+    if (result.rowCount === 0) {
+      res.status(404).json({ error: 'Tag not found' });
+    } else {
+      res.json({ message: 'Tag updated successfully' });
+    }
+  } catch (error) {
+    console.error('Error updating tag:', error);
+    if (error.code === '23505') { // unique_violation
+      res.status(400).json({ error: 'Tag name already exists' });
+    } else {
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
+  }
+});
+
+// Delete a tag
+app.delete('/tags/:tagId', async (req, res) => {
+  try {
+    const tagId = parseInt(req.params.tagId);
+
+    const result = await db.result('DELETE FROM tags WHERE tag_id = $1', [tagId]);
+
+    if (result.rowCount === 0) {
+      res.status(404).json({ error: 'Tag not found' });
+    } else {
+      res.json({ message: 'Tag deleted successfully' });
+    }
+  } catch (error) {
+    console.error('Error deleting tag:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// ********************************* Note-Tag Operations *********************************
+
+// Add a tag to a note
+app.post('/notes/:noteId/tags', async (req, res) => {
+  try {
+    const noteId = parseInt(req.params.noteId);
+    const { tagId } = req.body;
+
+    await db.none(
+      'UPDATE notes SET tag_id = $1 WHERE note_id = $2',
+      [tagId, noteId]
+    );
+
+    res.json({ message: 'Tag added to note successfully' });
+  } catch (error) {
+    console.error('Error adding tag to note:', error);
+    if (error.code === '23503') { // foreign_key_violation
+      res.status(400).json({ error: 'Invalid note ID or tag ID' });
+    } else {
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
+  }
+});
+
+// Remove a tag from a note
+app.delete('/notes/:noteId/tags', async (req, res) => {
+  try {
+    const noteId = parseInt(req.params.noteId);
+
+    await db.none(
+      'UPDATE notes SET tag_id = NULL WHERE note_id = $1',
+      [noteId]
+    );
+
+    res.json({ message: 'Tag removed from note successfully' });
+  } catch (error) {
+    console.error('Error removing tag from note:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// Get all notes with a specific tag
+app.get('/tags/:tagId/notes', async (req, res) => {
+  try {
+    const tagId = parseInt(req.params.tagId);
+
+    const notes = await db.any(
+      `SELECT n.note_id, n.title, n.content, n.user_id, n.created_at, n.updated_at
+       FROM notes n
+       WHERE n.tag_id = $1 AND n.is_deleted = false`,
+      [tagId]
+    );
+
+    res.json(notes);
+  } catch (error) {
+    console.error('Error fetching notes by tag:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
 
 
 
