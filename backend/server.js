@@ -298,7 +298,7 @@ app.get('/users/:userId/shared-notes', async (req, res) => {
   try {
     const userId = parseInt(req.params.userId);
     const sharedNotes = await db.any(
-      `SELECT n.note_id, n.title, n.content, n.user_id as owner_id, sn.can_edit, sn.shared_at
+      `SELECT n.note_id, n.title, n.content, n.user_id as owner_id, sn.shared_note_id, sn.can_edit, sn.shared_at
        FROM notes n
        JOIN shared_notes sn ON n.note_id = sn.note_id
        WHERE sn.shared_with_user_id = $1 AND n.is_deleted = false`,
