@@ -1,6 +1,6 @@
 'use client'
 import React, { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
@@ -11,10 +11,11 @@ config();
 
 const URL = process.env.NEXT_PUBLIC_API_URL;
 
-
 export default function Component() {
   const { isAuthenticated } = useAuth();
-  const [isLogin, setIsLogin] = useState(true);
+  const searchParams = useSearchParams();
+  const initialIsLogin = searchParams.get('mode') !== 'signup';
+  const [isLogin, setIsLogin] = useState(initialIsLogin);
   const [isAnimating, setIsAnimating] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -27,9 +28,8 @@ export default function Component() {
   useEffect(() => {
     // Redirect to dashboard if user is already authenticated
     if (isAuthenticated) {
-      router.push('/dashboard');
+      router.push('/home');
     }
-
   }, [isAuthenticated]);
 
   // Detect autofill
