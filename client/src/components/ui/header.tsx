@@ -4,8 +4,11 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, useScroll, useSpring, useTransform } from 'framer-motion';
 import { Button } from '@/components/ui/button';
+import { useSession } from 'next-auth/react';
 
 const Header = () => {
+  const { data: session } = useSession();
+  console.log(session);
   const pathname = usePathname();
   const isOnPage = pathname === '/' || pathname === '/notes';
   const { scrollY } = useScroll();
@@ -54,8 +57,12 @@ const Header = () => {
           </motion.div>
         </Link>
         <div className="flex items-center justify-center space-x-4">
-          {isOnPage && (
-            <Link href="/login">
+          {session ? (
+            <Link href="/api/auth/signout">
+              <Button>Logout</Button>
+            </Link>
+          ) : (
+            <Link href="/api/auth/signin">
               <Button>Login</Button>
             </Link>
           )}
