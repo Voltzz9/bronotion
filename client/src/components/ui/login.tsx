@@ -6,8 +6,11 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { useAuth } from '@/app/hooks/AuthContext';
+import { config } from 'dotenv';
+config();
 
-const URL = 'http://localhost:5433'; // TODO Change to enviroment var?
+const URL = process.env.NEXT_PUBLIC_API_URL;
+
 
 export default function Component() {
   const { isAuthenticated } = useAuth();
