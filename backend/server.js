@@ -1,11 +1,35 @@
-import express from 'express';
-import pgp from 'pg-promise';
-import bcrypt from 'bcrypt'; // For password hashing
+const express = require('express');
+const pgp = require('pg-promise')();
+const bcrypt = require('bcrypt');
 const cors = require('cors');
 
-const db = pgp()('postgres://admin:admin@localhost:5432/bronotion');
+// Load environment variables
+require('dotenv').config();
+
+// Database connection configuration
+const dbConfig = {
+    host: process.env.DB_HOST || 'localhost',
+    port: process.env.DB_PORT || 5432,
+    database: process.env.DB_NAME || 'bronotion',
+    user: process.env.DB_USER || 'admin',
+    password: process.env.DB_PASSWORD || 'admin'
+};
+
+// Initialize database connection
+const db = pgp(dbConfig);
+
+// Test database connection
+db.connect()
+    .then(obj => {
+        console.log('Database connection successful');
+        obj.done(); // success, release the connection;
+    })
+    .catch(error => {
+        console.error('ERROR:', error.message || error);
+    });
+
 const app = express();
-const PORT = 5433;
+const PORT = process.env.PORT || 5433;
 
 app.use(cors());
 
