@@ -1,16 +1,13 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import { motion, useScroll, useSpring, useTransform } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { useSession } from 'next-auth/react';
 
 const Header = () => {
-  const { data: session } = useSession();
+  const  session  = useSession();
   console.log(session);
-  const pathname = usePathname();
-  const isOnPage = pathname === '/' || pathname === '/notes';
   const { scrollY } = useScroll();
   const [isMobile, setIsMobile] = useState(false);
 
@@ -57,7 +54,7 @@ const Header = () => {
           </motion.div>
         </Link>
         <div className="flex items-center justify-center space-x-4">
-          {session ? (
+          {session.status === 'authenticated' ? (
             <Link href="/api/auth/signout">
               <Button>Logout</Button>
             </Link>
