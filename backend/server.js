@@ -247,8 +247,191 @@ app.get('/notes/:noteId', async (req, res) => {
   }
 });
 
+// ********************************* Shared Note Routes *********************************
+
+// Share a note with another user
+app.post('/notes/:noteId/share', async (req, res) => {
+  try {
+    const noteId = parseInt(req.params.noteId);
+    const { sharedWithUserId, canEdit } = req.body;
+
+    // First, check if the note is already shared
+    const existingShare = await db.oneOrNone(
+      `SELECT shared_note_id FROM shared_notes 
+       WHERE note_id = $1 AND shared_with_user_id = $2`,
+      [noteId, sharedWithUserId]
+    );
+
+    if (existingShare) {
+      // Note is already shared
+      return res.status(200).json({ 
+        message: 'Note has already been shared with this user.',
+        sharedNoteId: existingShare.shared_note_id
+      });
+    }
+
+    // If not already shared, create new share
+    const result = await db.one(
+      `INSERT INTO shared_notes (note_id, shared_with_user_id, can_edit)
+       VALUES ($1, $2, $3)
+       RETURNING shared_note_id`,
+      [noteId, sharedWithUserId, canEdit]
+    );
+
+    res.status(201).json({ 
+      message: 'Note shared successfully', 
+      sharedNoteId: result.shared_note_id 
+    });
+
+  } catch (error) {
+    console.error('Error sharing note:', error);
+    if (error.code === '23503') { // Foreign key violation
+      res.status(400).json({ error: 'Invalid note ID or user ID' });
+    } else {
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
+  }
+});
+
+// Get all notes shared with a user
+app.get('/users/:userId/shared-notes', async (req, res) => {
+  try {
+    const userId = parseInt(req.params.userId);
+    const sharedNotes = await db.any(
+      `SELECT n.note_id, n.title, n.content, n.user_id as owner_id, sn.can_edit, sn.shared_at
+       FROM notes n
+       JOIN shared_notes sn ON n.note_id = sn.note_id
+       WHERE sn.shared_with_user_id = $1 AND n.is_deleted = false`,
+      [userId]
+    );
+    res.json(sharedNotes);
+  } catch (error) {
+    console.error('Error fetching shared notes:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// Update shared note permissions
+app.put('/shared-notes/:noteId/permissions', async (req, res) => {
+  try {
+    const noteId = parseInt(req.params.noteId);
+    const { sharedWithUserId, canEdit } = req.body;
+
+    if (!sharedWithUserId || typeof canEdit !== 'boolean') {
+      return res.status(400).json({ error: 'Invalid input. Both shared_with_user_id and canEdit are required.' });
+    }
+
+    const result = await db.result(
+      `UPDATE shared_notes
+       SET can_edit = $1
+       WHERE note_id = $2 AND shared_with_user_id = $3`,
+      [canEdit, noteId, sharedWithUserId]
+    );
+
+    if (result.rowCount === 0) {
+      res.status(404).json({ error: 'Shared note not found or user does not have access' });
+    } else {
+      res.json({ message: 'Shared note permissions updated successfully' });
+    }
+  } catch (error) {
+    console.error('Error updating shared note permissions:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// Remove shared access to a note
+app.delete('/shared-notes/:sharedNoteId', async (req, res) => {
+  try {
+    const sharedNoteId = parseInt(req.params.sharedNoteId);
+
+    const result = await db.result(
+      `DELETE FROM shared_notes
+       WHERE shared_note_id = $1`,
+      [sharedNoteId]
+    );
+
+    if (result.rowCount === 0) {
+      res.status(404).json({ error: 'Shared note not found' });
+    } else {
+      res.json({ message: 'Shared access removed successfully' });
+    }
+  } catch (error) {
+    console.error('Error removing shared access:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// ********************************* Collaboration Routes *********************************
+
+// Add active editor to a note
+app.post('/notes/:noteId/active-editors', async (req, res) => {
+  try {
+    const noteId = parseInt(req.params.noteId);
+    const { userId } = req.body;
+
+    const result = await db.one(
+      `INSERT INTO active_editors (note_id, user_id)
+       VALUES ($1, $2)
+       ON CONFLICT (note_id, user_id) DO UPDATE
+       SET last_active = CURRENT_TIMESTAMP
+       RETURNING active_editor_id`,
+      [noteId, userId]
+    );
+
+    res.status(201).json({ message: 'Active editor added successfully', activeEditorId: result.active_editor_id });
+  } catch (error) {
+    console.error('Error adding active editor:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// Get active editors for a note
+app.get('/notes/:noteId/active-editors', async (req, res) => {
+  try {
+    const noteId = parseInt(req.params.noteId);
+    const activeEditors = await db.any(
+      `SELECT ae.user_id, u.username, ae.last_active
+       FROM active_editors ae
+       JOIN users u ON ae.user_id = u.user_id
+       WHERE ae.note_id = $1`,
+      [noteId]
+    );
+    res.json(activeEditors);
+  } catch (error) {
+    console.error('Error fetching active editors:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// Remove active editor from a note
+app.delete('/notes/:noteId/active-editors/:userId', async (req, res) => {
+  try {
+    const noteId = parseInt(req.params.noteId);
+    const userId = parseInt(req.params.userId);
+
+    const result = await db.result(
+      `DELETE FROM active_editors
+       WHERE note_id = $1 AND user_id = $2`,
+      [noteId, userId]
+    );
+
+    if (result.rowCount === 0) {
+      res.status(404).json({ error: 'Active editor not found' });
+    } else {
+      res.json({ message: 'Active editor removed successfully' });
+    }
+  } catch (error) {
+    console.error('Error removing active editor:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+
+
 
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
+
+
