@@ -34,7 +34,7 @@ export default function NotesPage() {
         <div className="w-2/4 p-4 flex flex-col">
           <div className="bg-white shadow-lg rounded-lg overflow-hidden flex-grow flex flex-col">
             <div
-              className="w-full h-full resize-none border-none outline-none p-4 flex-grow overflow-auto"
+              className="w-full h-full resize-none border-none outline-none p-4 flex-grow overflow-auto markdown-style"
               dangerouslySetInnerHTML={{ __html: parsedNote }}
             />
           </div>
