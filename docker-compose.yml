@@ -1,4 +1,16 @@
 services:
+  db:
+    image: postgres:14
+    container_name: postgres-db
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: bronotion
+    volumes:
+      - ./backend/sql/DDL.sql:/docker-entrypoint-initdb.d/DDL.sql
+    ports:
+      - "5432:5432"
+  
   backend:
     build:
       context: ./backend
@@ -19,13 +31,16 @@ services:
       - ./backend:/app
       - /app/node_modules
 
-  db:
-    image: postgres:14
-    container_name: postgres-db
-    environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: admin
-      POSTGRES_DB: bronotion
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: bronotion-react-frontend
     ports:
-      - "5432:5432"
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      REACT_APP_API_URL: http://localhost:5433
     
