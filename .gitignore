@@ -19,6 +19,7 @@
 
 # misc
 /client/.DS_Store
+/backend/.DS_Store
 /client/*.pem
 
 # debug

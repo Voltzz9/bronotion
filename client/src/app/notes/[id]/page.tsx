@@ -20,7 +20,7 @@ export default function NotesPage() {
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       <Header></Header>
-      <main className="flex flex-grow">
+      <main className="flex flex-grow pt-24">
         <div className="w-2/4 p-4 flex flex-col">
           <div className="bg-white shadow-lg rounded-lg overflow-hidden flex-grow flex flex-col">
             <textarea
