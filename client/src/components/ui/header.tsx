@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { motion, useScroll, useSpring, useTransform } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { useSession } from 'next-auth/react';
+import { handleSignOut } from '@/app/actions/authActions';
 
 const Header = () => {
   const  session  = useSession();
@@ -55,9 +56,11 @@ const Header = () => {
         </Link>
         <div className="flex items-center justify-center space-x-4">
           {session.status === 'authenticated' ? (
-            <Link href="/api/auth/signout">
-              <Button>Logout</Button>
-            </Link>
+            <form onSubmit={handleSignOut}>
+            <Button>
+              Logout
+            </Button>
+            </form>
           ) : (
             <Link href="/api/auth/signin">
               <Button>Login</Button>

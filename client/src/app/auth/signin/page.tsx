@@ -26,6 +26,9 @@ export default function LoginPage() {
     const onSubmit = async (values: z.infer<typeof signInSchema>) => {
         try {
             const result = await handleCredentialsSignIn(values.email, values.password);
+            if (result) {
+                setGlobalError(result);
+            }
         } catch (error) {
             console.error(error);
         }
