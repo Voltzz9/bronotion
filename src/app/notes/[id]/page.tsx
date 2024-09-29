@@ -1,84 +1,42 @@
 'use client'
-
-import React, { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation'; // Import useParams for routing
-import Header from '@/components/ui/header';
-import { marked } from 'marked'; // Import marked package
+import React, { useEffect, useState } from 'react'
+import Header from '@/components/ui/header'
+import { marked } from 'marked';
+import DOMPurify from 'dompurify';
 
 export default function NotesPage() {
-  const params = useParams(); // Use useParams instead of useRouter
-  const id = params?.id; // Get note ID from URL params
-
-  const [note, setNote] = useState('');
-  const [title, setTitle] = useState('Untitled Note'); // State for note title
-  const [collaborators, setCollaborators] = useState(['Alice', 'Bob']);
-  const [showCollaboratorModal, setShowCollaboratorModal] = useState(false);
-  const [newCollaborator, setNewCollaborator] = useState('');
+  const [note, setNote] = useState(`# Rendered Markdown`)
+  const [parsedNote, setParsedNote] = useState('')
 
   useEffect(() => {
-    if (id) {
-      fetchNote();
-    }
-  }, [id]);
+    const sanitizedHtml = DOMPurify.sanitize(marked.parse(note));
+    setParsedNote(sanitizedHtml);
+  }, [note]);
 
-  const fetchNote = async () => {
-    try {
-      const response = await fetch(`http://localhost:5433/notes/${id}`); // Adjust API endpoint as necessary
-      console.log(response);
-      const data = await response.json();
-      if (data) {
-        setTitle(data.title);
-        setNote(data.content);
-      }
-    } catch (error) {
-      console.error('Failed to fetch note:', error);
-    }
-  };
-
-  const handleNoteChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setNote(e.target.value);
-  };
-
-  const handleAddCollaborator = () => {
-    if (newCollaborator && !collaborators.includes(newCollaborator)) {
-      setCollaborators([...collaborators, newCollaborator]);
-      setNewCollaborator('');
-      setShowCollaboratorModal(false);
-    }
-  };
+  const setNoteContent = (content: string) => {
+    setNote(content)
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
-      <Header />
-      <main className="flex py-40">
-        <div className="flex-grow container mx-auto px-4 py-4">
-          <div className="bg-white shadow-lg rounded-lg overflow-hidden">
-            <div className="p-4 bg-gray-100 border-b">
-              <input
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                className="text-2xl font-bold bg-transparent border-none outline-none w-full"
-              />
-            </div>
-            <div className="p-4">
-              <textarea
-                value={note}
-                onChange={handleNoteChange}
-                placeholder="Start typing your note here..."
-                className="w-full h-96 resize-none border-none outline-none"
-              />
-            </div>
+      <Header></Header>
+      <main className="flex flex-grow">
+        <div className="w-2/4 p-4 flex flex-col">
+          <div className="bg-white shadow-lg rounded-lg overflow-hidden flex-grow flex flex-col">
+            <textarea
+              value={note}
+              onChange={(e) => setNoteContent(e.target.value)}
+              placeholder="Start typing your note here..."
+              className="w-full h-full resize-none border-none outline-none p-4 flex-grow"
+            />
           </div>
         </div>
-        <div className="flex-grow container mx-auto px-4 py-4">
-          <div className="bg-white shadow-lg rounded-lg overflow-hidden text-center">
-            <div className="p-4 text-center">
-              <div
-                className="markdown-output resize-none border-none outline-none"
-                dangerouslySetInnerHTML={{ __html: marked(note) }}
-              />
-            </div>
+        <div className="w-2/4 p-4 flex flex-col">
+          <div className="bg-white shadow-lg rounded-lg overflow-hidden flex-grow flex flex-col">
+            <div
+              className="w-full h-full resize-none border-none outline-none p-4 flex-grow overflow-auto markdown-style"
+              dangerouslySetInnerHTML={{ __html: parsedNote }}
+            />
           </div>
         </div>
       </main>

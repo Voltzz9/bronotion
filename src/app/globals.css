@@ -2,6 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
+
 :root {
   --primary: #c29be9;
   --secondary: #ceb2ff;
@@ -32,7 +33,9 @@ a:hover {
 }
 
 
-input, textarea, select {
+input,
+textarea,
+select {
   background-color: var(--background);
   color: var(--foreground);
   border: 2px solid var(--border-color);
@@ -41,12 +44,19 @@ input, textarea, select {
   transition: border-color 0.3s ease;
 }
 
-input:focus, textarea:focus, select:focus {
+input:focus,
+textarea:focus,
+select:focus {
   outline: none;
   border-color: var(--accent);
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   color: var(--primary);
   margin-bottom: 1rem;
 }
@@ -55,25 +65,57 @@ section {
   padding: 4rem 0;
 }
 
-header, footer {
+header,
+footer {
   background-color: var(--muted);
   color: var(--foreground);
   padding: 1rem 0;
 }
 
 /* Custom utility classes */
-.text-primary { color: var(--primary); }
-.text-secondary { color: var(--foreground); }
-.text-accent { color: var(--accent); }
-.bg-primary { background-color: var(--tertiary); }
-.bg-secondary { background-color: var(--foreground); }
-.bg-accent { background-color: var(--accent); }
-.border-primary { border-color: var(--primary); }
-.border-secondary { border-color: var(--secondary); }
-.border-accent { border-color: var(--accent); }
+.text-primary {
+  color: var(--primary);
+}
 
-.hover-bg-secondary:hover { background-color: var(--secondary); }
-.hover-text-primary:hover { color: var(--primary); }
+.text-secondary {
+  color: var(--foreground);
+}
+
+.text-accent {
+  color: var(--accent);
+}
+
+.bg-primary {
+  background-color: var(--tertiary);
+}
+
+.bg-secondary {
+  background-color: var(--foreground);
+}
+
+.bg-accent {
+  background-color: var(--accent);
+}
+
+.border-primary {
+  border-color: var(--primary);
+}
+
+.border-secondary {
+  border-color: var(--secondary);
+}
+
+.border-accent {
+  border-color: var(--accent);
+}
+
+.hover-bg-secondary:hover {
+  background-color: var(--secondary);
+}
+
+.hover-text-primary:hover {
+  color: var(--primary);
+}
 
 .glow {
   text-shadow: 0 0 10px var(--primary);
@@ -137,6 +179,7 @@ header, footer {
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
   }
+
   .dark {
     --background: 0 0% 3.9%;
     --foreground: 0 0% 98%;
@@ -165,11 +208,91 @@ header, footer {
   }
 }
 
-@layer base {
-  * {
-    @apply border-border;
+.markdown-style {
+  @apply text-black leading-normal break-words;
+
+  h1 {
+    @apply text-4xl font-bold mb-4 mt-6 text-black;
   }
-  body {
-    @apply bg-background text-foreground;
+
+  h2 {
+    @apply text-3xl font-bold mb-4 mt-6 text-black;
   }
+
+  h3 {
+    @apply text-2xl font-bold mb-4 mt-6 text-black;
+  }
+
+  h4 {
+    @apply text-xl font-bold mb-4 mt-6 text-black;
+  }
+
+  h5 {
+    @apply text-lg font-bold mb-4 mt-6 text-black;
+  }
+
+  h6 {
+    @apply text-base font-bold mb-4 mt-6 text-black;
+  }
+
+  p {
+    @apply mb-4 text-black;
+  }
+
+  ul,
+  ol {
+    @apply mb-4 pl-8;
+  }
+
+  ul {
+    @apply list-disc;
+  }
+
+  ol {
+    @apply list-decimal;
+  }
+
+  a {
+    @apply text-blue-600 hover:underline;
+  }
+
+  blockquote {
+    @apply pl-4 border-l-4 border-gray-300 italic;
+  }
+
+  pre {
+    @apply bg-gray-100 rounded p-4 mb-4 overflow-x-auto;
+  }
+
+  code {
+    @apply bg-gray-100 rounded px-1 py-0.5 font-mono text-sm;
+  }
+
+  hr {
+    @apply my-8 border-t border-gray-300;
+  }
+
+  table {
+    @apply w-full mb-4 border-collapse;
+  }
+
+  th,
+  td {
+    @apply border border-gray-300 px-4 py-2;
+  }
+
+  th {
+    @apply bg-gray-100 font-bold;
+  }
+
+
+}
+
+
+* {
+  @apply border-border;
+}
+
+body {
+  @apply bg-background text-foreground;
 }
