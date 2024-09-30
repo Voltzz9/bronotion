@@ -48,8 +48,44 @@ email: admin@example.com
 password: admin
 ```
 
+## Running the Docker
 
+### Prerequisites
 
+Before you can run the project in Docker, you need to have the following installed:
+
+- **Docker Desktop**: Ensure you have Docker Desktop installed on your machine. You can download it from [Docker's official website](https://www.docker.com/products/docker-desktop). 
+
+### Installation Steps for Docker Desktop
+
+1. **Download Docker Desktop**:
+   - Go to [Docker Desktop](https://www.docker.com/products/docker-desktop) and download the appropriate version for your operating system (Windows/Mac).
+  
+2. **Install Docker Desktop**:
+   - Follow the installation instructions specific to your operating system.
+
+3. **Start Docker Desktop**:
+   - After installation, launch Docker Desktop. Make sure it's running before proceeding. (Ensure that you have created an account and logged in to Docker Desktop).
+
+## Running the Project
+
+To run the Docker container for this project, follow these steps:
+
+Don't forget to have docker desktop running.
+
+1. **In the Terminal**: Make sure that you are in the root directory of the project.
+
+2. **Grant Permissions for the Run Script**:
+   
+        chmod +x ./run.sh
+
+3. **Execute the Run Script**:
+   
+        ./run.sh
+
+<br>
+<hr>
+<br>
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
