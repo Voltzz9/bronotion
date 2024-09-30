@@ -1,12 +1,13 @@
-'use client'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import  Header  from '@/components/ui/header'
 import { CarouselLandingComponent } from '../components/carousel-landing'
 import { TextAnimate } from "@/components/ui/text-animate"
+import { SessionWrapper } from './SessionProvider'
 
 export default function HomePage() {
   return (
+    <SessionWrapper>
     <div className="min-h-screen flex flex-col bg-primary text-foreground">
        <Header />
       <main className="flex-grow pt-20">
@@ -89,5 +90,6 @@ export default function HomePage() {
         </div>
       </footer>
     </div>
-  )
+    </SessionWrapper>
+  );
 }

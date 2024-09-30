@@ -8,7 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import SignOutButton from './sign-out';
 
-const Header = () => {
+export default function Header() {
   const { data: session, status } = useSession();
   const { scrollY } = useScroll();
   const [isMobile, setIsMobile] = useState(false);
@@ -84,5 +84,3 @@ const Header = () => {
     </header>
   );
 };
-
-export default Header;
