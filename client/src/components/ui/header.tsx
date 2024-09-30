@@ -3,17 +3,18 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion, useScroll, useSpring, useTransform } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { useSession } from 'next-auth/react';
+import { useSession, signOut } from 'next-auth/react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import SignOutButton from './sign-out';
-
 
 const Header = () => {
   const { data: session, status } = useSession();
   const { scrollY } = useScroll();
   const [isMobile, setIsMobile] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(status === 'authenticated');
 
+  // Effect to check if the window size is mobile
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 640);
@@ -23,10 +24,10 @@ const Header = () => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  // Effect to update local authentication state
   useEffect(() => {
-    console.log("Session status changed:", status);
-    console.log("Session data:", session);
-  }, [status, session]);
+    setIsAuthenticated(status === 'authenticated');
+  }, [status]); // Runs when status changes (login/logout)
 
   const logoWidth = useSpring(useTransform(scrollY, [0, 50], ['100%', isMobile ? '100%' : '10%']), {
     stiffness: 80,
@@ -59,18 +60,20 @@ const Header = () => {
           </motion.div>
         </Link>
         <div className="flex items-center justify-center space-x-4">
-          {status === 'authenticated' ? (
+          {isAuthenticated ? (
             <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Avatar className="cursor-pointer">
-                <AvatarImage src={session.user?.image || ''} alt={session.user?.name || 'User'} />
-                <AvatarFallback>{session.user?.name?.[0] || 'U'}</AvatarFallback>
-              </Avatar>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <SignOutButton />
-            </DropdownMenuContent>
-          </DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Avatar className="cursor-pointer">
+                  {session && (
+                    <AvatarImage src={session.user?.image || ''} alt={session.user?.name || 'User'} />
+                  )}
+                  <AvatarFallback>{session?.user?.name?.[0] || 'U'}</AvatarFallback>
+                </Avatar>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <SignOutButton />
+              </DropdownMenuContent>
+            </DropdownMenu>
           ) : (
             <Link href="/auth/signin">
               <Button>Login</Button>

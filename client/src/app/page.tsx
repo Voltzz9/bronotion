@@ -8,7 +8,7 @@ import { TextAnimate } from "@/components/ui/text-animate"
 export default function HomePage() {
   return (
     <div className="min-h-screen flex flex-col bg-primary text-foreground">
-
+       <Header />
       <main className="flex-grow pt-20">
         <section className="bg-muted py-60">
             <div className="container mx-auto px-4 text-center">
