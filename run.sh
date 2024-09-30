@@ -32,9 +32,10 @@ done
 echo "Database is ready. Checking if tables exist..."
 
 # Check if any tables exist in the public schema
+#table_count=$(docker exec postgres-db psql -U admin -d bronotion -tAc "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public'")
 table_count=$(docker exec postgres-db psql -U admin -d bronotion -tAc "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public'")
 
-if [ "$table_count" -eq "0" ]; then
+if [ -n "$table_count" ] && [ "$table_count" -eq "0" ]; then
     echo "No tables found. Running DDL.sql to create tables..."
     docker exec -i postgres-db psql -U admin -d bronotion -f /docker-entrypoint-initdb.d/DDL.sql
     echo "Tables created successfully."
