@@ -10,12 +10,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-
-// Define the schema for sign-in form validation
-const signInSchema = z.object({
-  email: z.string().email("Invalid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters long"),
-});
+import { signInSchema } from "@/lib/zod";
 
 export default function LoginPage() {
     const [globalError, setGlobalError] = useState<string>("");

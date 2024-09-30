@@ -1,45 +1,78 @@
 import { signInSchema } from '@/lib/zod';
 import NextAuth from 'next-auth';
-import Credentials from 'next-auth/providers/credentials';
+import CredentialsProvider from 'next-auth/providers/credentials';
 
+export const { handlers, signIn, signOut, auth } = NextAuth({
+  providers: [
+    CredentialsProvider({
+      credentials: {
+        email: { label: "Email", type: "email", placeholder: "Email" },
+        password: { label: "Password", type: "password", placeholder: "Password" },
+      },
+      async authorize(credentials, req) {
+        // Validate the credentials using the zod schema
+        const parsedCredentials = signInSchema.safeParse(credentials);
 
-export const {handlers, signIn, signOut, auth} = NextAuth({
-    providers: [
-        Credentials({
-            credentials: {
-                email: { label: "Email", type: "email", placeholder: "Email"},
-                password: {  label: "Password", type: "password", placeholder: "Password"}
+        if (!parsedCredentials.success) {
+          console.log('Invalid credentials:', parsedCredentials.error);
+          return null;
+        }
+
+        try {
+          // Make a request to your backend API to log in the user
+          const response = await fetch('http://localhost:8080/login', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
             },
-            async authorize(credentials){
-                let user = null;
-                
-                const parsedCredentials = signInSchema.safeParse(credentials);
+            body: JSON.stringify({
+              email: credentials?.email,
+              password: credentials?.password,
+            }),
+          });
 
-                if (!parsedCredentials.success) {
-                    console.log('Invalid credentials', parsedCredentials.error);
-                    return null;
-                }
-
-                user = {
-                    id: '1',
-                    name: 'Test User',
-                    email: 'admin@exmaple.com'
-                }
-
-                if (user) {
-                    console.log('User found');
-                    return user;
-                }
-                else {
-                    console.log('User not found');
-                    return null;
-            }
-        }})
-    
-    ],
-    pages: { 
-        signIn: '/auth/signin',
-        signOut: '/',
-        error: '/auth/error'
+          // Check if the login was successful
+          if (response.ok) {
+            const user = await response.json();
+            console.log('User logged in:', user);
+            return {
+              id: user.userId,
+              email: user.email,
+              username: user.username,
+            };
+          } else {
+            console.log('Login failed');
+            return null;
+          }
+        } catch (error) {
+          console.error('Error during login:', error);
+          return null;
+        }
+      },
+    }),
+  ],
+  pages: {
+    signIn: '/auth/signin',
+    signOut: '/',
+    error: '/auth/error',
+  },
+  session: {
+    strategy: 'jwt',
+  },
+  callbacks: {
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
+        token.email = user.email;
+      }
+      return token;
     },
+    async session({ session, token }) {
+      if (token) {
+        session.user.id = token.id as string;
+        session.user.email = token.email as string;
+      }
+      return session;
+    },
+  },
 });
