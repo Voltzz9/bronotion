@@ -67,6 +67,7 @@ section {
 
 header,
 footer {
+  @apply h-20;
   background-color: var(--muted);
   color: var(--foreground);
   padding: 1rem 0;

@@ -4,12 +4,14 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, useScroll, useSpring, useTransform } from 'framer-motion';
 import { Button } from '@/components/ui/button';
+import AnimatedArrowButton from './animated-arrow-button'; // Assuming this is the arrow button
 
 const Header = () => {
   const pathname = usePathname();
   const isOnPage = pathname === '/' || pathname === '/notes';
   const { scrollY } = useScroll();
   const [isMobile, setIsMobile] = useState(false);
+  const [isSidePanelOpen, setIsSidePanelOpen] = useState(true); // State for side panel
 
   useEffect(() => {
     const checkMobile = () => {
@@ -36,32 +38,43 @@ const Header = () => {
     damping: 15,
   });
 
+  const toggleSidePanel = () => {
+    setIsSidePanelOpen(!isSidePanelOpen); // Toggle the side panel
+  };
+
   return (
-    <header className="fixed top-0 left-0 right-0 bg-accent shadow-sm z-10">
-      <nav className="container mx-auto py-2 flex justify-between items-center">
-        <Link href="/" className="flex items-center">
-          <motion.div
-            style={{ width: logoWidth, x: logoX }}
-            className="flex items-center"
-          >
-            <span className="text-4xl font-bold text-secondary">B</span>
-            <motion.span
-              style={{ opacity }}
-              className="text-4xl font-bold text-secondary"
-            >
-              ronotion
-            </motion.span>
-          </motion.div>
-        </Link>
-        <div className="flex items-center justify-center space-x-4">
-          {isOnPage && (
-            <Link href="/login">
-              <Button>Login</Button>
+    <>
+      <header className="fixed top-0 left-0 right-0 bg-accent shadow-sm z-50">
+        <nav className="container mx-auto py-2 flex justify-between items-center">
+          <div className="flex">
+            <AnimatedArrowButton onClick={toggleSidePanel} /> {/* Toggle side panel on arrow click */}
+            <Link href="/" className="flex items-center">
+              <motion.div
+                style={{ width: logoWidth, x: logoX }}
+                className="flex items-center"
+              >
+                <span className="text-4xl font-bold text-secondary">B</span>
+                <motion.span
+                  style={{ opacity }}
+                  className="text-4xl font-bold text-secondary"
+                >
+                  ronotion
+                </motion.span>
+              </motion.div>
             </Link>
-          )}
-        </div>
-      </nav>
-    </header>
+          </div>
+
+          <div className="flex items-center justify-center space-x-4">
+            {isOnPage && (
+              <Link href="/login">
+                <Button>Login</Button>
+              </Link>
+            )}
+          </div>
+        </nav>
+      </header>
+
+    </>
   );
 };
 
