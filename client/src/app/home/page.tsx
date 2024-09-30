@@ -2,15 +2,16 @@ import React from 'react'
 import { NoteDashboardV2 } from '@/components/note-dashboard';
 import  Header  from '@/components/ui/header'
 import { SessionWrapper } from '../SessionProvider';
+import { auth } from '../../../auth';
+import { redirect } from 'next/navigation';
 
 
-export default function Dashboard (){
-  const recentNotes = [
-    { id: 1, title: "Project Brainstorm", author: "Alice", avatar: "/api/placeholder/32/32" },
-    { id: 2, title: "Meeting Minutes", author: "Bob", avatar: "/api/placeholder/32/32" },
-    { id: 3, title: "Product Roadmap", author: "Charlie", avatar: "/api/placeholder/32/32" },
-  ];
-
+export default async function Dashboard (){
+  const session = await auth();
+  if (!session) {
+    redirect("/auth/signin");
+    return null;
+  }
   return (
     <SessionWrapper>
     <div className="min-h-screen flex flex-col bg-primary text-foreground">
