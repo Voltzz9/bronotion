@@ -7,7 +7,7 @@ export default function GitHubSignInForm() {
     <form action={handleGithubSignIn}>
       <Button type="submit" className="w-full flex items-center justify-center space-x-2">
         <GitHubLogoIcon className="w-5 h-5" /> {/* Adjust size if needed */}
-        <span>Sign in with GitHub</span>
+        <span>Sign In with GitHub</span>
       </Button>
     </form>
   );

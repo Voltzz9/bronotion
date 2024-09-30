@@ -189,7 +189,7 @@ export default function Component() {
             type="submit" 
             className="w-full"
           >
-            {isLogin ? 'Login' : 'Sign Up'}
+            {isLogin ? 'Sign In' : 'Sign Up'}
           </Button>
         </form>
         <GitHubSignInForm />
