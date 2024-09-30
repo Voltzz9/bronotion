@@ -4,7 +4,9 @@ import Link from 'next/link';
 import { motion, useScroll, useSpring, useTransform } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { useSession } from 'next-auth/react';
-import SignOutButton from '@/components/ui/sign-out';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import SignOutButton from './sign-out';
 
 
 const Header = () => {
@@ -58,7 +60,17 @@ const Header = () => {
         </Link>
         <div className="flex items-center justify-center space-x-4">
           {status === 'authenticated' ? (
-            <SignOutButton />
+            <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Avatar className="cursor-pointer">
+                <AvatarImage src={session.user?.image || ''} alt={session.user?.name || 'User'} />
+                <AvatarFallback>{session.user?.name?.[0] || 'U'}</AvatarFallback>
+              </Avatar>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <SignOutButton />
+            </DropdownMenuContent>
+          </DropdownMenu>
           ) : (
             <Link href="/auth/signin">
               <Button>Login</Button>
