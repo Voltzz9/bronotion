@@ -60,6 +60,7 @@ Before you can run the project in Docker, you need to have the following install
 
 1. **Download Docker Desktop**:
    - Go to [Docker Desktop](https://www.docker.com/products/docker-desktop) and download the appropriate version for your operating system (Windows/Mac).
+   - Check this video if using WSL2: [Docker Desktop with WSL2](https://www.youtube.com/watch?v=5RQbdMn04Oc).
   
 2. **Install Docker Desktop**:
    - Follow the installation instructions specific to your operating system.
@@ -76,11 +77,12 @@ Don't forget to have docker desktop running.
 1. **In the Terminal**: Make sure that you are in the root directory of the project.
 
 2. **Grant Permissions for the Run Script**:
-   
+
         chmod +x ./run.sh
 
-3. **Execute the Run Script**:
-   
+3. **Execute the Run Script**: <br>
+   **NOTE THIS SHOULD ONLY BE RUN WHEN U HAVE PULLED A BRANCH Else you can run (press the play button) the container folder "group-37" in Docker Desktop.**
+
         ./run.sh
 
 <br>
