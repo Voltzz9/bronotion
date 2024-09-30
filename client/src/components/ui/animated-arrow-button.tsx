@@ -29,10 +29,10 @@ export default function Component() {
 
       {/* Side Panel */}
       <motion.div
-        initial={{ x: '-100%' }} // Start off-screen to the left
-        animate={{ x: isPanelOpen ? 0 : '-100%' }} // Slide in when panel is open
+        initial={{ x: '100%' }} // Start off-screen to the left
+        animate={{ x: isPanelOpen ? 0 : '100%' }} // Slide in when panel is open
         transition={{ type: "spring", stiffness: 100, damping: 20 }}
-        className="fixed top-20 left-0 h-[calc(100%-64px)] w-64 bg-gray-100 shadow-lg z-30"
+        className="fixed top-20 right-0 h-[calc(100%-64px)] w-64 bg-gray-100 shadow-lg z-30"
 
       >
         <div className="z-40">

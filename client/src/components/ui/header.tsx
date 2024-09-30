@@ -9,6 +9,7 @@ import AnimatedArrowButton from './animated-arrow-button'; // Assuming this is t
 const Header = () => {
   const pathname = usePathname();
   const isOnPage = pathname === '/' || pathname === '/notes';
+  const isOnNotesPage = pathname.startsWith('/notes');
   const { scrollY } = useScroll();
   const [isMobile, setIsMobile] = useState(false);
   const [isSidePanelOpen, setIsSidePanelOpen] = useState(true); // State for side panel
@@ -47,7 +48,7 @@ const Header = () => {
       <header className="fixed top-0 left-0 right-0 bg-accent shadow-sm z-50">
         <nav className="container mx-auto py-2 flex justify-between items-center">
           <div className="flex">
-            <AnimatedArrowButton onClick={toggleSidePanel} /> {/* Toggle side panel on arrow click */}
+
             <Link href="/" className="flex items-center">
               <motion.div
                 style={{ width: logoWidth, x: logoX }}
@@ -62,6 +63,7 @@ const Header = () => {
                 </motion.span>
               </motion.div>
             </Link>
+
           </div>
 
           <div className="flex items-center justify-center space-x-4">
@@ -71,6 +73,9 @@ const Header = () => {
               </Link>
             )}
           </div>
+          {isOnNotesPage && (
+            <AnimatedArrowButton onClick={toggleSidePanel} />
+          )}
         </nav>
       </header>
 
