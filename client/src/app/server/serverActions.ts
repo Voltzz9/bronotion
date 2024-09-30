@@ -10,5 +10,5 @@ export async function handleGoogleSignIn() {
 }
 
 export async function handleSignOut() {
-  await signOut({redirectTo: "/"});
+  await signOut({redirectTo: "/auth/signout"});
 }
