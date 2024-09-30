@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import  Header  from '@/components/ui/header'
 import { CarouselLandingComponent } from '../components/carousel-landing'
 import { TextAnimate } from "@/components/ui/text-animate"
+import { RealTimeNoteCollaborationComponent } from '@/components/real-time-note-collaboration'
 
 export default function HomePage() {
   return (
@@ -14,7 +15,8 @@ export default function HomePage() {
       <main className="flex-grow pt-20">
         <section className="bg-muted py-60">
             <div className="container mx-auto px-4 text-center">
-                <TextAnimate text="Real-Time note collaboration" type="rollIn" />
+                {/* <TextAnimate text="Real-Time note collaboration" type="rollIn" /> */}
+                <RealTimeNoteCollaborationComponent text1='Real-Time' text2='note collaboration' />
               <p className="text-xl mb-8 text-secondary">
                 Create, share, and edit notes with your team - all in one place.
               </p>
