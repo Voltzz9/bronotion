@@ -1,14 +1,14 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { motion, useScroll, useSpring, useTransform } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import AnimatedArrowButton from './animated-arrow-button'; // Assuming this is the arrow button
-import { useSession, signOut } from 'next-auth/react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { usePathname } from 'next/navigation';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import SignOutButton from './sign-out';
+import { useSession, signOut } from 'next-auth/react';
 
 export default function Header() {
   const { data: session, status } = useSession();
@@ -20,6 +20,7 @@ export default function Header() {
   const [isAuthenticated, setIsAuthenticated] = useState(status === 'authenticated');
 
   // Effect to check if the window size is mobile
+  // Effect to check if the window size is mobile
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 640);
@@ -28,6 +29,11 @@ export default function Header() {
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
+  // Effect to update local authentication state
+  useEffect(() => {
+    setIsAuthenticated(status === 'authenticated');
+  }, [status]); // Runs when status changes (login/logout)
 
   // Effect to update local authentication state
   useEffect(() => {
