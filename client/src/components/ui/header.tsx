@@ -74,7 +74,7 @@ const Header = () => {
             )}
           </div>
           {isOnNotesPage && (
-            <AnimatedArrowButton onClick={toggleSidePanel} />
+            <AnimatedArrowButton />
           )}
         </nav>
       </header>

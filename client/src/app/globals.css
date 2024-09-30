@@ -72,6 +72,9 @@ footer {
   color: var(--foreground);
   padding: 1rem 0;
 }
+.arrow { 
+  color: var(--foreground)
+}
 
 /* Custom utility classes */
 .text-primary {

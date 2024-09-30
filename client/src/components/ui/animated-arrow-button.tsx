@@ -19,10 +19,10 @@ export default function Component() {
       <Button
         onClick={handleClick}
         variant="link"
-        className="flex items-center space-x-2 group z-2"
+        className="flex items-center space-x-2 group z-2 arrow"
       >
         <ArrowRight
-          className={`h-8 w-8 transition-transform duration-300 ease-in-out ${isRightArrow ? 'rotate-0' : 'rotate-180'
+          className={`h-8 w-8 transition-transform duration-300 ease-in-out arrow ${isRightArrow ? 'rotate-0' : 'rotate-180'
             }`}
         />
       </Button>
