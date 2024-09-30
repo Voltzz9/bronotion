@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react'
 import Header from '@/components/ui/header'
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
+import { SessionWrapper } from '@/app/SessionProvider';
 
 export default function NotesPage() {
   const [note, setNote] = useState(`# Rendered Markdown`)
@@ -18,6 +19,7 @@ export default function NotesPage() {
   }
 
   return (
+    <SessionWrapper>
     <div className="min-h-screen flex flex-col bg-gray-50">
       <Header></Header>
       <main className="flex flex-grow pt-24">
@@ -46,5 +48,6 @@ export default function NotesPage() {
         </div>
       </footer>
     </div>
+    </SessionWrapper>
   );
 }
