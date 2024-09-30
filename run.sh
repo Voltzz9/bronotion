@@ -22,13 +22,6 @@ docker-compose build
 echo "Starting all services..."
 docker-compose up -d
 
-echo "Waiting for database to be ready..."
-until docker exec postgres-db pg_isready -U admin -d bronotion
-do
-    echo "Database is unavailable - sleeping"
-    sleep 1
-done
-
 echo "Database is ready. Checking if tables exist..."
 
 # Check if any tables exist in the public schema
