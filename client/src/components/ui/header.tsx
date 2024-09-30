@@ -3,12 +3,12 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion, useScroll, useSpring, useTransform } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { useSession } from 'next-auth/react';
-import { handleSignOut } from '@/app/actions/authActions';
+import { useSession, signOut } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 
 const Header = () => {
-  const  session  = useSession();
-  console.log(session);
+  const { data: session, status } = useSession();
+  const router = useRouter();
   const { scrollY } = useScroll();
   const [isMobile, setIsMobile] = useState(false);
 
@@ -21,21 +21,30 @@ const Header = () => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Define spring properties for smooth, slow animation
+  useEffect(() => {
+    console.log("Session status changed:", status);
+    console.log("Session data:", session);
+  }, [status, session]);
+
   const logoWidth = useSpring(useTransform(scrollY, [0, 50], ['100%', isMobile ? '100%' : '10%']), {
     stiffness: 80,
     damping: 15,
   });
-
   const logoX = useSpring(useTransform(scrollY, [0, 50], ['0%', isMobile ? '0%' : '-45%']), {
     stiffness: 80,
     damping: 15,
   });
-
   const opacity = useSpring(useTransform(scrollY, [0, 50], [1, 0]), {
     stiffness: 80,
     damping: 15,
   });
+
+  const handleSignOut = async (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    await signOut({ redirect: false });
+    router.push('/');
+    router.refresh();
+  };
 
   return (
     <header className="fixed top-0 left-0 right-0 bg-accent shadow-sm z-10">
@@ -55,14 +64,10 @@ const Header = () => {
           </motion.div>
         </Link>
         <div className="flex items-center justify-center space-x-4">
-          {session.status === 'authenticated' ? (
-            <form onSubmit={handleSignOut}>
-            <Button>
-              Logout
-            </Button>
-            </form>
+          {status === 'authenticated' ? (
+            <Button onClick={handleSignOut}>Logout</Button>
           ) : (
-            <Link href="/api/auth/signin">
+            <Link href="/auth/signin">
               <Button>Login</Button>
             </Link>
           )}

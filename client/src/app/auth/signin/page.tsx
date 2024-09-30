@@ -1,20 +1,25 @@
 'use client';
 import { useState } from "react";
+import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import ErrorMessage from "@/components/ui/error-message";
 import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Label } from "@/components/ui/label";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { signInSchema } from "@/lib/zod";
-import LoadingButton from "@/components/ui/loading-button";
-import { handleCredentialsSignIn } from "@/app/actions/authActions";
+
+// Define the schema for sign-in form validation
+const signInSchema = z.object({
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters long"),
+});
 
 export default function LoginPage() {
     const [globalError, setGlobalError] = useState<string>("");
+    const router = useRouter();
     const form = useForm<z.infer<typeof signInSchema>>({
         resolver: zodResolver(signInSchema),
         defaultValues: {
@@ -25,12 +30,21 @@ export default function LoginPage() {
 
     const onSubmit = async (values: z.infer<typeof signInSchema>) => {
         try {
-            const result = await handleCredentialsSignIn(values.email, values.password);
-            if (result) {
-                setGlobalError(result);
+            const result = await signIn("credentials", {
+                email: values.email,
+                password: values.password,
+                redirect: false,
+            });
+
+            if (result?.error) {
+                setGlobalError(result.error);
+            } else if (result?.ok) {
+                router.push("/home"); // Redirect to home page after successful login
+                router.refresh(); // Force a refresh of the current route
             }
         } catch (error) {
             console.error(error);
+            setGlobalError("An unexpected error occurred");
         }
     };
 
@@ -45,7 +59,7 @@ export default function LoginPage() {
                 <CardContent className="space-y-4 p-6">
                     {globalError && <ErrorMessage message={globalError} />}
                     <Form {...form}>
-                        <form onSubmit={form.handleSubmit(onSubmit)}>
+                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                             <FormField
                                 name="email"
                                 control={form.control}
@@ -56,11 +70,13 @@ export default function LoginPage() {
                                             <Input
                                                 type="email"
                                                 placeholder="Email"
-                                                {...field} />
+                                                {...field}
+                                            />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
-                                )} />
+                                )}
+                            />
                             <FormField
                                 name="password"
                                 control={form.control}
@@ -71,19 +87,23 @@ export default function LoginPage() {
                                             <Input
                                                 type="password"
                                                 placeholder="Password"
-                                                {...field} />
+                                                {...field}
+                                            />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
-                                )} />
-                            <LoadingButton pending={form.formState.isSubmitting}/>
+                                )}
+                            />
+                            <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
+                                {form.formState.isSubmitting ? "Logging in..." : "Login"}
+                            </Button>
                         </form>
                     </Form>
                 </CardContent>
 
                 <CardFooter className="p-6 text-center">
                     <p className="text-sm text-gray-500">
-                        Don’t have an account? <a href="#" className="text-blue-600 hover:underline">Sign up</a>
+                        Don't have an account? <a href="#" className="text-secondary hover:underline">Sign up</a>
                     </p>
                 </CardFooter>
             </Card>
