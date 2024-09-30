@@ -88,7 +88,6 @@ export default function Header() {
                   {session && (
                     <AvatarImage src={session.user?.image || ''} alt={session.user?.name || 'User'} />
                   )}
-                  <AvatarFallback>{session?.user?.name?.[0] || 'U'}</AvatarFallback>
                 </Avatar>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
