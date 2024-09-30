@@ -1,8 +1,5 @@
 "use server";
-
 import { signIn, signOut } from "@/../../auth";
-import { useSession } from "next-auth/react";
-
 
 export async function handleGithubSignIn() {
   await signIn("github", {redirectTo: "/home"});
