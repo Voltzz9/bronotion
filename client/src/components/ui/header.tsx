@@ -3,12 +3,12 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion, useScroll, useSpring, useTransform } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { useSession, signOut } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
+import SignOutButton from '@/components/ui/sign-out';
+
 
 const Header = () => {
   const { data: session, status } = useSession();
-  const router = useRouter();
   const { scrollY } = useScroll();
   const [isMobile, setIsMobile] = useState(false);
 
@@ -39,13 +39,6 @@ const Header = () => {
     damping: 15,
   });
 
-  const handleSignOut = async (event: React.MouseEvent<HTMLButtonElement>) => {
-    event.preventDefault();
-    await signOut({ redirect: false });
-    router.push('/');
-    router.refresh();
-  };
-
   return (
     <header className="fixed top-0 left-0 right-0 bg-accent shadow-sm z-10">
       <nav className="container mx-auto py-2 flex justify-between items-center">
@@ -65,7 +58,7 @@ const Header = () => {
         </Link>
         <div className="flex items-center justify-center space-x-4">
           {status === 'authenticated' ? (
-            <Button onClick={handleSignOut}>Logout</Button>
+            <SignOutButton />
           ) : (
             <Link href="/auth/signin">
               <Button>Login</Button>

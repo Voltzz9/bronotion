@@ -1,5 +1,1 @@
-export {auth as middleware} from '../client/auth';
-
-export const config = {
-    matcher: ["/((?!api).)*$"]
-};
+export { auth as middleware } from "@/../../auth"

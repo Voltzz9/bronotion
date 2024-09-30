@@ -1,9 +1,10 @@
-'use client';
+"use client";
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import  GitHubButton  from "@/components/ui/git-hub";
 import ErrorMessage from "@/components/ui/error-message";
 import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -93,6 +94,7 @@ export default function LoginPage() {
                                 {form.formState.isSubmitting ? "Logging in..." : "Login"}
                             </Button>
                         </form>
+                        <GitHubButton />
                     </Form>
                 </CardContent>
 
