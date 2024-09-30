@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Define ports that need to be cleared
-ports=("5433" "5432")
+ports=("8080" "5432" "3000")
 
 echo "Killing processes on conflicting ports..."
 for port in "${ports[@]}"; do
