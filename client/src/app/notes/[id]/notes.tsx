@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react'
 import Header from '@/components/ui/header'
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
+import { FloatingCollaborators } from '@/components/floating-collaborators';
 
 export default function Notes() {
   const [note, setNote] = useState(`# Rendered Markdown`)
@@ -40,7 +41,9 @@ export default function Notes() {
           </div>
         </div>
       </main>
+      <FloatingCollaborators />
       <footer className="bg-gray-800 text-white py-4">
+
         <div className="container mx-auto px-4 text-center">
           <p>&copy; 2024 Bronotion. All rights reserved.</p>
         </div>
