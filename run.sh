@@ -1,5 +1,20 @@
 #!/bin/bash
 
+# Check if Docker is installed
+if ! [ -x "$(command -v docker)" ]; then
+    echo "Error: Docker is not installed." >&2
+    exit 1
+fi
+
+# Check if an argument is provided
+if [ $# -eq 0 ]; then
+    echo "No argument provided. Usage: ./run.sh [dev|prod]"
+    exit 1
+fi
+
+# Get the first argument
+MODE=$1
+
 # Define ports that need to be cleared
 ports=("8080" "5432" "3000")
 
@@ -19,13 +34,20 @@ done
 echo "Starting Docker Compose build..."
 docker-compose build
 
-echo "Starting all services..."
+echo "Starting db services..."
 docker-compose up -d db
 
-echo "Database is ready. Checking if tables exist..."
+echo "Waiting for database to start..."
+sleep 5
+until docker exec postgres-db pg_isready -U admin -d bronotion; do
+  echo "PostgreSQL is not ready yet..."
+  sleep 5
+done
+echo "PostgreSQL is ready!"
+
+echo "Checking if tables exist..."
 
 # Check if any tables exist in the public schema
-#table_count=$(docker exec postgres-db psql -U admin -d bronotion -tAc "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public'")
 table_count=$(docker exec postgres-db psql -U admin -d bronotion -tAc "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public'")
 
 if [ -n "$table_count" ] && [ "$table_count" -eq "0" ]; then
@@ -37,7 +59,23 @@ else
     echo "Tables already exist. Skipping DDL execution."
 fi
 
-echo "Starting backend and frontend services..."
-docker-compose up -d backend frontend
+echo "Starting backend"
+docker-compose up -d backend
+
+echo "Creating both frontend containers..."
+docker-compose up --no-start frontend-dev frontend-prod
+
+echo "Starting frontend based on ./run.sh argument..."
+# Check the argument and run the appropriate command
+if [ "$MODE" = "dev" ]; then
+    echo "Running in development mode (hot reload enabled)"
+    docker-compose up -d frontend-dev
+elif [ "$MODE" = "prod" ]; then
+    echo "Running in production mode"
+    docker-compose up -d frontend-prod
+else
+    echo "Invalid argument. Use 'dev' for development or 'prod' for production."
+    exit 1
+fi
 
 echo "All services started and database initialized if necessary."

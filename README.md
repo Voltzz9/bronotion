@@ -81,9 +81,9 @@ Don't forget to have docker desktop running.
         chmod +x ./run.sh
 
 3. **Execute the Run Script**: <br>
-   **NOTE THIS SHOULD ONLY BE RUN WHEN U HAVE PULLED A BRANCH Else you can run (press the play button) the container folder "group-37" in Docker Desktop.**
+   **NOTE THIS SHOULD ONLY BE RUN WHEN U HAVE PULLED A BRANCH Else you can run (press the play buttons) the container folder "group-37" in Docker Desktop.**
 
-        ./run.sh
+        ./run.sh [dev|prod]
 
 <br>
 <hr>
