@@ -20,14 +20,7 @@ echo "Starting Docker Compose build..."
 docker-compose build
 
 echo "Starting all services..."
-docker-compose up -d
-
-echo "Waiting for database to be ready..."
-until docker exec postgres-db pg_isready -U admin -d bronotion
-do
-    echo "Database is unavailable - sleeping"
-    sleep 1
-done
+docker-compose up -d db
 
 echo "Database is ready. Checking if tables exist..."
 
@@ -43,5 +36,8 @@ if [ -n "$table_count" ] && [ "$table_count" -eq "0" ]; then
 else
     echo "Tables already exist. Skipping DDL execution."
 fi
+
+echo "Starting backend and frontend services..."
+docker-compose up -d backend frontend
 
 echo "All services started and database initialized if necessary."

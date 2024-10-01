@@ -1,17 +1,15 @@
-'use client'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import  Header  from '@/components/ui/header'
 import { CarouselLandingComponent } from '../components/carousel-landing'
 import { TextAnimate } from "@/components/ui/text-animate"
-import { RealTimeNoteCollaborationComponent } from '@/components/real-time-note-collaboration'
+import { SessionWrapper } from './SessionProvider'
 
 export default function HomePage() {
   return (
+    <SessionWrapper>
     <div className="min-h-screen flex flex-col bg-primary text-foreground">
-      
-      <Header />
-
+       <Header />
       <main className="flex-grow pt-20">
         <section className="bg-muted py-60">
             <div className="container mx-auto px-4 text-center">
@@ -36,7 +34,13 @@ export default function HomePage() {
           <div className="container mx-auto px-4 text-center">
             <h2 className="text-3xl font-bold mb-4">Ready to start collaborating?</h2>
             <p className="text-xl mb-8">Join thousands of teams already using CollabNotes to work better together.</p>
-            <Link href="/signup" className="bg-primary text-background hover:bg-secondary px-6 py-3 rounded-lg text-lg font-semibold">
+            <Link 
+              href={{
+              pathname: '/login',
+              query: {mode: 'signup'}
+              }} 
+              className="bg-primary text-background hover:bg-secondary px-6 py-3 rounded-lg text-lg font-semibold"
+            >
               Sign Up Now
             </Link>
           </div>
@@ -86,5 +90,6 @@ export default function HomePage() {
         </div>
       </footer>
     </div>
-  )
+    </SessionWrapper>
+  );
 }

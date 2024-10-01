@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { useAuth } from '@/app/hooks/AuthContext';
 import { config } from 'dotenv';
+import GitHubSignInForm from './git-hub';
+import GoogleSignInButton from './google';
 config();
 
 const URL = process.env.NEXT_PUBLIC_API_URL;
@@ -131,7 +133,7 @@ export default function Component() {
             : 'Create a new account by entering your details'}
         </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className={`space-y-4 transition-opacity duration-300 ${isAnimating ? 'opacity-0' : 'opacity-100'}`}>
         <form 
           onSubmit={isLogin ? handleLogin : handleSignup} 
           className={`space-y-4 transition-opacity duration-300 ${isAnimating ? 'opacity-0' : 'opacity-100'}`}
@@ -187,9 +189,11 @@ export default function Component() {
             type="submit" 
             className="w-full"
           >
-            {isLogin ? 'Login' : 'Sign Up'}
+            {isLogin ? 'Sign In' : 'Sign Up'}
           </Button>
         </form>
+        <GitHubSignInForm />
+          <GoogleSignInButton />
         <div className="text-center text-secondary">
           <Button variant="link" onClick={toggleForm}>
             {isLogin ? "Don't have an account? Sign Up" : "Already have an account? Login"}
