@@ -1,7 +1,7 @@
 "use client"
 
-import { FC, useEffect, useRef } from "react"
-import { HTMLMotionProps, motion, useAnimation, useInView } from "framer-motion"
+import { FC, useRef } from "react"
+import { HTMLMotionProps, motion} from "framer-motion"
 
 type AnimationType =
   | "fadeIn"
@@ -202,21 +202,9 @@ const TextAnimate: FC<Props> = ({
   //   });
 
   const ref = useRef(null)
-  const isInView = useInView(ref, { once: true })
 
   const letters = Array.from(text)
   const { container, child } = animationVariants[type]
-
-  const ctrls = useAnimation()
-
-  //   useEffect(() => {
-  //     if (isInView) {
-  //       ctrls.start("visible");
-  //     }
-  //     if (!isInView) {
-  //       ctrls.start("hidden");
-  //     }
-  //   }, [ctrls, isInView]);
 
   if (type === "rollIn" || type === "whipIn") {
     return (

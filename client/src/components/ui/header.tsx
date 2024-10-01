@@ -3,12 +3,12 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion, useScroll, useSpring, useTransform } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import AnimatedArrowButton from './animated-arrow-button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import AnimatedArrowButton from './animated-arrow-button'; // Assuming this is the arrow button
+import { Avatar, AvatarImage } from '@/components/ui/avatar';
 import { usePathname } from 'next/navigation';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import SignOutButton from './sign-out';
-import { useSession, signOut } from 'next-auth/react';
+import { useSession } from 'next-auth/react';
 
 export default function Header() {
   const { data: session, status } = useSession();
@@ -16,7 +16,6 @@ export default function Header() {
   const isOnNotesPage = pathname.startsWith('/notes');
   const { scrollY } = useScroll();
   const [isMobile, setIsMobile] = useState(false);
-  const [isSidePanelOpen, setIsSidePanelOpen] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(status === 'authenticated');
 
   useEffect(() => {
@@ -46,10 +45,6 @@ export default function Header() {
     stiffness: 80,
     damping: 15,
   });
-
-  const toggleSidePanel = () => {
-    setIsSidePanelOpen(!isSidePanelOpen);
-  };
 
   return (
     <>

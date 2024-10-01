@@ -82,7 +82,15 @@ export function NoteDashboardV2() {
       const data = await response.json()
       console.log(data)
       
-      const formattedNotes = data.map((note: any) => ({
+      interface ApiNote {
+        note_id: number;
+        title: string;
+        content: string;
+        tag_id?: string;
+        updated_at: string;
+      }
+
+      const formattedNotes = data.map((note: ApiNote) => ({
         id: note.note_id.toString(), // Ensure id is a string
         title: note.title,
         content: note.content,
