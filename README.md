@@ -83,8 +83,9 @@ Don't forget to have docker desktop running.
 3. **Execute the Run Script**: <br>
    **NOTE THIS SHOULD ONLY BE RUN WHEN U HAVE PULLED A BRANCH Else you can run (press the play buttons) the container folder "group-37" in Docker Desktop.**
 
-        ./run.sh [dev|prod]
+        ./run.sh [dev|prod] [clean]
 
+   **The clean arguement is optional and will delete all containers and images.**
 <br>
 <hr>
 <br>

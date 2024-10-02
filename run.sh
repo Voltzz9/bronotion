@@ -19,16 +19,28 @@ MODE1=$2
 if [ "$MODE1" = "clean" ]; then
     echo "Cleaning up Docker data..."
     # Stop all running containers
-    echo "Stopping all running containers..."
-    docker stop $(docker ps -aq)
+    if [ "$(docker ps -aq)" ]; then
+        echo "Stopping all running containers..."
+        docker stop $(docker ps -aq) || { echo "Failed to stop containers"; exit 1; }
+    else
+        echo "No containers to stop."
+    fi
 
     # Remove all containers
-    echo "Removing all containers..."
-    docker rm $(docker ps -aq)
+    if [ "$(docker ps -aq)" ]; then
+        echo "Removing all containers..."
+        docker rm $(docker ps -aq) || { echo "Failed to remove containers"; exit 1; }
+    else
+        echo "No containers to remove."
+    fi
 
     # Remove all Docker images
-    echo "Removing all Docker images..."
-    docker rmi $(docker images -q)
+    if [ "$(docker images -q)" ]; then
+        echo "Removing all Docker images..."
+        docker rmi $(docker images -q) || { echo "Failed to remove images"; exit 1; }
+    else
+        echo "No images to remove."
+    fi
 
     # Display status after cleanup
     echo "Docker cleanup complete."
