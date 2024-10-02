@@ -1,16 +1,20 @@
 const express = require('express');
-const { PrismaClient } = require('@prisma/client'); // Import Prisma Client
+const { PrismaClient } = require('@prisma/client');
 const bcrypt = require('bcrypt');
 const cors = require('cors');
-
-// Load environment variables
+const https = require('https'); // Import HTTPS
+const fs = require('fs'); // Import File System
 require('dotenv').config();
 
-// Initialize Prisma Client
 const prisma = new PrismaClient();
-
 const app = express();
 const PORT = process.env.PORT || 8080;
+
+// Load SSL certificate and key
+const options = {
+  key: fs.readFileSync('server.key'), // Path to your key file
+  cert: fs.readFileSync('server.cert'), // Path to your certificate file
+};
 
 app.use(cors());
 app.use(express.json());
@@ -610,6 +614,7 @@ app.get('/tags/:tagId/notes', async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
+// Start HTTPS server
+https.createServer(options, app).listen(PORT, () => {
+  console.log(`Server is running on https://localhost:${PORT}`);
 });
