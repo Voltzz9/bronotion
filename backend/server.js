@@ -8,11 +8,11 @@ require('dotenv').config();
 
 // Database connection configuration
 const dbConfig = {
-    host: process.env.DB_HOST || 'localhost',
-    port: process.env.DB_PORT || 5432,
-    database: process.env.DB_NAME || 'bronotion',
-    user: process.env.DB_USER || 'admin',
-    password: process.env.DB_PASSWORD || 'admin'
+  host: process.env.DB_HOST || 'localhost',
+  port: process.env.DB_PORT || 5432,
+  database: process.env.DB_NAME || 'bronotion',
+  user: process.env.DB_USER || 'admin',
+  password: process.env.DB_PASSWORD || 'admin'
 };
 
 // Initialize database connection
@@ -20,13 +20,13 @@ const db = pgp(dbConfig);
 
 // Test database connection
 db.connect()
-    .then(obj => {
-        console.log('Database connection successful');
-        obj.done(); // success, release the connection;
-    })
-    .catch(error => {
-        console.error('ERROR:', error.message || error);
-    });
+  .then(obj => {
+    console.log('Database connection successful');
+    obj.done(); // success, release the connection;
+  })
+  .catch(error => {
+    console.error('ERROR:', error.message || error);
+  });
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -68,6 +68,32 @@ app.post('/create_user', async (req, res) => {
   } catch (error) {
     console.error('Error creating user:', error);
     res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// Search for a user
+app.get('/users/search', async (req, res) => {
+  try {
+    const prefix = req.query.prefix;
+
+    if (!prefix) {
+      return res.status(400).json({ error: 'Prefix parameter is required' });
+    }
+
+    const users = await db.any('SELECT * FROM users WHERE username ILIKE $1 LIMIT 8', [`${prefix}%`]);
+
+    if (users.length === 0) {
+      return res.status(404).json({ error: 'No users found' });
+    }
+
+    res.json(users);
+  } catch (error) {
+    console.error('Error retrieving users:', error);
+    if (error.name === 'QueryResultError') {
+      res.status(404).json({ error: 'User not found' });
+    } else {
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
   }
 });
 
@@ -264,7 +290,7 @@ app.post('/notes/:noteId/share', async (req, res) => {
 
     if (existingShare) {
       // Note is already shared
-      return res.status(200).json({ 
+      return res.status(200).json({
         message: 'Note has already been shared with this user.',
         sharedNoteId: existingShare.shared_note_id
       });
@@ -278,9 +304,9 @@ app.post('/notes/:noteId/share', async (req, res) => {
       [noteId, sharedWithUserId, canEdit]
     );
 
-    res.status(201).json({ 
-      message: 'Note shared successfully', 
-      sharedNoteId: result.shared_note_id 
+    res.status(201).json({
+      message: 'Note shared successfully',
+      sharedNoteId: result.shared_note_id
     });
 
   } catch (error) {
@@ -450,7 +476,7 @@ app.delete('/notes/:noteId/active-editors/:userId', async (req, res) => {
 app.post('/tags', async (req, res) => {
   try {
     const { name } = req.body;
-    
+
     const result = await db.one(
       `INSERT INTO tags (name)
        VALUES ($1)
