@@ -4,7 +4,10 @@ import Header from '@/components/ui/header'
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 import { FloatingCollaborators } from '@/components/floating-collaborators';
+<<<<<<< HEAD
 import { useDispatch, useSelector } from 'react-redux';
+=======
+>>>>>>> 024603cad0f752f8680f729b5d4a9301b35eb7ed
 
 interface NotesProps {
   id: string
