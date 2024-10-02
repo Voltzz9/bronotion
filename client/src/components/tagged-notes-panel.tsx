@@ -5,6 +5,7 @@ import { ChevronDown } from 'lucide-react'
 import InlineSearchBar from './inline-search-bar'
 import { Button } from './ui/button'
 import { CollaboratorPopup } from '@/components/collaborator-popup'
+import { useSelector } from 'react-redux';
 
 interface Note {
   note_id: string
@@ -68,8 +69,6 @@ export function TaggedNotesPanelComponent() {
 
         const uniqueIds = Array.from(new Set(sampleNotes.map((note: Note) => note.tag_id)))
         setUniqueTagIds(uniqueIds)
-        console.log(notes)
-        console.log(uniqueIds)
       } catch (error) {
         console.error('Error fetching notes:', error)
       }
