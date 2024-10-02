@@ -4,11 +4,7 @@ import Header from '@/components/ui/header'
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 import { FloatingCollaborators } from '@/components/floating-collaborators';
-<<<<<<< HEAD
-import { useDispatch, useSelector } from 'react-redux';
-=======
->>>>>>> 024603cad0f752f8680f729b5d4a9301b35eb7ed
-
+import  useNoteId  from '@/app/hooks/useNoteId';
 interface NotesProps {
   id: string
 }
@@ -29,6 +25,9 @@ export default function Notes({ id }: NotesProps) {
   const setNoteContent = (content: string) => {
     setNote(content)
   }
+
+  const noteId = useNoteId();
+  console.log(noteId);
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
