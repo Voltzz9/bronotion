@@ -38,6 +38,17 @@ app.use(express.json());
 
 // ********************************* User Routes *********************************
 
+// Get all users
+app.get('/users', async (req, res) => {
+  try {
+    const users = await db.any('SELECT user_id, username, email FROM users');
+    res.json(users);
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 // Add a manual user
 app.post('/create_user', async (req, res) => {
   try {
@@ -584,7 +595,26 @@ app.get('/tags/:tagId/notes', async (req, res) => {
   }
 });
 
+// Get all tags for a given user ID
+app.get('/users/:userId/tags', async (req, res) => {
+  try {
+    const userId = parseInt(req.params.userId);
 
+    const tags = await db.any(
+      `SELECT t.tag_id, t.name, t.created_at, t.updated_at
+       FROM tags t
+       JOIN notes n ON t.tag_id = n.tag_id
+       WHERE n.user_id = $1 AND n.is_deleted = false
+       GROUP BY t.tag_id, t.name, t.created_at, t.updated_at`,
+      [userId]
+    );
+
+    res.json(tags);
+  } catch (error) {
+    console.error('Error fetching tags for user:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);

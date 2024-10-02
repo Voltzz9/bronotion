@@ -35,10 +35,23 @@ export function NoteDashboardV2() {
   const [searchTerm, setSearchTerm] = useState('')
   const [notes, setNotes] = useState<Note[]>(mockNotes)
   const [selectedTags, setSelectedTags] = useState<string[]>([])
+  const [allTags, setAllTags] = useState<string[]>([])
 
   useEffect(() => {
     fetchNotes()
+    fetchTags()
   }, [])
+
+  const fetchTags = async () => {
+    try {
+      const response = await fetch(`${URL}/users/1/tags`) // TODO replace with actual user id
+      const data = await response.json()
+      const tags = data.map((tag: any) => tag.name)
+      setAllTags(tags)
+    } catch (error) {
+      console.error('Failed to fetch tags:', error)
+    }
+  }
 
   const filteredNotes = notes.filter(note =>
     note.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
