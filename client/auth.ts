@@ -14,18 +14,18 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       return session;
     },
     async jwt({token}) {
-      if (!token.sub) return token;
+      // if (!token.sub) return token;
 
-      const existingUser = await getUserByID(token.sub);
+      // const existingUser = await getUserByID(token.sub);
 
-      if (!existingUser) {
-        return token;
-      }
+      // if (!existingUser) {
+      //   return token;
+      // }
 
-      token.isOAuth = true;
-      token.name = existingUser.name;
-      token.email = existingUser.email;
-      token.role = "ADMIN";
+      // token.isOAuth = true;
+      // token.name = existingUser.name;
+      // token.email = existingUser.email;
+      // token.role = "ADMIN";
 
       return token;
     },
