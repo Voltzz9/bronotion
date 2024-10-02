@@ -3,10 +3,10 @@ DECLARE
     new_user_id INTEGER;
 BEGIN
    -- Populate users table
-INSERT INTO users (name, username, email, "emailVerified", image) VALUES
-('John Doe', 'johnd', 'john@example.com', '2023-01-01 10:00:00+00', 'https://example.com/john.jpg'),
-('Jane Smith', 'janes', 'jane@example.com', '2023-01-02 11:00:00+00', 'https://example.com/jane.jpg'),
-('Bob Johnson', 'bobj', 'bob@example.com', '2023-01-03 12:00:00+00', 'https://example.com/bob.jpg');
+INSERT INTO users (name, username, password_hash, email, "emailVerified", image) VALUES
+('John Doe', 'johnd', '$2a$12$eImiTXuWVxfM37uY4JANjQ==', 'john@example.com', '2023-01-01 10:00:00+00', 'https://example.com/john.jpg'),
+('Jane Smith', 'janes', '$2a$12$KIXg8rf/8d5f8f8f8f8f8f==', 'jane@example.com', '2023-01-02 11:00:00+00', 'https://example.com/jane.jpg'),
+('Bob Johnson', 'bobj', '$2a$12$7QJ8f8f8f8f8f8f8f8f8f==', 'bob@example.com', '2023-01-03 12:00:00+00', 'https://example.com/bob.jpg');
 
 -- Populate user_auth_methods table
 INSERT INTO user_auth_methods (user_id, "isOAuth", "isManual") VALUES
