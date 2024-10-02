@@ -4,14 +4,12 @@ import Header from '@/components/ui/header'
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 import { FloatingCollaborators } from '@/components/floating-collaborators';
-import  useNoteId  from '@/app/hooks/useNoteId';
-interface NotesProps {
-  id: string
-}
+import useNoteId from '@/app/hooks/useNoteId';
 
-export default function Notes({ id }: NotesProps) {
+export default function Notes() {
   const [note, setNote] = useState(`# Rendered Markdown`)
   const [parsedNote, setParsedNote] = useState('')
+  const noteId = useNoteId()
 
   useEffect(() => {
     const parseMarkdown = async () => {
@@ -26,8 +24,7 @@ export default function Notes({ id }: NotesProps) {
     setNote(content)
   }
 
-  const noteId = useNoteId();
-  console.log(noteId);
+
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
