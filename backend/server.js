@@ -1,39 +1,18 @@
 const express = require('express');
-const pgp = require('pg-promise')();
+const { PrismaClient } = require('@prisma/client'); // Import Prisma Client
 const bcrypt = require('bcrypt');
 const cors = require('cors');
 
 // Load environment variables
 require('dotenv').config();
 
-// Database connection configuration
-const dbConfig = {
-    host: process.env.DB_HOST || 'localhost',
-    port: process.env.DB_PORT || 5432,
-    database: process.env.DB_NAME || 'bronotion',
-    user: process.env.DB_USER || 'admin',
-    password: process.env.DB_PASSWORD || 'admin'
-};
-
-// Initialize database connection
-const db = pgp(dbConfig);
-
-// Test database connection
-db.connect()
-    .then(obj => {
-        console.log('Database connection successful');
-        obj.done(); // success, release the connection;
-    })
-    .catch(error => {
-        console.error('ERROR:', error.message || error);
-    });
+// Initialize Prisma Client
+const prisma = new PrismaClient();
 
 const app = express();
 const PORT = process.env.PORT || 8080;
 
 app.use(cors());
-
-// Middleware to parse JSON
 app.use(express.json());
 
 // ********************************* User Routes *********************************
@@ -42,29 +21,22 @@ app.use(express.json());
 app.post('/create_user', async (req, res) => {
   try {
     const { username, email, password } = req.body;
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Hash the password before storing it
-    const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
-
-    // Start a transaction
-    const result = await db.tx(async t => {
-      // Insert into users table
-      const user = await t.one(
-        'INSERT INTO users (username, email, is_Manual) VALUES ($1, $2, $3) RETURNING user_id',
-        [username, email, true]
-      );
-
-      // Insert into manual_users table with hashed password
-      await t.none(
-        'INSERT INTO manual_users (user_id, password_hash) VALUES ($1, $2)',
-        [user.user_id, hashedPassword]
-      );
-
-      return user;
+    const user = await prisma.users.create({
+      data: {
+        username,
+        email,
+        is_Manual: true,
+        manual_users: {
+          create: {
+            password_hash: hashedPassword
+          }
+        }
+      }
     });
 
-    res.status(201).json({ message: 'User created successfully', userId: result.user_id });
+    res.status(201).json({ message: 'User created successfully', userId: user.user_id });
   } catch (error) {
     console.error('Error creating user:', error);
     res.status(500).json({ error: 'Internal Server Error' });
@@ -75,22 +47,21 @@ app.post('/create_user', async (req, res) => {
 app.get('/users/:userId', async (req, res) => {
   try {
     const userId = parseInt(req.params.userId);
-    const user = await db.one(
-      `SELECT u.user_id, u.username, u.email, u.avatar_url, u.is_Manual, 
-              m.registration_date
-       FROM users u
-       LEFT JOIN manual_users m ON u.user_id = m.user_id
-       WHERE u.user_id = $1`,
-      userId
-    );
+    const user = await prisma.users.findUnique({
+      where: { user_id: userId },
+      include: {
+        manual_users: true
+      }
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
     res.json(user);
   } catch (error) {
     console.error('Error retrieving user:', error);
-    if (error.name === 'QueryResultError') {
-      res.status(404).json({ error: 'User not found' });
-    } else {
-      res.status(500).json({ error: 'Internal Server Error' });
-    }
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
@@ -99,17 +70,21 @@ app.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Fetch the user by email
-    const user = await db.one(
-      `SELECT u.user_id, u.username, u.email, u.is_Manual, m.password_hash
-       FROM users u
-       JOIN manual_users m ON u.user_id = m.user_id
-       WHERE u.email = $1 AND u.is_Manual = true`,
-      [email]
-    );
+    const user = await prisma.users.findFirst({
+      where: {
+        email,
+        is_Manual: true
+      },
+      include: {
+        manual_users: true
+      }
+    });
 
-    // Compare the password with the stored hash
-    const passwordMatch = await bcrypt.compare(password, user.password_hash);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const passwordMatch = await bcrypt.compare(password, user.manual_users.password_hash);
 
     if (passwordMatch) {
       res.status(200).json({ message: 'Login successful', userId: user.user_id });
@@ -118,11 +93,7 @@ app.post('/login', async (req, res) => {
     }
   } catch (error) {
     console.error('Error logging in:', error);
-    if (error.name === 'QueryResultError') {
-      res.status(404).json({ error: 'User not found' });
-    } else {
-      res.status(500).json({ error: 'Internal Server Error' });
-    }
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
@@ -130,12 +101,12 @@ app.post('/login', async (req, res) => {
 app.delete('/users/:userId', async (req, res) => {
   try {
     const userId = parseInt(req.params.userId);
-    const result = await db.result('DELETE FROM users WHERE user_id = $1', userId);
-    if (result.rowCount === 0) {
-      res.status(404).json({ error: 'User not found' });
-    } else {
-      res.json({ message: 'User deleted successfully' });
-    }
+
+    const user = await prisma.users.delete({
+      where: { user_id: userId }
+    });
+
+    res.json({ message: 'User deleted successfully' });
   } catch (error) {
     console.error('Error deleting user:', error);
     res.status(500).json({ error: 'Internal Server Error' });
@@ -149,13 +120,17 @@ app.post('/notes', async (req, res) => {
   try {
     const { title, content, user_id, tag_id } = req.body;
 
-    const result = await db.one(
-      `INSERT INTO notes (title, content, user_id, tag_id, is_deleted)
-       VALUES ($1, $2, $3, $4, $5) RETURNING note_id`,
-      [title, content, user_id, tag_id, false]
-    );
+    const note = await prisma.notes.create({
+      data: {
+        title,
+        content,
+        user_id,
+        tag_id,
+        is_deleted: false
+      }
+    });
 
-    res.status(201).json({ message: 'Note created successfully', noteId: result.note_id });
+    res.status(201).json({ message: 'Note created successfully', noteId: note.note_id });
   } catch (error) {
     console.error('Error creating note:', error);
     res.status(500).json({ error: 'Internal Server Error' });
@@ -166,12 +141,12 @@ app.post('/notes', async (req, res) => {
 app.get('/users/:userId/notes', async (req, res) => {
   try {
     const userId = parseInt(req.params.userId);
-    const notes = await db.any(
-      `SELECT note_id, title, content, tag_id, created_at, updated_at
-       FROM notes
-       WHERE user_id = $1 AND is_deleted = false`,
-      [userId]
-    );
+    const notes = await prisma.notes.findMany({
+      where: {
+        user_id: userId,
+        is_deleted: false
+      }
+    });
     res.json(notes);
   } catch (error) {
     console.error('Error fetching notes:', error);
@@ -185,18 +160,17 @@ app.put('/notes/:noteId', async (req, res) => {
     const noteId = parseInt(req.params.noteId);
     const { title, content, tag_id } = req.body;
 
-    const result = await db.result(
-      `UPDATE notes
-       SET title = $1, content = $2, tag_id = $3, updated_at = CURRENT_TIMESTAMP
-       WHERE note_id = $4 AND is_deleted = false`,
-      [title, content, tag_id, noteId]
-    );
+    const note = await prisma.notes.update({
+      where: { note_id: noteId },
+      data: {
+        title,
+        content,
+        tag_id,
+        updated_at: new Date()
+      }
+    });
 
-    if (result.rowCount === 0) {
-      res.status(404).json({ error: 'Note not found or already deleted' });
-    } else {
-      res.json({ message: 'Note updated successfully' });
-    }
+    res.json({ message: 'Note updated successfully' });
   } catch (error) {
     console.error('Error updating note:', error);
     res.status(500).json({ error: 'Internal Server Error' });
@@ -208,18 +182,14 @@ app.delete('/notes/:noteId', async (req, res) => {
   try {
     const noteId = parseInt(req.params.noteId);
 
-    const result = await db.result(
-      `UPDATE notes
-       SET is_deleted = true
-       WHERE note_id = $1`,
-      [noteId]
-    );
+    const note = await prisma.notes.update({
+      where: { note_id: noteId },
+      data: {
+        is_deleted: true
+      }
+    });
 
-    if (result.rowCount === 0) {
-      res.status(404).json({ error: 'Note not found' });
-    } else {
-      res.json({ message: 'Note deleted successfully' });
-    }
+    res.json({ message: 'Note deleted successfully' });
   } catch (error) {
     console.error('Error deleting note:', error);
     res.status(500).json({ error: 'Internal Server Error' });
@@ -230,20 +200,26 @@ app.delete('/notes/:noteId', async (req, res) => {
 app.get('/notes/:noteId', async (req, res) => {
   try {
     const noteId = parseInt(req.params.noteId);
-    const note = await db.one(
-      `SELECT note_id, title, content, tag_id, created_at, updated_at
-       FROM notes
-       WHERE note_id = $1 AND is_deleted = false`,
-      noteId
-    );
+    const note = await prisma.note.findUnique({
+      where: { note_id: noteId },
+      select: {
+        note_id: true,
+        title: true,
+        content: true,
+        tag_id: true,
+        created_at: true,
+        updated_at: true,
+      },
+    });
+
+    if (!note) {
+      return res.status(404).json({ error: 'Note not found' });
+    }
+
     res.json(note);
   } catch (error) {
     console.error('Error fetching note:', error);
-    if (error.name === 'QueryResultError') {
-      res.status(404).json({ error: 'Note not found' });
-    } else {
-      res.status(500).json({ error: 'Internal Server Error' });
-    }
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
@@ -255,41 +231,40 @@ app.post('/notes/:noteId/share', async (req, res) => {
     const noteId = parseInt(req.params.noteId);
     const { sharedWithUserId, canEdit } = req.body;
 
-    // First, check if the note is already shared
-    const existingShare = await db.oneOrNone(
-      `SELECT shared_note_id FROM shared_notes 
-       WHERE note_id = $1 AND shared_with_user_id = $2`,
-      [noteId, sharedWithUserId]
-    );
+    const existingShare = await prisma.shared_notes.findUnique({
+      where: {
+        note_id_shared_with_user_id: {
+          note_id: noteId,
+          shared_with_user_id: sharedWithUserId,
+        },
+      },
+    });
 
     if (existingShare) {
-      // Note is already shared
-      return res.status(200).json({ 
+      return res.status(200).json({
         message: 'Note has already been shared with this user.',
-        sharedNoteId: existingShare.shared_note_id
+        sharedNoteId: existingShare.shared_note_id,
       });
     }
 
-    // If not already shared, create new share
-    const result = await db.one(
-      `INSERT INTO shared_notes (note_id, shared_with_user_id, can_edit)
-       VALUES ($1, $2, $3)
-       RETURNING shared_note_id`,
-      [noteId, sharedWithUserId, canEdit]
-    );
-
-    res.status(201).json({ 
-      message: 'Note shared successfully', 
-      sharedNoteId: result.shared_note_id 
+    const result = await prisma.shared_notes.create({
+      data: {
+        note_id: noteId,
+        shared_with_user_id: sharedWithUserId,
+        can_edit: canEdit,
+      },
+      select: {
+        shared_note_id: true,
+      },
     });
 
+    res.status(201).json({
+      message: 'Note shared successfully',
+      sharedNoteId: result.shared_note_id,
+    });
   } catch (error) {
     console.error('Error sharing note:', error);
-    if (error.code === '23503') { // Foreign key violation
-      res.status(400).json({ error: 'Invalid note ID or user ID' });
-    } else {
-      res.status(500).json({ error: 'Internal Server Error' });
-    }
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
@@ -297,13 +272,23 @@ app.post('/notes/:noteId/share', async (req, res) => {
 app.get('/users/:userId/shared-notes', async (req, res) => {
   try {
     const userId = parseInt(req.params.userId);
-    const sharedNotes = await db.any(
-      `SELECT n.note_id, n.title, n.content, n.user_id as owner_id, sn.shared_note_id, sn.can_edit, sn.shared_at
-       FROM notes n
-       JOIN shared_notes sn ON n.note_id = sn.note_id
-       WHERE sn.shared_with_user_id = $1 AND n.is_deleted = false`,
-      [userId]
-    );
+    const sharedNotes = await prisma.shared_notes.findMany({
+      where: { shared_with_user_id: userId },
+      include: {
+        note: {
+          where: { is_deleted: false },
+          select: {
+            note_id: true,
+            title: true,
+            content: true,
+            user_id: true,
+            created_at: true,
+            updated_at: true,
+          },
+        },
+      },
+    });
+
     res.json(sharedNotes);
   } catch (error) {
     console.error('Error fetching shared notes:', error);
@@ -315,13 +300,19 @@ app.get('/users/:userId/shared-notes', async (req, res) => {
 app.get('/notes/:noteId/shared-users', async (req, res) => {
   try {
     const noteId = parseInt(req.params.noteId);
-    const sharedUsers = await db.any(
-      `SELECT u.user_id, u.username, u.email, sn.can_edit, sn.shared_at
-       FROM users u
-       JOIN shared_notes sn ON u.user_id = sn.shared_with_user_id
-       WHERE sn.note_id = $1`,
-      [noteId]
-    );
+    const sharedUsers = await prisma.shared_notes.findMany({
+      where: { note_id: noteId },
+      include: {
+        user: {
+          select: {
+            user_id: true,
+            username: true,
+            email: true,
+          },
+        },
+      },
+    });
+
     res.json(sharedUsers);
   } catch (error) {
     console.error('Error fetching shared users:', error);
@@ -339,14 +330,15 @@ app.put('/shared-notes/:noteId/permissions', async (req, res) => {
       return res.status(400).json({ error: 'Invalid input. Both shared_with_user_id and canEdit are required.' });
     }
 
-    const result = await db.result(
-      `UPDATE shared_notes
-       SET can_edit = $1
-       WHERE note_id = $2 AND shared_with_user_id = $3`,
-      [canEdit, noteId, sharedWithUserId]
-    );
+    const result = await prisma.shared_notes.updateMany({
+      where: {
+        note_id: noteId,
+        shared_with_user_id: sharedWithUserId,
+      },
+      data: { can_edit: canEdit },
+    });
 
-    if (result.rowCount === 0) {
+    if (result.count === 0) {
       res.status(404).json({ error: 'Shared note not found or user does not have access' });
     } else {
       res.json({ message: 'Shared note permissions updated successfully' });
@@ -362,17 +354,11 @@ app.delete('/shared-notes/:sharedNoteId', async (req, res) => {
   try {
     const sharedNoteId = parseInt(req.params.sharedNoteId);
 
-    const result = await db.result(
-      `DELETE FROM shared_notes
-       WHERE shared_note_id = $1`,
-      [sharedNoteId]
-    );
+    const result = await prisma.shared_notes.delete({
+      where: { shared_note_id: sharedNoteId },
+    });
 
-    if (result.rowCount === 0) {
-      res.status(404).json({ error: 'Shared note not found' });
-    } else {
-      res.json({ message: 'Shared access removed successfully' });
-    }
+    res.json({ message: 'Shared access removed successfully' });
   } catch (error) {
     console.error('Error removing shared access:', error);
     res.status(500).json({ error: 'Internal Server Error' });
@@ -387,14 +373,23 @@ app.post('/notes/:noteId/active-editors', async (req, res) => {
     const noteId = parseInt(req.params.noteId);
     const { userId } = req.body;
 
-    const result = await db.one(
-      `INSERT INTO active_editors (note_id, user_id)
-       VALUES ($1, $2)
-       ON CONFLICT (note_id, user_id) DO UPDATE
-       SET last_active = CURRENT_TIMESTAMP
-       RETURNING active_editor_id`,
-      [noteId, userId]
-    );
+    const result = await prisma.active_editors.upsert({
+      where: {
+        note_id_user_id: {
+          note_id: noteId,
+          user_id: userId,
+        },
+      },
+      update: { last_active: new Date() },
+      create: {
+        note_id: noteId,
+        user_id: userId,
+        last_active: new Date(),
+      },
+      select: {
+        active_editor_id: true,
+      },
+    });
 
     res.status(201).json({ message: 'Active editor added successfully', activeEditorId: result.active_editor_id });
   } catch (error) {
@@ -407,13 +402,18 @@ app.post('/notes/:noteId/active-editors', async (req, res) => {
 app.get('/notes/:noteId/active-editors', async (req, res) => {
   try {
     const noteId = parseInt(req.params.noteId);
-    const activeEditors = await db.any(
-      `SELECT ae.user_id, u.username, ae.last_active
-       FROM active_editors ae
-       JOIN users u ON ae.user_id = u.user_id
-       WHERE ae.note_id = $1`,
-      [noteId]
-    );
+    const activeEditors = await prisma.active_editors.findMany({
+      where: { note_id: noteId },
+      include: {
+        user: {
+          select: {
+            user_id: true,
+            username: true,
+          },
+        },
+      },
+    });
+
     res.json(activeEditors);
   } catch (error) {
     console.error('Error fetching active editors:', error);
@@ -427,13 +427,14 @@ app.delete('/notes/:noteId/active-editors/:userId', async (req, res) => {
     const noteId = parseInt(req.params.noteId);
     const userId = parseInt(req.params.userId);
 
-    const result = await db.result(
-      `DELETE FROM active_editors
-       WHERE note_id = $1 AND user_id = $2`,
-      [noteId, userId]
-    );
+    const result = await prisma.active_editors.deleteMany({
+      where: {
+        note_id: noteId,
+        user_id: userId,
+      },
+    });
 
-    if (result.rowCount === 0) {
+    if (result.count === 0) {
       res.status(404).json({ error: 'Active editor not found' });
     } else {
       res.json({ message: 'Active editor removed successfully' });
@@ -450,29 +451,26 @@ app.delete('/notes/:noteId/active-editors/:userId', async (req, res) => {
 app.post('/tags', async (req, res) => {
   try {
     const { name } = req.body;
-    
-    const result = await db.one(
-      `INSERT INTO tags (name)
-       VALUES ($1)
-       RETURNING tag_id, name`,
-      [name]
-    );
+
+    const result = await prisma.tags.create({
+      data: { name },
+      select: {
+        tag_id: true,
+        name: true,
+      },
+    });
 
     res.status(201).json({ message: 'Tag created successfully', tag: result });
   } catch (error) {
     console.error('Error creating tag:', error);
-    if (error.code === '23505') { // unique_violation
-      res.status(400).json({ error: 'Tag name already exists' });
-    } else {
-      res.status(500).json({ error: 'Internal Server Error' });
-    }
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
 // Get all tags
 app.get('/tags', async (req, res) => {
   try {
-    const tags = await db.any('SELECT * FROM tags');
+    const tags = await prisma.tags.findMany();
     res.json(tags);
   } catch (error) {
     console.error('Error fetching tags:', error);
@@ -486,23 +484,15 @@ app.put('/tags/:tagId', async (req, res) => {
     const tagId = parseInt(req.params.tagId);
     const { name } = req.body;
 
-    const result = await db.result(
-      'UPDATE tags SET name = $1 WHERE tag_id = $2',
-      [name, tagId]
-    );
+    const result = await prisma.tags.update({
+      where: { tag_id: tagId },
+      data: { name },
+    });
 
-    if (result.rowCount === 0) {
-      res.status(404).json({ error: 'Tag not found' });
-    } else {
-      res.json({ message: 'Tag updated successfully' });
-    }
+    res.json({ message: 'Tag updated successfully' });
   } catch (error) {
     console.error('Error updating tag:', error);
-    if (error.code === '23505') { // unique_violation
-      res.status(400).json({ error: 'Tag name already exists' });
-    } else {
-      res.status(500).json({ error: 'Internal Server Error' });
-    }
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
@@ -511,13 +501,11 @@ app.delete('/tags/:tagId', async (req, res) => {
   try {
     const tagId = parseInt(req.params.tagId);
 
-    const result = await db.result('DELETE FROM tags WHERE tag_id = $1', [tagId]);
+    const result = await prisma.tags.delete({
+      where: { tag_id: tagId },
+    });
 
-    if (result.rowCount === 0) {
-      res.status(404).json({ error: 'Tag not found' });
-    } else {
-      res.json({ message: 'Tag deleted successfully' });
-    }
+    res.json({ message: 'Tag deleted successfully' });
   } catch (error) {
     console.error('Error deleting tag:', error);
     res.status(500).json({ error: 'Internal Server Error' });
@@ -532,19 +520,15 @@ app.post('/notes/:noteId/tags', async (req, res) => {
     const noteId = parseInt(req.params.noteId);
     const { tagId } = req.body;
 
-    await db.none(
-      'UPDATE notes SET tag_id = $1 WHERE note_id = $2',
-      [tagId, noteId]
-    );
+    await prisma.notes.update({
+      where: { note_id: noteId },
+      data: { tag_id: tagId },
+    });
 
     res.json({ message: 'Tag added to note successfully' });
   } catch (error) {
     console.error('Error adding tag to note:', error);
-    if (error.code === '23503') { // foreign_key_violation
-      res.status(400).json({ error: 'Invalid note ID or tag ID' });
-    } else {
-      res.status(500).json({ error: 'Internal Server Error' });
-    }
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
@@ -553,10 +537,10 @@ app.delete('/notes/:noteId/tags', async (req, res) => {
   try {
     const noteId = parseInt(req.params.noteId);
 
-    await db.none(
-      'UPDATE notes SET tag_id = NULL WHERE note_id = $1',
-      [noteId]
-    );
+    await prisma.notes.update({
+      where: { note_id: noteId },
+      data: { tag_id: null },
+    });
 
     res.json({ message: 'Tag removed from note successfully' });
   } catch (error) {
@@ -570,12 +554,20 @@ app.get('/tags/:tagId/notes', async (req, res) => {
   try {
     const tagId = parseInt(req.params.tagId);
 
-    const notes = await db.any(
-      `SELECT n.note_id, n.title, n.content, n.user_id, n.created_at, n.updated_at
-       FROM notes n
-       WHERE n.tag_id = $1 AND n.is_deleted = false`,
-      [tagId]
-    );
+    const notes = await prisma.notes.findMany({
+      where: {
+        tag_id: tagId,
+        is_deleted: false,
+      },
+      select: {
+        note_id: true,
+        title: true,
+        content: true,
+        user_id: true,
+        created_at: true,
+        updated_at: true,
+      },
+    });
 
     res.json(notes);
   } catch (error) {
@@ -584,10 +576,6 @@ app.get('/tags/:tagId/notes', async (req, res) => {
   }
 });
 
-
-
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
-
-
