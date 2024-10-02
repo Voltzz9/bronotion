@@ -6,9 +6,18 @@ import DOMPurify from 'dompurify';
 import { FloatingCollaborators } from '@/components/floating-collaborators';
 import useNoteId from '@/app/hooks/useNoteId';
 
+interface Note {
+  note_id: number,
+  title: string,
+  content: string,
+  tag_id: string,
+  created_at: Date,
+  updated_at: Date,
+}
+
 export default function Notes() {
-  const [note, setNote] = useState(`# Rendered Markdown`)
-  const [parsedNote, setParsedNote] = useState('')
+  const [note, setNote] = useState('')
+  const [parsedNote, setParsedNote] = useState(`# Rendered Markdown`)
   const noteId = useNoteId()
 
   useEffect(() => {
@@ -24,7 +33,21 @@ export default function Notes() {
     setNote(content)
   }
 
+  useEffect(() => {
+    if (noteId) {
+      const fetchNote = async () => {
+        try {
+          const response = await fetch(`http://localhost:8080/notes/${noteId}`);
+          const data: Note = await response.json();
+          setNote(data.content);  // Assuming the response has a 'content' field
+        } catch (error) {
+          console.error("Error fetching note:", error);
+        }
+      };
 
+      fetchNote();
+    }
+  }, [noteId]);
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
