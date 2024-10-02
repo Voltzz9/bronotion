@@ -13,12 +13,6 @@ interface Collaborator {
   registration_date: Date
 }
 
-const mockCollaborators: Collaborator[] = [
-  { user_id: 1, username: 'Alice', email: "alice@gmail.com", avatar_url: '/placeholder.svg?height=32&width=32', is_manual: true, registration_date: new Date('2023-01-15T10:30:00') },
-  { user_id: 2, username: 'Bob', email: "bob@gmail.com", avatar_url: '/placeholder.svg?height=32&width=32', is_manual: false, registration_date: new Date('2022-07-23T14:00:00') },
-  { user_id: 3, username: 'Charlie', email: "charlie@gmail.com", avatar_url: '/placeholder.svg?height=32&width=32', is_manual: true, registration_date: new Date('2021-05-10T08:45:00') }
-];
-
 export function FloatingCollaborators() {
   const [isExpanded, setIsExpanded] = useState(false)
   const [collaborators, setCollaborators] = useState<Collaborator[]>([])
@@ -26,17 +20,19 @@ export function FloatingCollaborators() {
   useEffect(() => {
     const fetchCollaborators = async () => {
       try {
-        const response = await fetch('/notes/1/active-editors')
+        console.log(noteId)
+        const response = await fetch(`http://localhost:8080/notes/${noteId}/shared-users`)
         if (!response.ok) {
           throw new Error('Failed to fetch Users')
         }
         const data: Collaborator[] = await response.json()
         setCollaborators(data)
+        console.log(data)
       } catch (error) {
         console.error('Error fetching users:', error)
       }
     }
-    fetchCollaborators
+    fetchCollaborators()
   }, [])
 
   return (
@@ -63,7 +59,7 @@ export function FloatingCollaborators() {
             className="overflow-hidden"
           >
             <ul className="p-2 space-y-1 rounded-lg">
-              {mockCollaborators.map((collaborator) => (
+              {collaborators.map((collaborator) => (
                 <li key={collaborator.user_id} className="flex items-center space-x-2 rounded-lg">
                   <img
                     src={collaborator.avatar_url}
