@@ -1,6 +1,6 @@
 const API_BASE_URL = 'https://localhost:8080';
 
-export async function getUserById(userId: number): Promise<any> {
+export async function getUserById(userId: string): Promise<any> {
     try {
         const response = await fetch(`${API_BASE_URL}/users/${userId}`);
         if (!response.ok) {
