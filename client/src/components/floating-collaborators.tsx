@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronUp, ChevronDown } from 'lucide-react'
+import useNoteId from '@/app/hooks/useNoteId'
 
 interface Collaborator {
   user_id: number
@@ -16,24 +17,27 @@ interface Collaborator {
 export function FloatingCollaborators() {
   const [isExpanded, setIsExpanded] = useState(false)
   const [collaborators, setCollaborators] = useState<Collaborator[]>([])
+  const noteId = useNoteId()
 
   useEffect(() => {
-    const fetchCollaborators = async () => {
-      try {
-        console.log(noteId)
-        const response = await fetch(`http://localhost:8080/notes/${noteId}/shared-users`)
-        if (!response.ok) {
-          throw new Error('Failed to fetch Users')
+    if (noteId !== null && noteId !== undefined) {
+      const fetchCollaborators = async () => {
+        try {
+          const response = await fetch(`http://localhost:8080/notes/${noteId}/shared-users`)
+          if (!response.ok) {
+            throw new Error('Failed to fetch Users')
+          }
+          const data: Collaborator[] = await response.json()
+          setCollaborators(data)
+          console.log(data)
+        } catch (error) {
+          console.error('Error fetching users:', error)
         }
-        const data: Collaborator[] = await response.json()
-        setCollaborators(data)
-        console.log(data)
-      } catch (error) {
-        console.error('Error fetching users:', error)
       }
+      fetchCollaborators()
     }
-    fetchCollaborators()
-  }, [])
+  }, [noteId])
+
 
   return (
     <motion.div

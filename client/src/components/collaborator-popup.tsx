@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
+import useNoteId from "@/app/hooks/useNoteId"
 
 interface User {
   user_id: number
@@ -22,12 +23,12 @@ export function CollaboratorPopup() {
   const [selectedCollaborator, setSelectedCollaborator] = useState<User | null>(null)
   const [searchResults, setSearchResults] = useState<User[]>([])
   const [isLoading, setIsLoading] = useState(false)
+  const noteId = useNoteId()
 
   const fetchSearchResults = useCallback(async (query: string) => {
     setIsLoading(true);
     try {
       const response = await fetch(`http://localhost:8080/users/search?prefix=${encodeURIComponent(query)}`);
-      console.log(noteId)
       if (!response.ok) {
         throw new Error('Failed to fetch Users');
       }
@@ -66,8 +67,8 @@ export function CollaboratorPopup() {
       sharedWithUserId: `${selectedCollaborator?.user_id}`, canEdit: true
     }
     console.log(`Added collaborator: ${selectedCollaborator?.username}`)
-    console.log(noteId)
     try {
+
       const response = await fetch(`http://localhost:8080/notes/${noteId}/share`, {
         method: 'POST',
         headers: {
