@@ -45,5 +45,8 @@
 # /client/.next/            # The build output folder
 # /client/node_modules/     # The node modules folder
 # /client/out/              # The dist folder
-# /client/.env              # The environment file
 /client/next-env.d.ts
+
+# Env files
+/client/.env.local   
+/backend/.env

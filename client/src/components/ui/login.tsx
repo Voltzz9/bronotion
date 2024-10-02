@@ -31,8 +31,7 @@ export default function Component() {
     if (isAuthenticated) {
       router.push('/dashboard');
     }
-
-  }, [isAuthenticated]);
+  }, [isAuthenticated, router]);
 
   // Detect autofill
   useEffect(() => {

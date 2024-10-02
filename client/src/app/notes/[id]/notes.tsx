@@ -9,8 +9,12 @@ export default function Notes() {
   const [parsedNote, setParsedNote] = useState('')
 
   useEffect(() => {
-    const sanitizedHtml = DOMPurify.sanitize(marked.parse(note));
-    setParsedNote(sanitizedHtml);
+    const parseMarkdown = async () => {
+      const parsedMarkdown = await marked.parse(note);
+      const sanitizedHtml = DOMPurify.sanitize(parsedMarkdown);
+      setParsedNote(sanitizedHtml);
+    };
+    parseMarkdown();
   }, [note]);
 
   const setNoteContent = (content: string) => {

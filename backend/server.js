@@ -311,6 +311,24 @@ app.get('/users/:userId/shared-notes', async (req, res) => {
   }
 });
 
+// Get all users from a shared note
+app.get('/notes/:noteId/shared-users', async (req, res) => {
+  try {
+    const noteId = parseInt(req.params.noteId);
+    const sharedUsers = await db.any(
+      `SELECT u.user_id, u.username, u.email, sn.can_edit, sn.shared_at
+       FROM users u
+       JOIN shared_notes sn ON u.user_id = sn.shared_with_user_id
+       WHERE sn.note_id = $1`,
+      [noteId]
+    );
+    res.json(sharedUsers);
+  } catch (error) {
+    console.error('Error fetching shared users:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 // Update shared note permissions
 app.put('/shared-notes/:noteId/permissions', async (req, res) => {
   try {
