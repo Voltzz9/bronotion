@@ -1,10 +1,10 @@
 import { SessionWrapper } from "@/app/SessionProvider";
-import  Notes  from "./notes"
+import Note from "./notes"
 
-export default function NotesPage() {
+export default function NotesPage({ params }: { params: { id: string } }) {
   return (
     <SessionWrapper>
-        <Notes />
+      <Note id={params.id} />
     </SessionWrapper>
   );
 }
