@@ -4,8 +4,13 @@ import Header from '@/components/ui/header'
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 import { FloatingCollaborators } from '@/components/floating-collaborators';
+import { useDispatch, useSelector } from 'react-redux';
 
-export default function Notes() {
+interface NotesProps {
+  id: string
+}
+
+export default function Notes({ id }: NotesProps) {
   const [note, setNote] = useState(`# Rendered Markdown`)
   const [parsedNote, setParsedNote] = useState('')
 
