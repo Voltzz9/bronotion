@@ -68,7 +68,7 @@ app.post('/create_user', async (req, res) => {
 // View user info
 app.get('/users/:userId', async (req, res) => {
   try {
-    const userId = parseInt(req.params.userId);
+    const userId = req.params.userId;
     const user = await prisma.user.findUnique({
       where: { id: userId },
       include: {

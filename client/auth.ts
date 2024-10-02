@@ -1,6 +1,7 @@
 import NextAuth from "next-auth"
 import GitHub from "next-auth/providers/github"
 import Google from "next-auth/providers/google"
+import { getUserById } from "@/lib/api"
  
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
@@ -14,18 +15,18 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       return session;
     },
     async jwt({token}) {
-      // if (!token.sub) return token;
+      if (!token.sub) return token;
 
-      // const existingUser = await getUserByID(token.sub);
+      const existingUser = await getUserById(token.sub);
 
-      // if (!existingUser) {
-      //   return token;
-      // }
+      if (!existingUser) {
+        return token;
+      }
 
-      // token.isOAuth = true;
-      // token.name = existingUser.name;
-      // token.email = existingUser.email;
-      // token.role = "ADMIN";
+      token.isOAuth = true;
+      token.name = existingUser.name;
+      token.email = existingUser.email;
+      token.role = "ADMIN";
 
       return token;
     },
