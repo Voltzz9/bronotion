@@ -1,10 +1,10 @@
 -- CreateTable
 CREATE TABLE "User" (
     "id" SERIAL NOT NULL,
-    "name" TEXT,
-    "username" TEXT,
-    "email" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "username" TEXT NOT NULL,
     "password_hash" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
     "emailVerified" TIMESTAMP(3),
     "image" TEXT,
 
@@ -13,11 +13,12 @@ CREATE TABLE "User" (
 
 -- CreateTable
 CREATE TABLE "UserAuthMethod" (
+    "id" SERIAL NOT NULL,
     "user_id" INTEGER NOT NULL,
-    "isOAuth" BOOLEAN NOT NULL DEFAULT false,
-    "isManual" BOOLEAN NOT NULL DEFAULT true,
+    "isOAuth" BOOLEAN NOT NULL,
+    "isManual" BOOLEAN NOT NULL,
 
-    CONSTRAINT "UserAuthMethod_pkey" PRIMARY KEY ("user_id")
+    CONSTRAINT "UserAuthMethod_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -110,9 +111,6 @@ CREATE TABLE "ActiveEditor" (
 
     CONSTRAINT "ActiveEditor_pkey" PRIMARY KEY ("active_editor_id")
 );
-
--- CreateIndex
-CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Account_provider_providerAccountId_key" ON "Account"("provider", "providerAccountId");

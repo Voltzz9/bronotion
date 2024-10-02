@@ -17,26 +17,43 @@ app.use(express.json());
 
 // ********************************* User Routes *********************************
 
+// Get all users
+app.get('/users', async (req, res) => {
+  try {
+    const users = await prisma.user.findMany({
+      select: {
+        id: true,       // Change made here
+        username: true,
+        email: true,
+      },
+    });
+    res.json(users);
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 // Add a manual user
 app.post('/create_user', async (req, res) => {
   try {
     const { username, email, password } = req.body;
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const user = await prisma.users.create({
+    const user = await prisma.user.create({
       data: {
         username,
         email,
-        is_Manual: true,
-        manual_users: {
+        password_hash: hashedPassword,
+        auth_methods: {
           create: {
-            password_hash: hashedPassword
-          }
-        }
-      }
+            isManual: true,
+          },
+        },
+      },
     });
 
-    res.status(201).json({ message: 'User created successfully', userId: user.user_id });
+    res.status(201).json({ message: 'User created successfully', userId: user.id });
   } catch (error) {
     console.error('Error creating user:', error);
     res.status(500).json({ error: 'Internal Server Error' });
@@ -47,11 +64,11 @@ app.post('/create_user', async (req, res) => {
 app.get('/users/:userId', async (req, res) => {
   try {
     const userId = parseInt(req.params.userId);
-    const user = await prisma.users.findUnique({
-      where: { user_id: userId },
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
       include: {
-        manual_users: true
-      }
+        auth_methods: true,
+      },
     });
 
     if (!user) {
@@ -70,24 +87,26 @@ app.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const user = await prisma.users.findFirst({
+    const user = await prisma.user.findFirst({
       where: {
         email,
-        is_Manual: true
+        auth_methods: {
+          isManual: true,
+        },
       },
       include: {
-        manual_users: true
-      }
+        auth_methods: true,
+      },
     });
 
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    const passwordMatch = await bcrypt.compare(password, user.manual_users.password_hash);
+    const passwordMatch = await bcrypt.compare(password, user.password_hash);
 
     if (passwordMatch) {
-      res.status(200).json({ message: 'Login successful', userId: user.user_id });
+      res.status(200).json({ message: 'Login successful', userId: user.id });
     } else {
       res.status(401).json({ error: 'Invalid email or password' });
     }
@@ -102,8 +121,8 @@ app.delete('/users/:userId', async (req, res) => {
   try {
     const userId = parseInt(req.params.userId);
 
-    const user = await prisma.users.delete({
-      where: { user_id: userId }
+    await prisma.user.delete({
+      where: { id: userId },
     });
 
     res.json({ message: 'User deleted successfully' });
@@ -120,14 +139,16 @@ app.post('/notes', async (req, res) => {
   try {
     const { title, content, user_id, tag_id } = req.body;
 
-    const note = await prisma.notes.create({
+    const note = await prisma.note.create({
       data: {
         title,
         content,
         user_id,
-        tag_id,
-        is_deleted: false
-      }
+        tags: {
+          connect: { tag_id: tag_id },
+        },
+        is_deleted: false,
+      },
     });
 
     res.status(201).json({ message: 'Note created successfully', noteId: note.note_id });
@@ -141,11 +162,11 @@ app.post('/notes', async (req, res) => {
 app.get('/users/:userId/notes', async (req, res) => {
   try {
     const userId = parseInt(req.params.userId);
-    const notes = await prisma.notes.findMany({
+    const notes = await prisma.note.findMany({
       where: {
         user_id: userId,
-        is_deleted: false
-      }
+        is_deleted: false,
+      },
     });
     res.json(notes);
   } catch (error) {
@@ -160,14 +181,16 @@ app.put('/notes/:noteId', async (req, res) => {
     const noteId = parseInt(req.params.noteId);
     const { title, content, tag_id } = req.body;
 
-    const note = await prisma.notes.update({
+    const note = await prisma.note.update({
       where: { note_id: noteId },
       data: {
         title,
         content,
-        tag_id,
-        updated_at: new Date()
-      }
+        tags: {
+          connect: { tag_id: tag_id },
+        },
+        updated_at: new Date(),
+      },
     });
 
     res.json({ message: 'Note updated successfully' });
@@ -182,11 +205,11 @@ app.delete('/notes/:noteId', async (req, res) => {
   try {
     const noteId = parseInt(req.params.noteId);
 
-    const note = await prisma.notes.update({
+    await prisma.note.update({
       where: { note_id: noteId },
       data: {
-        is_deleted: true
-      }
+        is_deleted: true,
+      },
     });
 
     res.json({ message: 'Note deleted successfully' });
@@ -206,7 +229,7 @@ app.get('/notes/:noteId', async (req, res) => {
         note_id: true,
         title: true,
         content: true,
-        tag_id: true,
+        tags: true,
         created_at: true,
         updated_at: true,
       },
@@ -231,7 +254,7 @@ app.post('/notes/:noteId/share', async (req, res) => {
     const noteId = parseInt(req.params.noteId);
     const { sharedWithUserId, canEdit } = req.body;
 
-    const existingShare = await prisma.shared_notes.findUnique({
+    const existingShare = await prisma.sharedNote.findUnique({
       where: {
         note_id_shared_with_user_id: {
           note_id: noteId,
@@ -247,7 +270,7 @@ app.post('/notes/:noteId/share', async (req, res) => {
       });
     }
 
-    const result = await prisma.shared_notes.create({
+    const result = await prisma.sharedNote.create({
       data: {
         note_id: noteId,
         shared_with_user_id: sharedWithUserId,
@@ -272,7 +295,7 @@ app.post('/notes/:noteId/share', async (req, res) => {
 app.get('/users/:userId/shared-notes', async (req, res) => {
   try {
     const userId = parseInt(req.params.userId);
-    const sharedNotes = await prisma.shared_notes.findMany({
+    const sharedNotes = await prisma.sharedNote.findMany({
       where: { shared_with_user_id: userId },
       include: {
         note: {
@@ -300,12 +323,12 @@ app.get('/users/:userId/shared-notes', async (req, res) => {
 app.get('/notes/:noteId/shared-users', async (req, res) => {
   try {
     const noteId = parseInt(req.params.noteId);
-    const sharedUsers = await prisma.shared_notes.findMany({
+    const sharedUsers = await prisma.sharedNote.findMany({
       where: { note_id: noteId },
       include: {
-        user: {
+        shared_with_users: {
           select: {
-            user_id: true,
+            id: true,
             username: true,
             email: true,
           },
@@ -330,7 +353,7 @@ app.put('/shared-notes/:noteId/permissions', async (req, res) => {
       return res.status(400).json({ error: 'Invalid input. Both shared_with_user_id and canEdit are required.' });
     }
 
-    const result = await prisma.shared_notes.updateMany({
+    const result = await prisma.sharedNote.updateMany({
       where: {
         note_id: noteId,
         shared_with_user_id: sharedWithUserId,
@@ -354,7 +377,7 @@ app.delete('/shared-notes/:sharedNoteId', async (req, res) => {
   try {
     const sharedNoteId = parseInt(req.params.sharedNoteId);
 
-    const result = await prisma.shared_notes.delete({
+    await prisma.sharedNote.delete({
       where: { shared_note_id: sharedNoteId },
     });
 
@@ -373,7 +396,7 @@ app.post('/notes/:noteId/active-editors', async (req, res) => {
     const noteId = parseInt(req.params.noteId);
     const { userId } = req.body;
 
-    const result = await prisma.active_editors.upsert({
+    const result = await prisma.activeEditor.upsert({
       where: {
         note_id_user_id: {
           note_id: noteId,
@@ -402,12 +425,12 @@ app.post('/notes/:noteId/active-editors', async (req, res) => {
 app.get('/notes/:noteId/active-editors', async (req, res) => {
   try {
     const noteId = parseInt(req.params.noteId);
-    const activeEditors = await prisma.active_editors.findMany({
+    const activeEditors = await prisma.activeEditor.findMany({
       where: { note_id: noteId },
       include: {
-        user: {
+        users: {
           select: {
-            user_id: true,
+            id: true,
             username: true,
           },
         },
@@ -427,7 +450,7 @@ app.delete('/notes/:noteId/active-editors/:userId', async (req, res) => {
     const noteId = parseInt(req.params.noteId);
     const userId = parseInt(req.params.userId);
 
-    const result = await prisma.active_editors.deleteMany({
+    const result = await prisma.activeEditor.deleteMany({
       where: {
         note_id: noteId,
         user_id: userId,
@@ -452,7 +475,7 @@ app.post('/tags', async (req, res) => {
   try {
     const { name } = req.body;
 
-    const result = await prisma.tags.create({
+    const result = await prisma.tag.create({
       data: { name },
       select: {
         tag_id: true,
@@ -470,7 +493,7 @@ app.post('/tags', async (req, res) => {
 // Get all tags
 app.get('/tags', async (req, res) => {
   try {
-    const tags = await prisma.tags.findMany();
+    const tags = await prisma.tag.findMany();
     res.json(tags);
   } catch (error) {
     console.error('Error fetching tags:', error);
@@ -484,7 +507,7 @@ app.put('/tags/:tagId', async (req, res) => {
     const tagId = parseInt(req.params.tagId);
     const { name } = req.body;
 
-    const result = await prisma.tags.update({
+    const result = await prisma.tag.update({
       where: { tag_id: tagId },
       data: { name },
     });
@@ -501,7 +524,7 @@ app.delete('/tags/:tagId', async (req, res) => {
   try {
     const tagId = parseInt(req.params.tagId);
 
-    const result = await prisma.tags.delete({
+    const result = await prisma.tag.delete({
       where: { tag_id: tagId },
     });
 
@@ -520,9 +543,11 @@ app.post('/notes/:noteId/tags', async (req, res) => {
     const noteId = parseInt(req.params.noteId);
     const { tagId } = req.body;
 
-    await prisma.notes.update({
-      where: { note_id: noteId },
-      data: { tag_id: tagId },
+    await prisma.noteTag.create({
+      data: {
+        note_id: noteId,
+        tag_id: tagId,
+      },
     });
 
     res.json({ message: 'Tag added to note successfully' });
@@ -533,13 +558,18 @@ app.post('/notes/:noteId/tags', async (req, res) => {
 });
 
 // Remove a tag from a note
-app.delete('/notes/:noteId/tags', async (req, res) => {
+app.delete('/notes/:noteId/tags/:tagId', async (req, res) => {
   try {
     const noteId = parseInt(req.params.noteId);
+    const tagId = parseInt(req.params.tagId);
 
-    await prisma.notes.update({
-      where: { note_id: noteId },
-      data: { tag_id: null },
+    await prisma.noteTag.delete({
+      where: {
+        note_id_tag_id: {
+          note_id: noteId,
+          tag_id: tagId,
+        },
+      },
     });
 
     res.json({ message: 'Tag removed from note successfully' });
@@ -554,9 +584,13 @@ app.get('/tags/:tagId/notes', async (req, res) => {
   try {
     const tagId = parseInt(req.params.tagId);
 
-    const notes = await prisma.notes.findMany({
+    const notes = await prisma.note.findMany({
       where: {
-        tag_id: tagId,
+        tags: {
+          some: {
+            tag_id: tagId,
+          },
+        },
         is_deleted: false,
       },
       select: {

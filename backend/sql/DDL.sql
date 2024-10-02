@@ -1,5 +1,5 @@
 -- Users table
-CREATE TABLE users (
+CREATE TABLE "User" (
   id SERIAL PRIMARY KEY,
   name VARCHAR(255),
   username VARCHAR(255),
@@ -9,21 +9,21 @@ CREATE TABLE users (
   image TEXT
 );
 
--- User Authentication Methods table (new)
-CREATE TABLE user_auth_methods (
+-- User Authentication Methods table
+CREATE TABLE "UserAuthMethod" (
   user_id INTEGER PRIMARY KEY,
   "isOAuth" BOOLEAN DEFAULT FALSE,
   "isManual" BOOLEAN DEFAULT TRUE,
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  FOREIGN KEY (user_id) REFERENCES "User"(id) ON DELETE CASCADE
 );
 
 -- Accounts table
-CREATE TABLE accounts (
+CREATE TABLE "Account" (
   id SERIAL PRIMARY KEY,
-  "userId" INTEGER NOT NULL,
+  user_id INTEGER NOT NULL,
   type VARCHAR(255) NOT NULL,
   provider VARCHAR(255) NOT NULL,
-  "providerAccountId" VARCHAR(255) NOT NULL,
+  provider_account_id VARCHAR(255) NOT NULL,
   refresh_token TEXT,
   access_token TEXT,
   expires_at BIGINT,
@@ -33,21 +33,21 @@ CREATE TABLE accounts (
   session_state TEXT,
   oauth_token_secret TEXT,
   oauth_token TEXT,
-  FOREIGN KEY ("userId") REFERENCES users(id) ON DELETE CASCADE,
-  UNIQUE(provider, "providerAccountId")
+  FOREIGN KEY (user_id) REFERENCES "User"(id) ON DELETE CASCADE,
+  UNIQUE(provider, provider_account_id)
 );
 
 -- Sessions table
-CREATE TABLE sessions (
+CREATE TABLE "Session" (
   id SERIAL PRIMARY KEY,
-  "userId" INTEGER NOT NULL,
+  user_id INTEGER NOT NULL,
   expires TIMESTAMPTZ NOT NULL,
-  "sessionToken" VARCHAR(255) NOT NULL UNIQUE,
-  FOREIGN KEY ("userId") REFERENCES users(id) ON DELETE CASCADE
+  session_token VARCHAR(255) NOT NULL UNIQUE,
+  FOREIGN KEY (user_id) REFERENCES "User"(id) ON DELETE CASCADE
 );
 
 -- Verification token table
-CREATE TABLE verification_token (
+CREATE TABLE "VerificationToken" (
   identifier TEXT NOT NULL,
   expires TIMESTAMPTZ NOT NULL,
   token TEXT NOT NULL,
@@ -55,7 +55,7 @@ CREATE TABLE verification_token (
 );
 
 -- Tags table
-CREATE TABLE tags (
+CREATE TABLE "Tag" (
   tag_id SERIAL PRIMARY KEY,
   name VARCHAR(50) NOT NULL UNIQUE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
@@ -63,7 +63,7 @@ CREATE TABLE tags (
 );
 
 -- Notes table
-CREATE TABLE notes (
+CREATE TABLE "Note" (
   note_id SERIAL PRIMARY KEY,
   title VARCHAR(255) NOT NULL,
   content TEXT,
@@ -71,37 +71,37 @@ CREATE TABLE notes (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   is_deleted BOOLEAN NOT NULL DEFAULT FALSE,
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  FOREIGN KEY (user_id) REFERENCES "User"(id) ON DELETE CASCADE
 );
 
--- Note Tags table (new)
-CREATE TABLE note_tags (
+-- Note Tags table
+CREATE TABLE "NoteTag" (
   note_id INTEGER NOT NULL,
   tag_id INTEGER NOT NULL,
   PRIMARY KEY (note_id, tag_id),
-  FOREIGN KEY (note_id) REFERENCES notes(note_id) ON DELETE CASCADE,
-  FOREIGN KEY (tag_id) REFERENCES tags(tag_id) ON DELETE CASCADE
+  FOREIGN KEY (note_id) REFERENCES "Note"(note_id) ON DELETE CASCADE,
+  FOREIGN KEY (tag_id) REFERENCES "Tag"(tag_id) ON DELETE CASCADE
 );
 
--- Shared_notes table
-CREATE TABLE shared_notes (
+-- Shared Notes table
+CREATE TABLE "SharedNote" (
   shared_note_id SERIAL PRIMARY KEY,
   note_id INTEGER NOT NULL,
   shared_with_user_id INTEGER NOT NULL,
   can_edit BOOLEAN DEFAULT FALSE,
   shared_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (note_id) REFERENCES notes(note_id) ON DELETE CASCADE,
-  FOREIGN KEY (shared_with_user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (note_id) REFERENCES "Note"(note_id) ON DELETE CASCADE,
+  FOREIGN KEY (shared_with_user_id) REFERENCES "User"(id) ON DELETE CASCADE,
   UNIQUE (note_id, shared_with_user_id)
 );
 
--- Active_editors table
-CREATE TABLE active_editors (
+-- Active Editors table
+CREATE TABLE "ActiveEditor" (
   active_editor_id SERIAL PRIMARY KEY,
   note_id INTEGER NOT NULL,
   user_id INTEGER NOT NULL,
   last_active TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (note_id) REFERENCES notes(note_id) ON DELETE CASCADE,
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (note_id) REFERENCES "Note"(note_id) ON DELETE CASCADE,
+  FOREIGN KEY (user_id) REFERENCES "User"(id) ON DELETE CASCADE,
   UNIQUE (note_id, user_id)
 );
