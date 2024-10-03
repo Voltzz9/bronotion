@@ -13,7 +13,7 @@
     id              String           @id @default(uuid())
     name            String
     username        String
-    password_hash   String
+    password_hash   String?
     email           String
     emailVerified   DateTime?
     image           String?

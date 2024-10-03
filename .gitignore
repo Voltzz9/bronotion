@@ -23,6 +23,7 @@
 /backend/.DS_Store
 /client/*.pem
 
+
 # debug
 /client/npm-debug.log*
 /client/yarn-debug.log*
@@ -50,3 +51,4 @@
 # Env files
 /client/.env.local   
 /backend/.env
+.DS_Store

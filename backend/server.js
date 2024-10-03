@@ -38,32 +38,47 @@ app.get('/users', async (req, res) => {
   }
 });
 
-// Add a manual user
+// Create a new user (for OAuth)
 app.post('/create_user', async (req, res) => {
   try {
-    const { username, email, password } = req.body;
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const { id, name, email, image } = req.body;
+
+    // Check if user already exists
+    const existingUser = await prisma.user.findUnique({
+      where: { id: id },
+    });
+
+    if (existingUser) {
+      return res.status(409).json({ error: 'User already exists' });
+    }
+
+    // Generate a username from email
+    const username = email.split('@')[0];
 
     const user = await prisma.user.create({
       data: {
-        username,
-        email,
-        password_hash: hashedPassword,
+        id: id,
+        name: name,
+        username: username, // Add this line
+        email: email,
+        emailVerified: new Date(),
+        image: image,
         auth_methods: {
           create: {
-            isManual: true,
+            isManual: false,
+            isOAuth: true,
           },
         },
       },
     });
 
     res.status(201).json({ message: 'User created successfully', userId: user.id });
-    res.status(201).json({ message: 'User created successfully', userId: user.id });
   } catch (error) {
     console.error('Error creating user:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    res.status(500).json({ error: 'Internal Server Error', details: error.message });
   }
 });
+
 
 // View user info
 app.get('/users/:userId', async (req, res) => {
