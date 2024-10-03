@@ -1,7 +1,7 @@
 import NextAuth from "next-auth"
 import GitHub from "next-auth/providers/github"
 import Google from "next-auth/providers/google"
-import { createUser, enableOAuth, getUserByEmail } from "@/lib/api"
+import { createUser, enableOAuth, getUserByEmail, getUserById } from "@/lib/api"
 import Credentials from "next-auth/providers/credentials"
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
@@ -49,9 +49,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       try {
         // Get UserID from email address
         let existingUser = null;
+        let user_id = null;
         if (user.email) {
           // Does email exist user table
-          existingUser = await getUserByEmail(user.email);
+          const data = await getUserByEmail(user.email);
+          user_id = data?.id;
+          if (user_id) {
+            existingUser = await getUserById(user_id);
+          }
           console.log('Existing user:', existingUser);
         }
 
