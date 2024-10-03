@@ -29,8 +29,8 @@ export async function getUserById(userId: string): Promise<User | null> {
 
 export async function enableOAuth(userId: string): Promise<User> {
   try {
-    const response = await fetch(`${API_BASE_URL}/users/${userId}/enable_oauth`, {
-      method: 'PATCH',
+    const response = await fetch(`${API_BASE_URL}/users/${userId}/oauth`, {
+      method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
