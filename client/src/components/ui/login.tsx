@@ -1,21 +1,16 @@
 'use client'
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { signIn } from "next-auth/react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { useAuth } from '@/app/hooks/AuthContext';
-import { config } from 'dotenv';
 import GitHubSignInForm from './git-hub';
 import GoogleSignInButton from './google';
-config();
-
-const URL = process.env.NEXT_PUBLIC_API_URL;
-
 
 export default function Component() {
-  const { isAuthenticated } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [isAnimating, setIsAnimating] = useState(false);
   const [email, setEmail] = useState('');
@@ -27,55 +22,33 @@ export default function Component() {
   const router = useRouter();
 
   useEffect(() => {
-    // Redirect to dashboard if user is already authenticated
-    if (isAuthenticated) {
-      router.push('/dashboard');
-    }
-  }, [isAuthenticated, router]);
-
-  // Detect autofill
-  useEffect(() => {
     if (emailRef.current && passwordRef.current) {
-      // Capture the autofill values after the component mounts
       setEmail(emailRef.current.value);
       setPassword(passwordRef.current.value);
     }
-  }, [emailRef, passwordRef]); // Run this effect after refs are assigned
+  }, [emailRef, passwordRef]);
 
   const toggleForm = () => {
     setIsAnimating(true);
     setTimeout(() => {
       setIsLogin(!isLogin);
       setIsAnimating(false);
-    }, 300); // Match this with the CSS transition duration
+    }, 300);
   };
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
     try {
-      // Send login data to your API
-      const response = await fetch(URL+'/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email,
-          password,
-        }),
+      const result = await signIn('credentials', {
+        redirect: false,
+        email,
+        password,
       });
 
-      const result = await response.json();
-
-      console.log(result);
-
-      if (response.ok) {
-        // TODO update auth context
-        router.push('/home');
+      if (result?.error) {
+        console.error('Login failed:', result.error);
       } else {
-        // TODO Handle errors like invalid credentials
-        console.error(result.message);
+        router.push('/home');
       }
     } catch (error) {
       console.error('An error occurred during login', error);
@@ -91,8 +64,7 @@ export default function Component() {
     }
 
     try {
-      // Send signup data to your API
-      const response = await fetch(URL+'/create_user', {
+      const response = await fetch('/api/auth/signup', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -106,13 +78,15 @@ export default function Component() {
 
       const result = await response.json();
 
-      console.log(result);
-
       if (response.ok) {
-        // TODO update auth context
+        // Automatically log in after successful signup
+        await signIn('credentials', {
+          redirect: false,
+          email,
+          password,
+        });
         router.push('/home');
       } else {
-        // Handle errors like email already registered
         console.error(result.message);
       }
     } catch (error) {
@@ -134,19 +108,20 @@ export default function Component() {
       </CardHeader>
       <CardContent className={`space-y-4 transition-opacity duration-300 ${isAnimating ? 'opacity-0' : 'opacity-100'}`}>
         <form 
-          onSubmit={isLogin ? handleLogin : handleSignup} 
+          onSubmit={isLogin ? handleLogin : handleSignup}
           className={`space-y-4 transition-opacity duration-300 ${isAnimating ? 'opacity-0' : 'opacity-100'}`}
         >
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input 
               id="email" 
+              name="email"
               type="email" 
               placeholder="bill@example.com" 
               required 
-              value={email} 
-              ref={emailRef} // Attach ref for autofill detection
+              value={email}
               onChange={(e) => setEmail(e.target.value)}
+              ref={emailRef}
             />
           </div>
           {!isLogin && (
@@ -154,6 +129,7 @@ export default function Component() {
               <Label htmlFor="name">Username</Label>
               <Input 
                 id="username" 
+                name="username"
                 type="text" 
                 required 
                 value={username} 
@@ -165,11 +141,12 @@ export default function Component() {
             <Label htmlFor="password">Password</Label>
             <Input 
               id="password" 
+              name="password"
               type="password" 
               required 
-              value={password} 
-              ref={passwordRef} // Attach ref for autofill detection
+              value={password}
               onChange={(e) => setPassword(e.target.value)}
+              ref={passwordRef}
             />
           </div>
           {!isLogin && (
@@ -177,6 +154,7 @@ export default function Component() {
               <Label htmlFor="confirmPassword">Confirm Password</Label>
               <Input 
                 id="confirmPassword" 
+                name="confirmPassword"
                 type="password" 
                 required 
                 value={confirmPassword} 
@@ -192,7 +170,7 @@ export default function Component() {
           </Button>
         </form>
         <GitHubSignInForm />
-          <GoogleSignInButton />
+        <GoogleSignInButton />
         <div className="text-center text-secondary">
           <Button variant="link" onClick={toggleForm}>
             {isLogin ? "Don't have an account? Sign Up" : "Already have an account? Login"}
