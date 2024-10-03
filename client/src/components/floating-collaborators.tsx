@@ -44,13 +44,13 @@ export function FloatingCollaborators() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="fixed left-8 bottom-28 w-30 bg-background shadow-lg overflow-hidden rounded-lg"
+      className="fixed left-8 bottom-28 w-32 bg-background shadow-lg overflow-hidden rounded-lg"
     >
       <div
-        className="bg-primary px-0 py-0 rounded-lg text-primary-foreground flex justify-between items-center cursor-pointer"
+        className="text-center w-full bg-primary px-0 py-0 rounded-lg text-primary-foreground flex justify-between items-center cursor-pointer"
         onClick={() => setIsExpanded(!isExpanded)}
       >
-        <div className="font-semibold pb-0 arrow bg-accent rounded-lg px-1">Collaborators</div>
+        <div className="p-1 font-semibold arrow bg-accent rounded-lg w-full text-center">Collaborators</div>
         {isExpanded ? <ChevronDown size={0} /> : <ChevronUp size={0} />}
       </div>
       <AnimatePresence>
@@ -60,9 +60,9 @@ export function FloatingCollaborators() {
             animate={{ height: 'auto' }}
             exit={{ height: 0 }}
             transition={{ duration: 0.3 }}
-            className="overflow-hidden"
+            className="overflow-hidden w-32"
           >
-            <ul className="p-2 space-y-1 rounded-lg">
+            <ul className="p-1 space-y-1 rounded-lg">
               {collaborators.map((collaborator) => (
                 <li key={collaborator.user_id} className="flex items-center space-x-2 rounded-lg">
                   <img
