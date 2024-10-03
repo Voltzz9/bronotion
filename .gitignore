@@ -52,3 +52,5 @@
 /client/.env.local   
 /backend/.env
 .DS_Store
+
+/backend/prisma/migrations
