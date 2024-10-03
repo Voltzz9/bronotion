@@ -64,7 +64,7 @@ export default function Component() {
     }
 
     try {
-      const response = await fetch('/api/auth/signup', {
+      const response = await fetch('https://localhost:8080/create_user', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -125,7 +125,7 @@ export default function Component() {
           </div>
           {!isLogin && (
             <div className="space-y-2">
-              <Label htmlFor="name">Username</Label>
+              <Label htmlFor="username">Username</Label>
               <Input 
                 id="username" 
                 name="username"
@@ -135,6 +135,7 @@ export default function Component() {
                 onChange={(e) => setUsername(e.target.value)}
               />
             </div>
+          
           )}
           <div className="space-y-2">
             <Label htmlFor="password">Password</Label>

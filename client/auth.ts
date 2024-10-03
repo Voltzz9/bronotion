@@ -2,6 +2,7 @@ import NextAuth from "next-auth"
 import GitHub from "next-auth/providers/github"
 import Google from "next-auth/providers/google"
 import { createUser, enableOAuth, getUserByEmail } from "@/lib/api"
+import Credentials from "next-auth/providers/credentials"
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
@@ -89,9 +90,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         // You might want to handle this error differently
         throw error;
       }
-      
-      token.isOAuth = account ? account.provider !== "credentials" : token.isOAuth;
-      return token;
     },
   },
   session: { strategy: "jwt" },
