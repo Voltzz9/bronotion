@@ -17,6 +17,10 @@ quit;
 ```
 4. Run the following command to create the tables:
 ```bash
+cd backend
+yarn install
+```
+```bash
 npx prisma migrate dev --name init
 ```
 5. Run the following command to populate the tables:
