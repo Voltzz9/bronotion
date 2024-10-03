@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { motion, useScroll, useSpring, useTransform } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import AnimatedArrowButton from './animated-arrow-button'; // Assuming this is the arrow button
-import { Avatar, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { usePathname } from 'next/navigation';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import SignOutButton from './sign-out';
@@ -74,7 +74,10 @@ export default function Header() {
                 <DropdownMenuTrigger asChild>
                   <Avatar className="cursor-pointer">
                     {session && (
-                      <AvatarImage src={session.user?.image || ''} alt={session.user?.name || 'User'} />
+                      <>
+                        <AvatarImage src={session.user?.image || ''} alt={session.user?.name || 'User'} />
+                        <AvatarFallback>{session.user?.name?.[0] || 'U'}</AvatarFallback>
+                      </>
                     )}
                   </Avatar>
                 </DropdownMenuTrigger>

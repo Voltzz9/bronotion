@@ -23,6 +23,7 @@
 /backend/.DS_Store
 /client/*.pem
 
+
 # debug
 /client/npm-debug.log*
 /client/yarn-debug.log*
@@ -52,3 +53,6 @@
 /client/.env  
 /backend/.env.local
 /backend/.env
+.DS_Store
+
+/backend/prisma/migrations/
