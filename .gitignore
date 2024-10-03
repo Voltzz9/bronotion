@@ -48,5 +48,7 @@
 /client/next-env.d.ts
 
 # Env files
-/client/.env.local   
+/client/.env.local
+/client/.env  
+/backend/.env.local
 /backend/.env
