@@ -4,7 +4,10 @@ const bcrypt = require('bcrypt');
 const cors = require('cors');
 const https = require('https'); // Import HTTPS
 const fs = require('fs'); // Import File System
+const { createClient } = require("@usewaypoint/client");
 require('dotenv').config();
+
+const client = createClient(process.env.API_KEY_USERNAME, process.env.API_KEY_PASSWORD);
 
 const prisma = new PrismaClient();
 const app = express();
@@ -18,6 +21,23 @@ const options = {
 
 app.use(cors());
 app.use(express.json());
+
+// ********************************* Emails **************************************
+
+async function sendEmail(to, subject, bodyHtml) {
+  try {
+    await client.emailMessages.createTemplated({
+      to: to,
+      subject: subject,
+      bodyHtml: bodyHtml
+    });
+    console.log('Email sent successfully');
+    return { success: true, message: 'Email sent successfully' };
+  } catch (error) {
+    console.error('Error sending email:', error);
+    return { success: false, error: 'Error sending email' };
+  }
+}
 
 // ********************************* User Routes *********************************
 
