@@ -4,17 +4,45 @@ import Google from "next-auth/providers/google"
 import { createUser, enableOAuth, getUserByEmail } from "@/lib/api"
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  providers: [GitHub, Google],
+  providers: [
+    GitHub,
+    Google,
+    Credentials({
+      name: "Credentials",
+      credentials: {
+        email: { label: "Email", type: "text", placeholder: "admin@example.com" },
+        password: { label: "Password", type: "password" }
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) {
+          return null;
+        }
+        
+        // Hardcoded admin credentials
+        if (credentials.email === "admin@example.com" && credentials.password === "adminpassword") {
+          return {
+            id: "admin-id",
+            email: "admin@example.com",
+            name: "Admin User",
+            role: "ADMIN"
+          };
+        }
+        return null;
+      }
+    }),
+  ],
   callbacks: {
     async session({token, session}){
       console.log('Session token:', session);
       if (token.sub && session.user){
-        session.user.id = token.sub
+        session.user.id = token.sub;
       }
       return session;
     },
     async jwt({token, user, account}) {
-      token.sub = account?.providerAccountId;
+      if (user) {
+        token.sub = user.id;
+      }
       if (!token.sub) return token;
 
       try {
@@ -61,7 +89,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         // You might want to handle this error differently
         throw error;
       }
+      
+      token.isOAuth = account ? account.provider !== "credentials" : token.isOAuth;
+      return token;
     },
   },
   session: { strategy: "jwt" },
-})
+});
