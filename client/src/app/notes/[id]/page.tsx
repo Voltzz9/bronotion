@@ -1,10 +1,10 @@
 import { SessionWrapper } from "@/app/SessionProvider";
-import  Notes  from "./notes"
+import Note from "./notes"
 
 export default function NotesPage() {
   return (
     <SessionWrapper>
-        <Notes />
+      <Note />
     </SessionWrapper>
   );
 }

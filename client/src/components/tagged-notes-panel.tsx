@@ -1,80 +1,120 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { ChevronDown } from 'lucide-react'
+import InlineSearchBar from './inline-search-bar'
+import { CollaboratorPopup } from '@/components/collaborator-popup'
 
 interface Note {
-  id: string
+  note_id: string
   title: string
   content: string
+  tag_id: string
+  created_at: Date
+  updated_at: Date
 }
 
-interface Tag {
-  id: string
-  name: string
-  notes: Note[]
-}
-
-const sampleTags: Tag[] = [
+// Sample JSON data
+const sampleNotes: Note[] = [
   {
-    id: '1',
-    name: 'Work',
-    notes: [
-      { id: '1', title: 'Meeting notes', content: 'Discuss project timeline' },
-      { id: '2', title: 'To-do list', content: 'Finish report by Friday' },
-    ],
+    note_id: "1",
+    title: "Meeting Notes",
+    content: "Discussed project timeline and goals",
+    tag_id: "work",
+    created_at: new Date("2024-09-30T10:00:00Z"),
+    updated_at: new Date("2024-09-30T10:30:00Z")
   },
   {
-    id: '2',
-    name: 'Personal',
-    notes: [
-      { id: '3', title: 'Grocery list', content: 'Milk, eggs, bread' },
-      { id: '4', title: 'Birthday ideas', content: 'Gift ideas for mom' },
-    ],
+    note_id: "2",
+    title: "Shopping List",
+    content: "Milk, eggs, bread, vegetables",
+    tag_id: "personal",
+    created_at: new Date("2024-10-01T09:00:00Z"),
+    updated_at: new Date("2024-10-01T09:15:00Z")
   },
+  {
+    note_id: "3",
+    title: "Book Ideas",
+    content: "Sci-fi novel about time travel",
+    tag_id: "creative",
+    created_at: new Date("2024-10-02T14:00:00Z"),
+    updated_at: new Date("2024-10-02T14:45:00Z")
+  },
+  {
+    note_id: "4",
+    title: "Bug Fix #123",
+    content: "Fixed issue with login authentication",
+    tag_id: "work",
+    created_at: new Date("2024-10-03T11:00:00Z"),
+    updated_at: new Date("2024-10-03T11:30:00Z")
+  }
 ]
 
 export function TaggedNotesPanelComponent() {
+  const [notes, setNotes] = useState<Note[]>([])
+  const [uniqueTagIds, setUniqueTagIds] = useState<string[]>([])
   const [openTags, setOpenTags] = useState<string[]>([])
 
+  useEffect(() => {
+    const fetchNotes = async () => {
+      try {
+        //const response = await fetch('/users/1/notes')
+        //if (!response.ok) {
+        // throw new Error('Failed to fetch notes')
+        //}
+        // const data: Note[] = await response.json()
+        setNotes(sampleNotes)
+
+        const uniqueIds = Array.from(new Set(sampleNotes.map((note: Note) => note.tag_id)))
+        setUniqueTagIds(uniqueIds)
+      } catch (error) {
+        console.error('Error fetching notes:', error)
+      }
+    }
+
+    fetchNotes()
+  }, [])
+
   const toggleTag = (tagId: string) => {
-    setOpenTags(prev =>
-      prev.includes(tagId) ? prev.filter(id => id !== tagId) : [...prev, tagId]
+    setOpenTags(prevOpenTags =>
+      prevOpenTags.includes(tagId)
+        ? prevOpenTags.filter(id => id !== tagId)
+        : [...prevOpenTags, tagId]
     )
   }
 
   return (
     <div className="w-full mx-auto bg-gray-100 min-h-screen">
+
       <div className="bg-white rounded-lg overflow-hidden">
-        {sampleTags.map((tag) => (
-          <div key={tag.id}>
+        <div className="border-b">
+          <InlineSearchBar />
+        </div>
+        <div className="p-2 border-b">
+          <CollaboratorPopup />
+        </div>
+        {uniqueTagIds.map((tagId) => (
+          <div key={tagId}>
             <button
-              onClick={() => toggleTag(tag.id)}
+              onClick={() => toggleTag(tagId)}
               className="flex items-center justify-between w-full text-left border-b border-gray-200 p-4 hover:bg-gray-50 transition-colors"
             >
-              <span className="font-medium">{tag.name}</span>
+              <span className="font-medium">{tagId}</span>
               <ChevronDown
                 size={20}
-                className={`transition-transform duration-300 ${
-                  openTags.includes(tag.id) ? 'transform rotate-180' : ''
-                }`}
+                className={`transition-transform duration-300 ${openTags.includes(tagId) ? 'transform rotate-180' : ''}`}
               />
             </button>
             <div
-              className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                openTags.includes(tag.id) ? 'max-h-[500px]' : 'max-h-0'
-              }`}
+              className={`overflow-hidden transition-all duration-300 ease-in-out ${openTags.includes(tagId) ? 'max-h-[500px]' : 'max-h-0'}`}
             >
               <div className="bg-gray-50">
-                {tag.notes.map((note, index) => (
+                {notes.filter(note => note.tag_id === tagId).map((note, index, filteredNotes) => (
                   <div
-                    key={note.id}
-                    className={`p-4 ${
-                      index !== tag.notes.length - 1 ? 'border-b border-gray-200' : ''
-                    }`}
+                    key={note.note_id}
+                    className={`p-2 ${index !== filteredNotes.length - 1 ? 'border-b border-gray-200' : ''}`}
                   >
-                    <h3 className="font-medium">{note.title}</h3>
-                    <p className="text-sm text-gray-600 mt-1">{note.content}</p>
+                    <div className="text-sm text-center"> {note.title} </div>
                   </div>
                 ))}
               </div>
@@ -82,6 +122,6 @@ export function TaggedNotesPanelComponent() {
           </div>
         ))}
       </div>
-    </div>
+    </div >
   )
 }
