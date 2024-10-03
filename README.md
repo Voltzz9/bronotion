@@ -17,11 +17,15 @@ quit;
 ```
 4. Run the following command to create the tables:
 ```bash
-psql -U admin -d bronotion -a -f ./backend/DDL.sql;
+cd backend
+yarn install
+```
+```bash
+npx prisma migrate dev --name init
 ```
 5. Run the following command to populate the tables:
 ```bash
-psql -U admin -d bronotion -a -f ./backend/DML.sql;
+psql -U admin -d bronotion -a -f ./sql/DML.sql;
 ```
 
 
