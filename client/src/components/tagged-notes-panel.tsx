@@ -3,9 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import { ChevronDown } from 'lucide-react'
 import InlineSearchBar from './inline-search-bar'
-import { Button } from './ui/button'
 import { CollaboratorPopup } from '@/components/collaborator-popup'
-import { useSelector } from 'react-redux';
 
 interface Note {
   note_id: string
