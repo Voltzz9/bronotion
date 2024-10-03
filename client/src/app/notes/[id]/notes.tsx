@@ -53,7 +53,7 @@ export default function Notes() {
     <div className="min-h-screen flex flex-col bg-gray-50">
       <Header />
       <main className="flex flex-grow pt-24">
-        <div className="w-2/4 p-4 flex flex-col">
+        <div className="w-2/4 pb-4 pl-4 pr-2 flex flex-col">
           <div className="bg-white shadow-lg rounded-lg overflow-hidden flex-grow flex flex-col">
             <textarea
               value={note}
@@ -63,7 +63,7 @@ export default function Notes() {
             />
           </div>
         </div>
-        <div className="w-2/4 p-4 flex flex-col">
+        <div className="w-2/4 pb-4 pl-2 pr-4 flex flex-col">
           <div className="bg-white shadow-lg rounded-lg overflow-hidden flex-grow flex flex-col">
             <div
               className="w-full h-full resize-none border-none outline-none p-4 flex-grow overflow-auto markdown-style"
