@@ -8,19 +8,19 @@ BEGIN
     CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
     -- Insert mock users and store their IDs
-    INSERT INTO "User" (id, name, username, password_hash, email, "emailVerified", image)
+    INSERT INTO "User" (id, username, password_hash, email, "emailVerified", image)
     VALUES
-        (uuid_generate_v4(), 'Alice Smith', 'alice_smith', '$2b$12$e.gO4Wg6IvR1ZAl/Fr8Uuey4BfV6gi3EYuk/JOnUNy6Br1ZeF59ye', 'alice@example.com', NOW(), 'https://example.com/images/alice.jpg')
+        (uuid_generate_v4(), 'alice_smith', '$2b$12$e.gO4Wg6IvR1ZAl/Fr8Uuey4BfV6gi3EYuk/JOnUNy6Br1ZeF59ye', 'alice@example.com', NOW(), 'https://example.com/images/alice.jpg')
     RETURNING id INTO alice_id;
 
-    INSERT INTO "User" (id, name, username, password_hash, email, "emailVerified", image)
+    INSERT INTO "User" (id, username, password_hash, email, "emailVerified", image)
     VALUES
-        (uuid_generate_v4(), 'Bob Johnson', 'bob_johnson', '$2b$12$e.gO4Wg6IvR1ZAl/Fr8Uuey4BfV6gi3EYuk/JOnUNy6Br1ZeF59ye', 'bob@example.com', NULL, 'https://example.com/images/bob.jpg')
+        (uuid_generate_v4(), 'bob_johnson', '$2b$12$e.gO4Wg6IvR1ZAl/Fr8Uuey4BfV6gi3EYuk/JOnUNy6Br1ZeF59ye', 'bob@example.com', NULL, 'https://example.com/images/bob.jpg')
     RETURNING id INTO bob_id;
 
-    INSERT INTO "User" (id, name, username, password_hash, email, "emailVerified", image)
+    INSERT INTO "User" (id, username, password_hash, email, "emailVerified", image)
     VALUES
-        (uuid_generate_v4(), 'Charlie Brown', 'charlie_brown', '$2b$12$e.gO4Wg6IvR1ZAl/Fr8Uuey4BfV6gi3EYuk/JOnUNy6Br1ZeF59ye', 'charlie@example.com', NOW(), 'https://example.com/images/charlie.jpg')
+        (uuid_generate_v4(), 'charlie_brown', '$2b$12$e.gO4Wg6IvR1ZAl/Fr8Uuey4BfV6gi3EYuk/JOnUNy6Br1ZeF59ye', 'charlie@example.com', NOW(), 'https://example.com/images/charlie.jpg')
     RETURNING id INTO charlie_id;
 
     -- Insert mock user authentication methods

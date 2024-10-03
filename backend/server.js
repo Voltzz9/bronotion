@@ -41,11 +41,15 @@ app.get('/users', async (req, res) => {
 // Create a new user (for OAuth)
 app.post('/create_user', async (req, res) => {
   try {
-    const { id, name, email, image } = req.body;
+    const { id, name, email, image, auth_method, provider_account_id } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ error: 'Missing required fields email' });
+    }
 
     // Check if user already exists
-    const existingUser = await prisma.user.findUnique({
-      where: { id: id },
+    const existingUser = await prisma.user.findFirst({
+      where: { email: email },
     });
 
     if (existingUser) {
@@ -53,29 +57,124 @@ app.post('/create_user', async (req, res) => {
     }
 
     // Generate a username from email
-    const username = email.split('@')[0];
+    let username = '';
+    if (name) {
+      username = name;
+    } else {
+      username = email.split('@')[0];
+    }
 
+    // if auth_method not defined, it is manual
+    const auth = auth_method || 'manual';
+
+    // Create user with associated records
     const user = await prisma.user.create({
       data: {
         id: id,
-        name: name,
-        username: username, // Add this line
+        username: username,
         email: email,
         emailVerified: new Date(),
         image: image,
         auth_methods: {
           create: {
-            isManual: false,
-            isOAuth: true,
+            isManual: auth === 'manual',
+            isOAuth: auth === 'google' || auth === 'github',
           },
         },
+        accounts: auth === 'google' || auth === 'github' ? {
+          create: {
+            type: 'oauth',
+            provider: auth,
+            provider_account_id: provider_account_id,
+            // TODO add access_token and refresh_token etc.
+          },
+        } : undefined,
+      },
+      include: {
+        auth_methods: true,
+        accounts: true,
       },
     });
 
-    res.status(201).json({ message: 'User created successfully', userId: user.id });
+    res.status(201).json({ 
+      message: 'User created successfully', 
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        username: user.username,
+      }
+    });
   } catch (error) {
     console.error('Error creating user:', error);
-    res.status(500).json({ error: 'Internal Server Error', details: error.message });
+    res.status(500).json({ 
+      error: 'Internal Server Error', 
+      details: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
+  }
+});
+
+// Get User ID from email
+app.get('/users/email/:email', async (req, res) => {
+  try {
+    const email = req.params.email;
+    const user = await prisma.user.findFirst({
+      where: {
+        email: email,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json(user);
+  } catch (error) {
+    console.error('Error retrieving user:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// Enable OAuth for a user
+app.post('/users/:userId/oauth', async (req, res) => {
+  try {
+    const userId = req.params.userId;
+
+    // Await the result of findFirst to get the data
+    const data = await prisma.userAuthMethod.findFirst({
+      where: {
+        user_id: userId,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (!data) {
+      // If no data is found, return a 404 response
+      return res.status(404).json({ error: 'UserAuthMethod not found for this user' });
+    }
+
+    const id = data.id;
+
+    await prisma.userAuthMethod.update({
+      where: {
+        id: id,
+      },
+      data: {
+        isOAuth: true,
+      },
+    });
+
+    res.status(200).json({ message: 'OAuth enabled successfully' });
+
+  } catch (error) {
+    console.error('Error enabling OAuth:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 

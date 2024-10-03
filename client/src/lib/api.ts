@@ -1,11 +1,12 @@
 const API_BASE_URL = 'https://localhost:8080';
 
 interface User {
-    id: string;
-    name: string;
+    id?: string;
     email: string;
     image?: string;
-    username?: string; // Add this line
+    username?: string;
+    auth_method?: string;
+    provider_account_id?: string;
   }
 
 export async function getUserById(userId: string): Promise<User | null> {
@@ -24,7 +25,45 @@ export async function getUserById(userId: string): Promise<User | null> {
     console.error('Error fetching user:', error);
     throw error;
   }
-}  
+}
+
+export async function enableOAuth(userId: string): Promise<User> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/users/${userId}/enable_oauth`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    if (!response.ok) {
+      throw new Error('Error enabling OAuth');
+    }
+    const data: User = await response.json();
+    console.log('OAuth enabled:', data);
+    return data;
+  } catch (error) {
+    console.error('Error enabling OAuth:', error);
+    throw error;
+  }
+}
+
+export async function getUserByEmail(email: string): Promise<User | null> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/users/email/${email}`);
+    if (response.status === 404) {
+      return null;
+    }
+    if (!response.ok) {
+      throw new Error('Error fetching user');
+    }
+    const data: User = await response.json();
+    console.log('User data fetched with email:', data);
+    return data;
+  } catch (error) {
+    console.error('Error fetching user:', error);
+    throw error;
+  }
+}
 
 export async function createUser(user: User): Promise<User> {
 try {
