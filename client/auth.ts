@@ -1,7 +1,7 @@
 import NextAuth from "next-auth"
 import GitHub from "next-auth/providers/github"
 import Google from "next-auth/providers/google"
-import { createUser, enableOAuth, getUserByEmail, getUserById } from "@/lib/api"
+import { createUser, enableOAuth, getUserByEmail, getUserById, loginUser } from "@/lib/api"
 import Credentials from "next-auth/providers/credentials"
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
@@ -14,35 +14,35 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         email: { label: "Email", type: "text", placeholder: "admin@example.com" },
         password: { label: "Password", type: "password" }
       },
-      async authorize(credentials) {
+      async authorize(credentials: Partial<Record<"email" | "password", unknown>>) {
+        console.log('Credentials:', credentials);  // Debugging
         if (!credentials?.email || !credentials?.password) {
+          console.error('Missing credentials');
           return null;
         }
-        
-        // Hardcoded admin credentials
-        if (credentials.email === "admin@example.com" && credentials.password === "adminpassword") {
-          return {
-            id: "admin-id",
-            email: "admin@example.com",
-            name: "Admin User",
-            role: "ADMIN"
-          };
+      
+        try {
+          // Your user login logic here
+          const user = await loginUser(credentials.email as string, credentials.password as string);
+          if (user) {
+            return user;
+          }
+          return null;
+        } catch (error) {
+          console.error('Error during login:', error);
+          return null;
         }
-        return null;
       }
     }),
   ],
   callbacks: {
     async session({token, session}){
-      console.log('Session token:', session);
       if (token.sub && session.user){
         session.user.id = token.sub;
       }
       return session;
     },
     async jwt({token, user, account}) {
-      console.log('JWT token:', token);
-      console.log('JWT user:', user);
       if (user) {
         token.sub = user.id;
       } else {
@@ -61,11 +61,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           if (user_id) {
             existingUser = await getUserById(user_id);
           }
-          console.log('Existing user:', existingUser);
         }
 
         if (!existingUser) {
-          console.log('User does not exist, creating new user:', user);
           // User doesn't exist, create a new one
           // if not make an entry (dont specify id it will generate one)
           // add account table entry
@@ -80,9 +78,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           };
 
           existingUser = await createUser(newUser);
-          console.log('New user created:', existingUser);
         } else {
-          console.log('User exists:', existingUser);
           // Enable OAuth for account
           const id = existingUser.id;
           if (id) {

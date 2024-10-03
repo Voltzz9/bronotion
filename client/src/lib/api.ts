@@ -92,3 +92,26 @@ try {
     throw error;
 }
 }
+
+export async function loginUser(email: string, password: string): Promise<User> {
+  try {
+      const response = await fetch(`${API_BASE_URL}/login`, {
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, password }),
+      });
+      if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(`Error logging in: ${response.status} ${response.statusText}. ${JSON.stringify(errorData)}`);
+      }
+      const data: User = await response.json();
+      console.log('User logged in:', data);
+      return data;
+  }
+  catch (error) {
+      console.error('Error logging in:', error);
+      throw error;
+  }
+}

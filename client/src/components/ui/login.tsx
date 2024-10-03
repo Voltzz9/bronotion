@@ -80,7 +80,7 @@ export default function Component() {
 
       if (response.ok) {
         await signIn('credentials', {
-          redirect: false,
+          redirectTo: '/home',
           email,
           password,
         });

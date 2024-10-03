@@ -41,7 +41,7 @@ app.get('/users', async (req, res) => {
 // Create a new user (for OAuth)
 app.post('/create_user', async (req, res) => {
   try {
-    const { id, name, email, image, auth_method, provider_account_id } = req.body;
+    const { id, name, password,email, image, auth_method, provider_account_id } = req.body;
 
     if (!email) {
       return res.status(400).json({ error: 'Missing required fields email' });
@@ -68,31 +68,35 @@ app.post('/create_user', async (req, res) => {
     const auth = auth_method || 'manual';
 
     // Create user with associated records
+    // Hash the password before storing it in the database
+    const hashedPassword = await bcrypt.hash(password, 10);
+
     const user = await prisma.user.create({
       data: {
-        id: id,
-        username: username,
-        email: email,
-        emailVerified: new Date(),
-        image: image,
-        auth_methods: {
-          create: {
-            isManual: auth === 'manual',
-            isOAuth: auth === 'google' || auth === 'github',
-          },
+      id: id,
+      username: username,
+      password_hash: hashedPassword,
+      email: email,
+      emailVerified: new Date(),
+      image: image,
+      auth_methods: {
+        create: {
+        isManual: auth === 'manual',
+        isOAuth: auth === 'google' || auth === 'github',
         },
-        accounts: auth === 'google' || auth === 'github' ? {
-          create: {
-            type: 'oauth',
-            provider: auth,
-            provider_account_id: provider_account_id,
-            // TODO add access_token and refresh_token etc.
-          },
-        } : undefined,
+      },
+      accounts: auth === 'google' || auth === 'github' ? {
+        create: {
+        type: 'oauth',
+        provider: auth,
+        provider_account_id: provider_account_id,
+        // TODO add access_token and refresh_token etc.
+        },
+      } : undefined,
       },
       include: {
-        auth_methods: true,
-        accounts: true,
+      auth_methods: true,
+      accounts: true,
       },
     });
 
@@ -206,13 +210,14 @@ app.get('/users/:userId', async (req, res) => {
 app.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
-
     const user = await prisma.user.findFirst({
       where: {
         email,
         auth_methods: {
-          isManual: true,
-        },
+          some: {
+            isManual: true
+          }
+        }
       },
       include: {
         auth_methods: true,
@@ -224,17 +229,14 @@ app.post('/login', async (req, res) => {
     }
 
     const passwordMatch = await bcrypt.compare(password, user.password_hash);
-
     if (passwordMatch) {
-      res.status(200).json({ message: 'Login successful', userId: user.id });
-      res.status(200).json({ message: 'Login successful', userId: user.id });
+      return res.status(200).json({ message: 'Login successful', userId: user.id, email: user.email });
     } else {
-      res.status(401).json({ error: 'Invalid email or password' });
+      return res.status(401).json({ error: 'Invalid email or password' });
     }
   } catch (error) {
     console.error('Error logging in:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
-    res.status(500).json({ error: 'Internal Server Error' });
+    return res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
