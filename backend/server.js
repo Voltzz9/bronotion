@@ -38,20 +38,35 @@ app.get('/users', async (req, res) => {
   }
 });
 
-// Add a manual user
+// Create a new user (for OAuth)
 app.post('/create_user', async (req, res) => {
   try {
-    const { username, email, password } = req.body;
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const { id, name, email, image } = req.body;
+
+    // Check if user already exists
+    const existingUser = await prisma.user.findUnique({
+      where: { id: id },
+    });
+
+    if (existingUser) {
+      return res.status(409).json({ error: 'User already exists' });
+    }
+
+    // Generate a username from email
+    const username = email.split('@')[0];
 
     const user = await prisma.user.create({
       data: {
-        username,
-        email,
-        password_hash: hashedPassword,
+        id: id,
+        name: name,
+        username: username, // Add this line
+        email: email,
+        emailVerified: new Date(),
+        image: image,
         auth_methods: {
           create: {
-            isManual: true,
+            isManual: false,
+            isOAuth: true,
           },
         },
       },
@@ -60,14 +75,15 @@ app.post('/create_user', async (req, res) => {
     res.status(201).json({ message: 'User created successfully', userId: user.id });
   } catch (error) {
     console.error('Error creating user:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    res.status(500).json({ error: 'Internal Server Error', details: error.message });
   }
 });
+
 
 // View user info
 app.get('/users/:userId', async (req, res) => {
   try {
-    const userId = parseInt(req.params.userId);
+    const userId = req.params.userId;
     const user = await prisma.user.findUnique({
       where: { id: userId },
       include: {
@@ -82,6 +98,7 @@ app.get('/users/:userId', async (req, res) => {
     res.json(user);
   } catch (error) {
     console.error('Error retrieving user:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
@@ -111,11 +128,13 @@ app.post('/login', async (req, res) => {
 
     if (passwordMatch) {
       res.status(200).json({ message: 'Login successful', userId: user.id });
+      res.status(200).json({ message: 'Login successful', userId: user.id });
     } else {
       res.status(401).json({ error: 'Invalid email or password' });
     }
   } catch (error) {
     console.error('Error logging in:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
@@ -141,7 +160,7 @@ app.delete('/users/:userId', async (req, res) => {
 // Create a new note
 app.post('/notes', async (req, res) => {
   try {
-    const { title, content, user_id, tag_id } = req.body;
+    const { title, content, userId } = req.body;
 
     const note = await prisma.note.create({
       data: {
@@ -179,11 +198,11 @@ app.get('/users/:userId/notes', async (req, res) => {
   }
 });
 
-// Update an existing note
+// Update a note
 app.put('/notes/:noteId', async (req, res) => {
   try {
     const noteId = parseInt(req.params.noteId);
-    const { title, content, tag_id } = req.body;
+    const { title, content } = req.body;
 
     const note = await prisma.note.update({
       where: { note_id: noteId },
