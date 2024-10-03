@@ -79,7 +79,6 @@ export default function Component() {
       const result = await response.json();
 
       if (response.ok) {
-        // Automatically log in after successful signup
         await signIn('credentials', {
           redirect: false,
           email,
