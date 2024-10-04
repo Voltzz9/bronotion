@@ -10,6 +10,7 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 import { PlusIcon, SearchIcon, CalendarIcon, UserIcon } from 'lucide-react'
 import Link from 'next/link'
 import { useSession } from 'next-auth/react'
+import { NoteSelector } from "@/components/note-selector"
 
 const URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -65,46 +66,69 @@ interface ActiveEditor {
 
 export function NoteDashboardV2() {
   const { data: session } = useSession();
-  const [searchTerm, setSearchTerm] = useState('')
-  const [notes, setNotes] = useState<Note[]>([])
-  const [selectedTags, setSelectedTags] = useState<string[]>([])
-  const [allTags, setAllTags] = useState<string[]>([])
+  const [searchTerm, setSearchTerm] = useState('');
+  const [notes, setNotes] = useState<Note[]>([]);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [allTags, setAllTags] = useState<string[]>([]);
+  const [noteView, setNoteView] = useState('all'); // 'all', 'my', 'shared'
 
   useEffect(() => {
     if (session?.user?.id) {
       console.log('Session User ID:', session.user.id);
-      fetchNotes(session.user.id)
-      fetchTags(session.user.id)
+      fetchNotes(session.user.id);
+      fetchTags(session.user.id);
     }
-  }, [session])
+  }, [session, noteView]); // Re-fetch notes when noteView changes
 
   const fetchTags = async (userId: string) => {
     try {
-      const response = await fetch(`${URL}tags/${userId}`)
-      const data = await response.json()
-      console.log('Tags:', data)
-      const tags = data.map((tag: any) => tag.name)
-      setAllTags(tags)
+      const response = await fetch(`${URL}tags/${userId}`);
+      const data = await response.json();
+      console.log('Tags:', data);
+      const tags = data.map((tag: any) => tag.name);
+      setAllTags(tags);
     } catch (error) {
-      console.error('Failed to fetch tags:', error)
+      console.error('Failed to fetch tags:', error);
     }
-  }
+  };
 
   const fetchNotes = async (userId: string) => {
     try {
-      const fetchUrl = `${URL}users/${userId}/notes`;
+      let fetchUrl = `${URL}users/${userId}/notes`;
+      let requestOptions: RequestInit = {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ includeShared: true }), // Default to includeShared: true
+      };
+  
+      if (noteView === 'own') {
+        requestOptions.body = JSON.stringify({ includeShared: false });
+      } else if (noteView === 'shared') {
+        fetchUrl = `${URL}users/${userId}/shared-notes`;
+        requestOptions = {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        };
+      }
+  
       console.log('Fetching notes from:', fetchUrl);
-      const response = await fetch(fetchUrl);
+      const response = await fetch(fetchUrl, requestOptions);
+  
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
+  
       const data = await response.json();
       console.log('Data: ', data);
-
+  
       if (!data || !Array.isArray(data)) {
         throw new Error('Invalid data format');
       }
-
+  
       interface ApiNote {
         note_id: number;
         title: string;
@@ -120,22 +144,26 @@ export function NoteDashboardV2() {
           image?: string;
         };
       }
-
-      const formattedNotes = data.map((note: ApiNote) => ({
-        note_id: note.note_id,
-        title: note.title,
-        content: note.content,
-        user_id: note.user_id,
-        created_at: new Date(note.created_at),
-        updated_at: new Date(note.updated_at),
-        is_deleted: note.is_deleted,
-        user: { id: note.user.id, username: note.user.username, image: note.user.image }, // Include username and image
-        tags: note.tags || [], // Ensure tags is always an array
-        shared_notes: [], // Add empty array for shared_notes
-        active_editors: [], // Add empty array for active_editors
-      }));
-
+  
+      const formattedNotes = data.map((item: any) => {
+        const note = noteView === 'shared' ? item : item;
+        return {
+          note_id: note.note_id,
+          title: note.title,
+          content: note.content,
+          user_id: note.user_id,
+          created_at: new Date(note.created_at),
+          updated_at: new Date(note.updated_at),
+          is_deleted: note.is_deleted,
+          user: note.user ? { id: note.user.id, username: note.user.username, image: note.user.image } : { id: '', username: '', image: '' }, // Include username and image
+          tags: note.tags || [], // Ensure tags is always an array
+          shared_notes: [], // Add empty array for shared_notes
+          active_editors: [], // Add empty array for active_editors
+        };
+      });
+  
       setNotes(formattedNotes);
+  
     } catch (error) {
       console.error('Failed to fetch notes:', error);
     }
@@ -148,7 +176,7 @@ export function NoteDashboardV2() {
       title: 'New Note',
       content: "# This is a sample note \n\nYou can edit this note using Markdown syntax.",
       userId: session.user.id,
-    }
+    };
 
     try {
       // contact the API to create a new note
@@ -175,18 +203,35 @@ export function NoteDashboardV2() {
     } catch (error) {
       console.error('Failed to add new note:', error);
     }
-  }
+  };
 
   const toggleTag = (tag: string) => {
     setSelectedTags(prev =>
       prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
-    )
-  }
+    );
+  };
 
   const filteredNotes = notes.filter(note =>
     note.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
     (selectedTags.length === 0 || selectedTags.some(tag => note.tags.includes(tag)))
-  )
+  );
+
+  useEffect(() => {
+    // Update tags based on filtered notes
+    const uniqueTags = Array.from(new Set(filteredNotes.flatMap(note => note.tags)));
+    if (JSON.stringify(uniqueTags) !== JSON.stringify(allTags)) {
+      setAllTags(uniqueTags);
+    }
+  }, [filteredNotes, allTags]);
+
+  // Sort tags to ensure selected tags appear first
+  const sortedTags = [...allTags].sort((a, b) => {
+    const aSelected = selectedTags.includes(a);
+    const bSelected = selectedTags.includes(b);
+    if (aSelected && !bSelected) return -1;
+    if (!aSelected && bSelected) return 1;
+    return 0;
+  });
 
   return (
     <div className="container mx-auto p-4">
@@ -208,38 +253,45 @@ export function NoteDashboardV2() {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
+          <div className="flex justify-between items-center mt-4">
+            <ScrollArea className="w-full whitespace-nowrap rounded-md border h-14">
+              <div className="flex w-max space-x-2 p-4">
+                {sortedTags.map((tag) => (
+                  <Badge
+                    key={tag}
+                    variant={selectedTags.includes(tag) ? "selected" : "outline"}
+                    className="cursor-pointer"
+                    onClick={() => toggleTag(tag)}
+                  >
+                    {tag}
+                  </Badge>
+                ))}
+              </div>
+              <ScrollBar orientation="horizontal" />
+            </ScrollArea>
+            <div className="ml-4 h-14">
+              <NoteSelector value={noteView} onChange={setNoteView} />
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
-          <ScrollArea className="w-full whitespace-nowrap rounded-md border">
-            <div className="flex w-max space-x-2 p-4">
-              {allTags.map((tag) => (
-                <Badge
-                  key={tag}
-                  variant={selectedTags.includes(tag) ? "selected" : "outline"}
-                  className="cursor-pointer"
-                  onClick={() => toggleTag(tag)}
-                >
-                  {tag}
-                </Badge>
-              ))}
-            </div>
-            <ScrollBar orientation="horizontal" />
-          </ScrollArea>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
             {filteredNotes.map((note) => (
               <Link key={note.note_id} href={`/notes/${note.note_id}`} passHref>
-                <Card className="flex flex-col cursor-pointer h-48"> {/* Set a fixed height */}
-                  <CardHeader className="flex-grow">
+                <Card className="flex flex-col cursor-pointer h-52"> {/* Set a fixed height */}
+                  <CardHeader className="flex-grow pb-2">
                     <CardTitle className="text-lg text-secondary">{note.title}</CardTitle>
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {note.tags.map((tag) => (
-                        <Badge key={tag} variant="outline">
-                          {tag}
-                        </Badge>
-                      ))}
-                    </div>
+                    <ScrollArea className="h-16 w-full mt-2">
+                      <div className="flex flex-wrap gap-2">
+                        {note.tags.map((tag) => (
+                          <Badge key={tag} variant="outline">
+                            {tag}
+                          </Badge>
+                        ))}
+                      </div>
+                    </ScrollArea>
                   </CardHeader>
-                  <CardFooter className="mt-auto">
+                  <CardFooter className="mt-auto pt-2">
                     <div className="flex justify-between items-center w-full text-sm text-muted-foreground">
                       <div className="flex items-center">
                         <CalendarIcon className="mr-2 h-4 w-4" />
@@ -262,5 +314,5 @@ export function NoteDashboardV2() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

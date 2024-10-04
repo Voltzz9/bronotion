@@ -288,11 +288,13 @@ app.post('/notes', async (req, res) => {
   }
 });
 
-// Fetch all notes for a user
-app.get('/users/:userId/notes', async (req, res) => {
+app.post('/users/:userId/notes', async (req, res) => {
   try {
     const userId = req.params.userId;
-    const notes = await prisma.note.findMany({
+    const { includeShared } = req.body; // Default to false if not provided
+
+    // Fetch the user's own notes
+    const userNotes = await prisma.note.findMany({
       where: {
         user_id: userId,
         is_deleted: false,
@@ -307,13 +309,47 @@ app.get('/users/:userId/notes', async (req, res) => {
       },
     });
 
-    // Format the notes to include only the tag names
-    const formattedNotes = notes.map(note => ({
+    let sharedNotes = [];
+    if (includeShared) {
+      // Fetch the shared notes
+      sharedNotes = await prisma.sharedNote.findMany({
+        where: {
+          shared_with_user_id: userId,
+          note: {
+            is_deleted: false,
+          },
+        },
+        include: {
+          note: {
+            include: {
+              user: true, // Include user data
+              tags: {
+                include: {
+                  tag: true,
+                },
+              },
+            },
+          },
+        },
+      });
+
+      // Format the shared notes to include only the tag names
+      sharedNotes = sharedNotes.map(sharedNote => ({
+        ...sharedNote.note,
+        tags: sharedNote.note.tags.map(noteTag => noteTag.tag.name),
+      }));
+    }
+
+    // Format the user's own notes to include only the tag names
+    const formattedUserNotes = userNotes.map(note => ({
       ...note,
       tags: note.tags.map(noteTag => noteTag.tag.name),
     }));
 
-    res.json(formattedNotes);
+    // Combine the user's own notes and the shared notes
+    const allNotes = [...formattedUserNotes, ...sharedNotes];
+
+    res.json(allNotes);
   } catch (error) {
     console.error('Error fetching notes:', error);
     res.status(500).json({ error: 'Internal Server Error' });
@@ -448,19 +484,34 @@ app.get('/users/:userId/shared-notes', async (req, res) => {
       },
       include: {
         note: {
-          select: {
-            note_id: true,
-            title: true,
-            content: true,
-            user_id: true,
-            created_at: true,
-            updated_at: true,
+          include: {
+            user: true, // Include user data
+            tags: {
+              include: {
+                tag: true,
+              },
+            },
           },
         },
       },
     });
 
-    res.json(sharedNotes);
+    // Format the shared notes to include only the tag names
+    const formattedSharedNotes = sharedNotes.map(sharedNote => ({
+      note_id: sharedNote.note.note_id,
+      title: sharedNote.note.title,
+      content: sharedNote.note.content,
+      user_id: sharedNote.note.user_id,
+      created_at: sharedNote.note.created_at,
+      updated_at: sharedNote.note.updated_at,
+      is_deleted: sharedNote.note.is_deleted,
+      user: sharedNote.note.user ? { id: sharedNote.note.user.id, username: sharedNote.note.user.username, image: sharedNote.note.user.image } : { id: '', username: '', image: '' },
+      tags: sharedNote.note.tags.map(noteTag => noteTag.tag.name),
+      shared_notes: [], // Add empty array for shared_notes
+      active_editors: [], // Add empty array for active_editors
+    }));
+
+    res.json(formattedSharedNotes);
   } catch (error) {
     console.error('Error fetching shared notes:', error);
     res.status(500).json({ error: 'Internal Server Error' });
@@ -725,6 +776,15 @@ app.post('/notes/:noteId/tags', async (req, res) => {
   try {
     const noteId = parseInt(req.params.noteId);
     const { tagId } = req.body;
+
+    // Check if the tag exists
+    const tag = await prisma.tag.findUnique({
+      where: { tag_id: tagId },
+    });
+
+    if (!tag) {
+      return res.status(404).json({ error: 'Tag not found' });
+    }
 
     await prisma.noteTag.create({
       data: {
