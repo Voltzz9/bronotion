@@ -5,6 +5,7 @@ import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 import { FloatingCollaborators } from '@/components/floating-collaborators';
 import useNoteId from '@/app/hooks/useNoteId';
+import { Button } from '@/components/ui/button';
 
 const URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -33,6 +34,23 @@ export default function Notes() {
 
   const setNoteContent = (content: string) => {
     setNote(content)
+  }
+
+  const saveNote = async () => {
+    try {
+      const response = await fetch(URL+`notes/${noteId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ content: note }),
+      });
+      if (!response.ok) {
+        throw new Error('Error saving note');
+      }
+    } catch (error) {
+      console.error('Error saving note:', error);
+    }
   }
 
   useEffect(() => {
@@ -72,6 +90,12 @@ export default function Notes() {
               dangerouslySetInnerHTML={{ __html: parsedNote }}
             />
           </div>
+          <Button
+            className="mt-4"
+            onClick={() => {
+              saveNote();
+            }}
+          > Save </Button>
         </div>
       </main>
       <FloatingCollaborators />
