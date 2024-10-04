@@ -9,43 +9,80 @@ import { Badge } from "@/components/ui/badge"
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 import { PlusIcon, SearchIcon, CalendarIcon, UserIcon } from 'lucide-react'
 import Link from 'next/link'
+import { useSession } from 'next-auth/react'
 
 const URL = process.env.NEXT_PUBLIC_API_URL;
 
 interface Note {
-  id: string
-  title: string
-  content: string
-  tags: string[]
-  lastEditDate: Date
-  lastEditedBy: string
+  note_id: number;
+  title: string;
+  content?: string;
+  user_id: string;
+  created_at: Date;
+  updated_at: Date;
+  is_deleted: boolean;
+  // Relations
+  user: User;
+  tags: string[];
+  shared_notes: SharedNote[];
+  active_editors: ActiveEditor[];
 }
 
-const mockNotes: Note[] = [
-  { id: '1', title: 'Q4 Planning', tags: ['Work', 'Planning'], content: "test", lastEditDate: new Date('2023-09-28'), lastEditedBy: 'Alice' },
-  { id: '2', title: 'Grocery List', tags: ['Personal', 'Shopping'], content: "test", lastEditDate: new Date('2023-09-29'), lastEditedBy: 'Bob' },
-  { id: '3', title: 'Book Notes: 1984', tags: ['Study', 'Literature'], content: "test", lastEditDate: new Date('2023-09-30'), lastEditedBy: 'Charlie' },
-  { id: '4', title: 'Workout Plan', tags: ['Health', 'Fitness'], content: "test", lastEditDate: new Date('2023-10-01'), lastEditedBy: 'David' },
-  { id: '5', title: 'Travel Itinerary', tags: ['Personal', 'Travel'], content: "test", lastEditDate: new Date('2023-10-02'), lastEditedBy: 'Eve' },
-]
+interface User {
+  id: string;
+  username: string;
+  image?: string;
+  // Add other fields as necessary
+}
 
-const allTags = Array.from(new Set(mockNotes.flatMap(note => note.tags)))
+interface NoteTag {
+  note_id: number;
+  tag_id: number;
+  tag: Tag;
+}
+
+interface Tag {
+  tag_id: number;
+  name: string;
+}
+
+interface SharedNote {
+  shared_note_id: number;
+  note_id: number;
+  shared_with_user_id: string;
+  can_edit: boolean;
+  shared_at: Date;
+  // Add other fields as necessary
+}
+
+interface ActiveEditor {
+  active_editor_id: number;
+  note_id: number;
+  user_id: string;
+  last_active: Date;
+  // Add other fields as necessary
+}
 
 export function NoteDashboardV2() {
+  const { data: session } = useSession();
   const [searchTerm, setSearchTerm] = useState('')
-  const [notes, setNotes] = useState<Note[]>(mockNotes)
+  const [notes, setNotes] = useState<Note[]>([])
   const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [allTags, setAllTags] = useState<string[]>([])
 
   useEffect(() => {
-    fetchNotes()
-    fetchTags()
-  }, [])
+    if (session?.user?.id) {
+      console.log('Session User ID:', session.user.id);
+      fetchNotes(session.user.id)
+      fetchTags(session.user.id)
+    }
+  }, [session])
 
-  const fetchTags = async () => {
+  const fetchTags = async (userId: string) => {
     try {
-      const response = await fetch(`${URL}/users/1/tags`) // TODO replace with actual user id
+      const response = await fetch(`${URL}tags/${userId}`)
       const data = await response.json()
+      console.log('Tags:', data)
       const tags = data.map((tag: any) => tag.name)
       setAllTags(tags)
     } catch (error) {
@@ -53,34 +90,91 @@ export function NoteDashboardV2() {
     }
   }
 
-  const filteredNotes = notes.filter(note =>
-    note.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
-    (selectedTags.length === 0 || selectedTags.some(tag => note.tags.includes(tag)))
-  )
+  const fetchNotes = async (userId: string) => {
+    try {
+      const fetchUrl = `${URL}users/${userId}/notes`;
+      console.log('Fetching notes from:', fetchUrl);
+      const response = await fetch(fetchUrl);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      console.log('Data: ', data);
 
-  const addNewNote = () => {
+      if (!data || !Array.isArray(data)) {
+        throw new Error('Invalid data format');
+      }
+
+      interface ApiNote {
+        note_id: number;
+        title: string;
+        content: string;
+        user_id: string;
+        created_at: string;
+        updated_at: string;
+        is_deleted: boolean;
+        tags?: string[]; // Tags are returned as an array of strings
+        user: {
+          id: string;
+          username: string;
+          image?: string;
+        };
+      }
+
+      const formattedNotes = data.map((note: ApiNote) => ({
+        note_id: note.note_id,
+        title: note.title,
+        content: note.content,
+        user_id: note.user_id,
+        created_at: new Date(note.created_at),
+        updated_at: new Date(note.updated_at),
+        is_deleted: note.is_deleted,
+        user: { id: note.user.id, username: note.user.username, image: note.user.image }, // Include username and image
+        tags: note.tags || [], // Ensure tags is always an array
+        shared_notes: [], // Add empty array for shared_notes
+        active_editors: [], // Add empty array for active_editors
+      }));
+
+      setNotes(formattedNotes);
+    } catch (error) {
+      console.error('Failed to fetch notes:', error);
+    }
+  };
+
+  const addNewNote = async () => {
+    if (!session?.user?.id) return;
+
     const newNote = {
       title: 'New Note',
       content: "# This is a sample note \n\nYou can edit this note using Markdown syntax.",
-      user_id: 1, // TODO replace with actual user id
+      userId: session.user.id,
     }
 
-    // contact the API to create a new note
-    const response = fetch(URL + '/notes', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(newNote),
-    })
+    try {
+      // contact the API to create a new note
+      const response = await fetch(URL + 'notes', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newNote),
+      });
 
-    console.log(response)
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
-    // update the notes state with the new note
-    // TODO fix this so it checks for success and refreshes the notes
-    // wait 2 seconds for the API to update
-    setTimeout(() => fetchNotes(), 2000)
-    fetchNotes()
+      console.log(response);
+
+      // update the notes state with the new note
+      const userId = session?.user?.id;
+      if (userId) {
+        setTimeout(() => fetchNotes(userId), 2000);
+      }
+      fetchNotes(session.user.id);
+    } catch (error) {
+      console.error('Failed to add new note:', error);
+    }
   }
 
   const toggleTag = (tag: string) => {
@@ -89,35 +183,10 @@ export function NoteDashboardV2() {
     )
   }
 
-  const fetchNotes = async () => {
-    try {
-      const response = await fetch(URL + '/users/1/notes') // TODO replace with actual user id
-      const data = await response.json()
-      console.log(data)
-      
-      interface ApiNote {
-        note_id: number;
-        title: string;
-        content: string;
-        tag_id?: string;
-        updated_at: string;
-      }
-
-      const formattedNotes = data.map((note: ApiNote) => ({
-        id: note.note_id.toString(), // Ensure id is a string
-        title: note.title,
-        content: note.content,
-        tags: note.tag_id ? [note.tag_id] : [], // TODO handle tags properly, also dynamically load
-        lastEditDate: new Date(note.updated_at), // Convert updated_at to Date
-        lastEditedBy: 'User', // TODO replace with actual user name
-      }));
-
-      setNotes(formattedNotes);
-      console.log(formattedNotes);
-    } catch (error) {
-      console.error('Failed to fetch notes:', error);
-    }
-  }
+  const filteredNotes = notes.filter(note =>
+    note.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
+    (selectedTags.length === 0 || selectedTags.some(tag => note.tags.includes(tag)))
+  )
 
   return (
     <div className="container mx-auto p-4">
@@ -146,7 +215,7 @@ export function NoteDashboardV2() {
               {allTags.map((tag) => (
                 <Badge
                   key={tag}
-                  variant={selectedTags.includes(tag) ? "default" : "outline"}
+                  variant={selectedTags.includes(tag) ? "selected" : "outline"}
                   className="cursor-pointer"
                   onClick={() => toggleTag(tag)}
                 >
@@ -158,9 +227,9 @@ export function NoteDashboardV2() {
           </ScrollArea>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
             {filteredNotes.map((note) => (
-              <Link key={note.id} href={`/notes/${note.id}`} passHref>
-                <Card className="flex flex-col cursor-pointer">
-                  <CardHeader>
+              <Link key={note.note_id} href={`/notes/${note.note_id}`} passHref>
+                <Card className="flex flex-col cursor-pointer h-48"> {/* Set a fixed height */}
+                  <CardHeader className="flex-grow">
                     <CardTitle className="text-lg text-secondary">{note.title}</CardTitle>
                     <div className="flex flex-wrap gap-2 mt-2">
                       {note.tags.map((tag) => (
@@ -174,11 +243,15 @@ export function NoteDashboardV2() {
                     <div className="flex justify-between items-center w-full text-sm text-muted-foreground">
                       <div className="flex items-center">
                         <CalendarIcon className="mr-2 h-4 w-4" />
-                        {format(note.lastEditDate, 'MMM d, yyyy')}
+                        {format(note.updated_at, 'MMM d, yyyy')}
                       </div>
                       <div className="flex items-center">
-                        <UserIcon className="mr-2 h-4 w-4" />
-                        {note.lastEditedBy}
+                        {note.user.image ? (
+                          <img src={note.user.image} alt={note.user.username} className="mr-2 h-4 w-4 rounded-full" />
+                        ) : (
+                          <UserIcon className="mr-2 h-4 w-4" />
+                        )}
+                        {note.user.username}
                       </div>
                     </div>
                   </CardFooter>

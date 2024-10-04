@@ -275,7 +275,9 @@ app.post('/notes', async (req, res) => {
       data: {
         title,
         content,
-        userId,
+        user: {
+          connect: { id: userId }, // Connect the note to an existing user
+        },
       },
     });
 
@@ -295,8 +297,23 @@ app.get('/users/:userId/notes', async (req, res) => {
         user_id: userId,
         is_deleted: false,
       },
+      include: {
+        user: true, // Include user data
+        tags: {
+          include: {
+            tag: true,
+          },
+        },
+      },
     });
-    res.json(notes);
+
+    // Format the notes to include only the tag names
+    const formattedNotes = notes.map(note => ({
+      ...note,
+      tags: note.tags.map(noteTag => noteTag.tag.name),
+    }));
+
+    res.json(formattedNotes);
   } catch (error) {
     console.error('Error fetching notes:', error);
     res.status(500).json({ error: 'Internal Server Error' });
@@ -773,6 +790,36 @@ app.get('/tags/:tagId/notes', async (req, res) => {
     res.json(notes);
   } catch (error) {
     console.error('Error fetching notes by tag:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// Get all tags for a specific user
+app.get('/tags/:userId', async (req, res) => {
+  try {
+    const userId = req.params.userId;
+
+    // Query to get all tags associated with the user's notes
+    const tags = await prisma.tag.findMany({
+      where: {
+        notes: {
+          some: {
+            note: {
+              user_id: userId,
+              is_deleted: false,
+            },
+          },
+        },
+      },
+      select: {
+        tag_id: true,
+        name: true,
+      },
+    });
+
+    res.json(tags);
+  } catch (error) {
+    console.error('Error fetching tags for user:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
