@@ -91,7 +91,7 @@ export default function Header() {
                     {session && (
                       <>
                         <AvatarImage src={session.user?.image || ''} alt={session.user?.name || 'User'} />
-                        <AvatarFallback>{session.user?.name?.[0] || 'U'}</AvatarFallback>
+                        <AvatarFallback className="font-bold bg-white">{session.user?.name?.[0] || 'U'}</AvatarFallback>
                       </>
                     )}
                   </Avatar>
