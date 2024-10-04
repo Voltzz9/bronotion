@@ -10,6 +10,8 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 import { PlusIcon, SearchIcon, CalendarIcon, UserIcon } from 'lucide-react'
 import Link from 'next/link'
 import { useSession } from 'next-auth/react'
+import { TagCombobox } from '@/components/tag-combobox'
+import SignOutButton from './ui/sign-out';
 
 const URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -32,7 +34,6 @@ interface User {
   id: string;
   username: string;
   image?: string;
-  // Add other fields as necessary
 }
 
 interface NoteTag {
@@ -52,7 +53,6 @@ interface SharedNote {
   shared_with_user_id: string;
   can_edit: boolean;
   shared_at: Date;
-  // Add other fields as necessary
 }
 
 interface ActiveEditor {
@@ -60,7 +60,6 @@ interface ActiveEditor {
   note_id: number;
   user_id: string;
   last_active: Date;
-  // Add other fields as necessary
 }
 
 export function NoteDashboardV2() {
@@ -141,6 +140,52 @@ export function NoteDashboardV2() {
     }
   };
 
+  const removeTag = async (tag: string, noteId: string) => {
+    if (!session?.user?.id) return;
+
+    console.log('Removing tag from note:', tag, noteId);
+
+    try {
+      // fetch the tag id from the tag name by calling API
+      const response = await fetch(URL + 'tagnames/' + tag);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      const tagId = data.tag_id;
+
+      // contact the API to remove the tag from the note
+      const response2 = await fetch(URL + 'notes/' + noteId + '/tags', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ tagId: tagId }),
+        credentials: 'include'
+      });
+      if (!response2.ok) {
+        throw new Error(`HTTP error! status: ${response2.status}`);
+      }
+
+      // update the tags state with the new tag
+      const userId = session?.user?.id;
+      if (userId) {
+        setTimeout(() => fetchTags(userId), 1000);
+      }
+      fetchTags(session.user.id);
+
+      // update UI of note with removed tag
+      const noteIndex = notes.findIndex((note) => note.note_id.toString() === noteId);
+      if (noteIndex >= 0) {
+        const updatedNotes = [...notes];
+        updatedNotes[noteIndex].tags = updatedNotes[noteIndex].tags.filter(t => t !== tag);
+        setNotes(updatedNotes);
+      }
+    } catch (error) {
+      console.error('Failed to remove tag:', error);
+    }
+  }
+
   const addNewNote = async () => {
     if (!session?.user?.id) return;
 
@@ -176,6 +221,97 @@ export function NoteDashboardV2() {
       fetchNotes(session.user.id);
     } catch (error) {
       console.error('Failed to add new note:', error);
+    }
+  }
+
+  const addNewTag = async (tag: string, noteId:string) => {
+    if (!session?.user?.id) return;
+
+    const newTag = {
+      name: tag
+    }
+
+    try {
+      // contact the API to create a new tag
+      const response = await fetch(URL + 'tags', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newTag),
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      // Get the new tag id
+      const data = await response.json();
+      const newTagId = data.tag.tag_id;
+
+      // Add the new tag to the note
+      addTagToNote(noteId, tag, newTagId);
+
+      // update the tags state with the new tag
+      const userId = session?.user?.id;
+      if (userId) {
+        setTimeout(() => fetchTags(userId), 1000);
+      }
+      fetchTags(session.user.id);
+    } catch (error) {
+      console.error('Failed to add new tag:', error);
+    }
+  }
+
+  const addTagToNote = async (noteId: string, tagName: string, tagId?: string) => {
+    console.log('Adding tag to note:', noteId, tagName, tagId);
+    if (!session?.user?.id) return;
+
+    if (!tagId) {
+      // fetch the tag id from the tag name by calling API
+      const response = await fetch(URL + 'tagnames/' + tagName);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      tagId = data.tag_id;
+    }
+
+    const newNoteTag = {
+      tagId: tagId
+    }
+
+    try {
+      // contact the API to create a new tag on note
+      const response = await fetch(URL + 'notes/' + noteId + '/tags', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newNoteTag),
+        credentials: 'include'
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      // update the tags state with the new tag
+      const userId = session?.user?.id;
+      if (userId) {
+        setTimeout(() => fetchTags(userId), 1000);
+      }
+      fetchTags(session.user.id);
+      
+      // update UI of note with new tag
+      const noteIndex = notes.findIndex((note) => note.note_id.toString() === noteId);
+      if (noteIndex >= 0) {
+        const updatedNotes = [...notes];
+        updatedNotes[noteIndex].tags.push(tagName);
+        setNotes(updatedNotes);
+      }
+    } catch (error) {
+      console.error('Failed to add new tag:', error);
     }
   }
 
@@ -229,16 +365,32 @@ export function NoteDashboardV2() {
           </ScrollArea>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
             {filteredNotes.map((note) => (
-              <Link key={note.note_id} href={`/notes/${note.note_id}`} passHref>
+              <div key={note.note_id}>
                 <Card className="flex flex-col cursor-pointer h-48"> {/* Set a fixed height */}
                   <CardHeader className="flex-grow">
-                    <CardTitle className="text-lg text-secondary">{note.title}</CardTitle>
+                    <Link  href={`/notes/${note.note_id}`} passHref>
+                      <CardTitle className="text-lg text-secondary">{note.title}</CardTitle>
+                    </Link>
                     <div className="flex flex-wrap gap-2 mt-2">
                       {note.tags.map((tag) => (
-                        <Badge key={tag} variant="outline">
+                        <Badge
+                          key={tag}
+                          variant="destructive"
+                          className="cursor-pointer"
+                          onClick={() => {
+                            removeTag(tag, note.note_id.toString());
+                          }}
+                        >
                           {tag}
                         </Badge>
                       ))}
+                      <TagCombobox
+                        initTags={allTags}
+                        selectedTags={note.tags}
+                        noteId={note.note_id.toString()}
+                        onTagToggle={addTagToNote}
+                        handleCreateTag={addNewTag}
+                      />
                     </div>
                   </CardHeader>
                   <CardFooter className="mt-auto">
@@ -258,7 +410,7 @@ export function NoteDashboardV2() {
                     </div>
                   </CardFooter>
                 </Card>
-              </Link>
+              </div>
             ))}
           </div>
         </CardContent>

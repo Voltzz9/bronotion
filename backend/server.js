@@ -672,6 +672,31 @@ app.post('/tags', async (req, res) => {
   }
 });
 
+// Get TagID from tag name
+app.get('/tagnames/:tagName', async (req, res) => {
+  try {
+    const tagName = req.params.tagName;
+
+    const tag = await prisma.tag.findFirst({
+      where: {
+        name: tagName,
+      },
+      select: {
+        tag_id: true,
+      },
+    });
+
+    if (!tag) {
+      return res.status(404).json({ error: 'Tag not found' });
+    }
+
+    res.json(tag);
+  } catch (error) {
+    console.error('Error fetching tag:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 // Get all tags
 app.get('/tags', async (req, res) => {
   try {
