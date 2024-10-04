@@ -75,24 +75,11 @@ export function NoteDashboardV2() {
   useEffect(() => {
     if (session?.user?.id) {
       console.log('Session User ID:', session.user.id);
-      fetchNotes(session.user.id);
-      fetchTags(session.user.id);
+      fetchNotesAndTags(session.user.id);
     }
-  }, [session, noteView]); // Re-fetch notes when noteView changes
+  }, [session, noteView]); // Re-fetch notes and tags when noteView changes
 
-  const fetchTags = async (userId: string) => {
-    try {
-      const response = await fetch(`${URL}tags/${userId}`);
-      const data = await response.json();
-      console.log('Tags:', data);
-      const tags = data.map((tag: any) => tag.name);
-      setAllTags(tags);
-    } catch (error) {
-      console.error('Failed to fetch tags:', error);
-    }
-  };
-
-  const fetchNotes = async (userId: string) => {
+  const fetchNotesAndTags = async (userId: string) => {
     try {
       let fetchUrl = `${URL}users/${userId}/notes`;
       let requestOptions: RequestInit = {
@@ -114,58 +101,39 @@ export function NoteDashboardV2() {
           },
         };
       }
-  
-      console.log('Fetching notes from:', fetchUrl);
+
       const response = await fetch(fetchUrl, requestOptions);
-  
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-  
+
       const data = await response.json();
-      console.log('Data: ', data);
-  
       if (!data || !Array.isArray(data)) {
         throw new Error('Invalid data format');
       }
-  
-      interface ApiNote {
-        note_id: number;
-        title: string;
-        content: string;
-        user_id: string;
-        created_at: string;
-        updated_at: string;
-        is_deleted: boolean;
-        tags?: string[]; // Tags are returned as an array of strings
-        user: {
-          id: string;
-          username: string;
-          image?: string;
-        };
-      }
-  
-      const formattedNotes = data.map((item: any) => {
-        const note = noteView === 'shared' ? item : item;
-        return {
-          note_id: note.note_id,
-          title: note.title,
-          content: note.content,
-          user_id: note.user_id,
-          created_at: new Date(note.created_at),
-          updated_at: new Date(note.updated_at),
-          is_deleted: note.is_deleted,
-          user: note.user ? { id: note.user.id, username: note.user.username, image: note.user.image } : { id: '', username: '', image: '' }, // Include username and image
-          tags: note.tags || [], // Ensure tags is always an array
-          shared_notes: [], // Add empty array for shared_notes
-          active_editors: [], // Add empty array for active_editors
-        };
-      });
-  
+
+      const formattedNotes = data.map((note: any) => ({
+        note_id: note.note_id,
+        title: note.title,
+        content: note.content,
+        user_id: note.user_id,
+        created_at: new Date(note.created_at),
+        updated_at: new Date(note.updated_at),
+        is_deleted: note.is_deleted,
+        user: note.user ? { id: note.user.id, username: note.user.username, image: note.user.image } : { id: '', username: '', image: '' },
+        tags: note.tags || [],
+        shared_notes: [],
+        active_editors: [],
+      }));
+
       setNotes(formattedNotes);
-  
+
+      // Extract all unique tags from the notes
+      const uniqueTags = Array.from(new Set(formattedNotes.flatMap((note: Note) => note.tags)));
+      setAllTags(uniqueTags);  // Set tags based on the current note view
+
     } catch (error) {
-      console.error('Failed to fetch notes:', error);
+      console.error('Failed to fetch notes and tags:', error);
     }
   };
 
@@ -197,9 +165,9 @@ export function NoteDashboardV2() {
       // update the notes state with the new note
       const userId = session?.user?.id;
       if (userId) {
-        setTimeout(() => fetchNotes(userId), 2000);
+        setTimeout(() => fetchNotesAndTags(userId), 2000);
       }
-      fetchNotes(session.user.id);
+      fetchNotesAndTags(session.user.id);
     } catch (error) {
       console.error('Failed to add new note:', error);
     }
@@ -216,15 +184,7 @@ export function NoteDashboardV2() {
     (selectedTags.length === 0 || selectedTags.some(tag => note.tags.includes(tag)))
   );
 
-  useEffect(() => {
-    // Update tags based on filtered notes
-    const uniqueTags = Array.from(new Set(filteredNotes.flatMap(note => note.tags)));
-    if (JSON.stringify(uniqueTags) !== JSON.stringify(allTags)) {
-      setAllTags(uniqueTags);
-    }
-  }, [filteredNotes, allTags]);
-
-  // Sort tags to ensure selected tags appear first
+  // Sorting tags to display selected tags first
   const sortedTags = [...allTags].sort((a, b) => {
     const aSelected = selectedTags.includes(a);
     const bSelected = selectedTags.includes(b);
@@ -248,7 +208,7 @@ export function NoteDashboardV2() {
             <Input
               type="search"
               placeholder="Search notes..."
-              className="pl-8"
+              className="pl-8 w-full"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -278,7 +238,7 @@ export function NoteDashboardV2() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
             {filteredNotes.map((note) => (
               <Link key={note.note_id} href={`/notes/${note.note_id}`} passHref>
-                <Card className="flex flex-col cursor-pointer h-52"> {/* Set a fixed height */}
+                <Card className="flex flex-col cursor-pointer h-52"> {/* Set a fixed height */} 
                   <CardHeader className="flex-grow pb-2">
                     <CardTitle className="text-lg text-secondary">{note.title}</CardTitle>
                     <ScrollArea className="h-16 w-full mt-2">
