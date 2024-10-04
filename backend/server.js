@@ -2,22 +2,65 @@ const express = require('express');
 const { PrismaClient } = require('@prisma/client');
 const bcrypt = require('bcrypt');
 const cors = require('cors');
-const https = require('https'); // Import HTTPS
-const fs = require('fs'); // Import File System
+// const https = require('https'); // Import HTTPS
+// const fs = require('fs'); // Import File System
 require('dotenv').config();
+const PushNotifications = require("node-pushnotifications");
 
 const prisma = new PrismaClient();
 const app = express();
 const PORT = process.env.PORT || 8080;
 
 // Load SSL certificate and key
-const options = {
-  key: fs.readFileSync('server.key'), // Path to your key file
-  cert: fs.readFileSync('server.cert'), // Path to your certificate file
-};
+//const options = {
+//  key: fs.readFileSync('server.key'), // Path to your key file
+//  cert: fs.readFileSync('server.cert'), // Path to your certificate file
+//};
 
 app.use(cors());
 app.use(express.json());
+
+// ********************************* Push Notifications **************************
+
+
+const vapidKeys = {
+  publicKey: process.env.VAPID_PUBLIC_KEY,
+  privateKey: process.env.VAPID_PRIVATE_KEY,
+};
+
+
+app.post("/subscribe", (req, res) => {
+  // Get pushSubscription object
+  const subscription = req.body;
+  console.log(subscription)
+  const settings = {
+    web: {
+      vapidDetails: {
+        subject: "mailto: <jonty09090@gmail.com>", // REPLACE_WITH_YOUR_EMAIL
+        publicKey: vapidKeys.publicKey,
+        privateKey: vapidKeys.privateKey,
+      },
+      gcmAPIKey: "gcmkey",
+      TTL: 2419200,
+      contentEncoding: "aes128gcm",
+      headers: {},
+    },
+    isAlwaysUseFCM: false,
+  };
+
+  // Send 201 - resource created
+  const push = new PushNotifications(settings);
+
+  // Create payload
+  const payload = { title: "Notification from Knock" };
+  push.send(subscription, payload, (err, result) => {
+    if (err) {
+      console.log(err);
+    } else {
+      console.log(result);
+    }
+  });
+});
 
 // ********************************* User Routes *********************************
 
@@ -41,7 +84,7 @@ app.get('/users', async (req, res) => {
 // Create a new user (for OAuth)
 app.post('/create_user', async (req, res) => {
   try {
-    const { id, name, password,email, image, auth_method, provider_account_id } = req.body;
+    const { id, name, password, email, image, auth_method, provider_account_id } = req.body;
 
     if (!email) {
       return res.status(400).json({ error: 'Missing required fields email' });
@@ -73,35 +116,35 @@ app.post('/create_user', async (req, res) => {
 
     const user = await prisma.user.create({
       data: {
-      id: id,
-      username: username,
-      password_hash: hashedPassword,
-      email: email,
-      emailVerified: new Date(),
-      image: image,
-      auth_methods: {
-        create: {
-        isManual: auth === 'manual',
-        isOAuth: auth === 'google' || auth === 'github',
+        id: id,
+        username: username,
+        password_hash: hashedPassword,
+        email: email,
+        emailVerified: new Date(),
+        image: image,
+        auth_methods: {
+          create: {
+            isManual: auth === 'manual',
+            isOAuth: auth === 'google' || auth === 'github',
+          },
         },
-      },
-      accounts: auth === 'google' || auth === 'github' ? {
-        create: {
-        type: 'oauth',
-        provider: auth,
-        provider_account_id: provider_account_id,
-        // TODO add access_token and refresh_token etc.
-        },
-      } : undefined,
+        accounts: auth === 'google' || auth === 'github' ? {
+          create: {
+            type: 'oauth',
+            provider: auth,
+            provider_account_id: provider_account_id,
+            // TODO add access_token and refresh_token etc.
+          },
+        } : undefined,
       },
       include: {
-      auth_methods: true,
-      accounts: true,
+        auth_methods: true,
+        accounts: true,
       },
     });
 
-    res.status(201).json({ 
-      message: 'User created successfully', 
+    res.status(201).json({
+      message: 'User created successfully',
       user: {
         id: user.id,
         name: user.name,
@@ -111,8 +154,8 @@ app.post('/create_user', async (req, res) => {
     });
   } catch (error) {
     console.error('Error creating user:', error);
-    res.status(500).json({ 
-      error: 'Internal Server Error', 
+    res.status(500).json({
+      error: 'Internal Server Error',
       details: error.message,
       stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
@@ -775,6 +818,9 @@ app.get('/tags/:tagId/notes', async (req, res) => {
 });
 
 // Start HTTPS server
-https.createServer(options, app).listen(PORT, () => {
-  console.log(`Server is running on https://localhost:${PORT}`);
+app.listen(PORT, () => {
+  console.log(`Server is running on http://localhost:${PORT}`);
 });
+//https.createServer(options, app).listen(PORT, () => {
+//  console.log(`Server is running on https://localhost:${PORT}`);
+//});

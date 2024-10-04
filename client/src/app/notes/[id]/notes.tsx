@@ -49,6 +49,52 @@ export default function Notes() {
     }
   }, [noteId]);
 
+  // ***************************** Push Notifications **********************
+
+  useEffect(() => {
+    if ("serviceWorker" in navigator) {
+      console.log("Service Worker found...")
+      const handleServiceWorker = async () => {
+        const register = await navigator.serviceWorker.register("/sw.js");
+
+        const subscription = await register.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(process.env.VAPID_PUBLIC_KEY || "BG5_w-BpjUQfVdOWNeNBn1CsJZNWCgTezGLGGmFu6bXF7sJkXrzz4DVTKsypr72V2OdGA9g-rM4dBRbNq1vkMC8"),
+        });
+
+        console.log("Subscription object created...")
+        const res = await fetch("http://localhost:8080/subscribe", {
+          method: "POST",
+          body: JSON.stringify(subscription),
+          headers: {
+            "content-type": "application/json",
+          },
+        });
+        console.log("Subscription object sent")
+
+        console.log(res);
+      };
+      handleServiceWorker();
+    }
+  }, []);
+
+  function urlBase64ToUint8Array(base64String: string) {
+    const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+    const base64 = (base64String + padding)
+      .replace(/\-/g, "+")
+      .replace(/_/g, "/");
+
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+
+    for (let i = 0; i < rawData.length; ++i) {
+      outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+  }
+
+  // ***********************************************************************
+
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       <Header />
