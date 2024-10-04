@@ -59,8 +59,6 @@ export default function Component() {
 
   const handleSignup = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log("Signup user with email:"+email+" username:"+username);
-
     if (password !== confirmPassword) {
       console.error("Passwords do not match");
       return;
@@ -82,10 +80,8 @@ export default function Component() {
       });
 
       const result = await response.json();
-      console.log("Response to create_user:"+result);
 
       if (response.ok) {
-        console.log('Attempting to sign in user:'+email+' password:'+password);
         await signIn('credentials', {
           redirectTo: '/home',
           email,
