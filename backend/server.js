@@ -39,6 +39,38 @@ async function sendEmail(to, subject, bodyHtml) {
   }
 }
 
+
+// Send email for share notification
+
+async function sendEmailShareNote(to) {
+  try {
+    await client.emailMessages.createTemplated({
+      to: to,
+      subject: "NOTE HAS BEEN SHARED WITH YOU",
+      bodyHtml: `
+      <html>
+      <body style="font-family: Arial, sans-serif; background-color: #f3e8ff; padding: 20px; text-align: center;">
+        <div style="max-width: 600px; margin: 0 auto; background-color: #f3e8ff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
+          <h2 style="color: #3c005a;">A Note Has Been Shared With You!</h2>
+          <p style="color: #312359;">Hello,</p>
+          <p style="color: #312359;">User has shared a note with you through <strong style="color: #3c005a;">Bronotion</strong>.</p>
+          <p style="color: #312359;">Click the button below to view the note:</p>
+          <a href="#" style="display: inline-block; background-color: #3c005a; color: #FFFFFF; padding: 10px 20px; text-decoration: none; border-radius: 4px;">View Note</a>
+          <p style="color: #312359;">Thank you for using Bronotion!</p>
+          <p style="color: #ceb2ff; font-size: 12px;">If you did not expect this email, please ignore it.</p>
+        </div>
+      </body>
+    </html> 
+    `
+    });
+    console.log('Email sent successfully');
+    return { success: true, message: 'Email sent succesfully' };
+  } catch (error) {
+    console.log('Error sending email:', error);
+    return { success: false, error: 'Error sending email' }
+  }
+}
+
 // ********************************* User Routes *********************************
 
 // Get all users
@@ -65,7 +97,7 @@ app.post('/create_user', async (req, res) => {
 
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
-      where: { email: email},
+      where: { email: email },
     });
 
     if (existingUser) {
@@ -319,6 +351,8 @@ app.post('/notes/:noteId/share', async (req, res) => {
       },
     });
 
+    sendEmailToSharie(emailAddr)
+
     res.status(201).json({
       message: 'Note shared successfully',
       sharedNoteId: result.shared_note_id,
@@ -328,6 +362,19 @@ app.post('/notes/:noteId/share', async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
+
+async function sendEmailToSharie(username) {
+  const sharieEmail = await prisma.user.findUnique({
+    where: {
+      username: username,
+    },
+    select: {
+      email: true,
+    },
+  });
+
+  sendEmailShareNote(sharieEmail)
+}
 
 // Get all notes shared with a user
 app.get('/users/:userId/shared-notes', async (req, res) => {
