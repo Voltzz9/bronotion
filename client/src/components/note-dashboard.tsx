@@ -144,6 +144,8 @@ export function NoteDashboardV2() {
   const addNewNote = async () => {
     if (!session?.user?.id) return;
 
+    console.log('Adding new note for user:', session.user.id);
+
     const newNote = {
       title: 'New Note',
       content: "# This is a sample note \n\nYou can edit this note using Markdown syntax.",
@@ -152,19 +154,19 @@ export function NoteDashboardV2() {
 
     try {
       // contact the API to create a new note
+      console.log('Contacting API to add new note:', newNote);
       const response = await fetch(URL + 'notes', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(newNote),
+        credentials: 'include'
       });
-
+      console.log(response);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-
-      console.log(response);
 
       // update the notes state with the new note
       const userId = session?.user?.id;

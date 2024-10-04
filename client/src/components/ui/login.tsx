@@ -21,6 +21,7 @@ export default function Component() {
   const emailRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
+  const URL = process.env.NEXT_PUBLIC_API_URL;
 
   useEffect(() => {
     if (emailRef.current && passwordRef.current) {
@@ -58,6 +59,7 @@ export default function Component() {
 
   const handleSignup = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    console.log("Signup user with email:"+email+" username:"+username);
 
     if (password !== confirmPassword) {
       console.error("Passwords do not match");
@@ -65,20 +67,22 @@ export default function Component() {
     }
 
     try {
-      const response = await fetch('https://localhost:8080/create_user', {
+      const response = await fetch(URL+'create_user', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({
           username,
           email,
           password,
-          auth_method : 'credentials',
+          auth_method : 'manual',
         }),
       });
 
       const result = await response.json();
+      console.log("Response to create_user:"+result);
 
       if (response.ok) {
         await signIn('credentials', {

@@ -38,19 +38,20 @@ yarn start:server
 This will start the database on port 8080 (because 5432 is the actual PostreSQL database).
 
 ## Run the frontend
-1. Start the frontend with the following command in a seperate terminal:
+1. Ensure everything is installed with the following command:
 ```bash
 yarn install
 ```
+2. Please generate an ssl certificate and key for the frontend to run. You can do this by running the following command:
+```bash
+openssl req -x509 -newkey rsa:4096 -nodes -keyout localhost-key.pem -out localhost.pem -days 365 -subj "/CN=localhost"
+```
+3. Start the frontend with the following command in a seperate terminal:
 ```bash
 yarn dev
 ```
 This will start the frontend on port 3000.
-2. You can login with the following credentials:
-```bash
-email: admin@example.com
-password: admin
-```
+
 
 ## Running the Docker
 

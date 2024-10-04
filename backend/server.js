@@ -16,7 +16,13 @@ const options = {
   cert: fs.readFileSync('server.cert'), // Path to your certificate file
 };
 
-app.use(cors());
+app.use(cors({
+  origin: 'https://localhost:3000',
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type'],
+  credentials: true,
+}));
+
 app.use(express.json());
 
 // ********************************* User Routes *********************************
@@ -271,10 +277,13 @@ app.post('/notes', async (req, res) => {
   try {
     const { title, content, userId } = req.body;
 
+    // if content not specified, set it to an empty string
+    const noteContent = content || '';
+
     const note = await prisma.note.create({
       data: {
         title,
-        content,
+        content: noteContent,
         user: {
           connect: { id: userId }, // Connect the note to an existing user
         },
