@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion, useScroll, useSpring, useTransform } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import AnimatedArrowButton from './animated-arrow-button'; // Assuming this is the arrow button
+import AnimatedArrowButton from './animated-arrow-button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { usePathname } from 'next/navigation';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -17,14 +17,26 @@ export default function Header() {
   const { scrollY } = useScroll();
   const [isMobile, setIsMobile] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(status === 'authenticated');
+  const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 640);
     };
+    const checkScroll = () => {
+      setIsScrolled(window.scrollY > 10);
+    };
+    
     checkMobile();
+    checkScroll();
+    
     window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+    window.addEventListener('scroll', checkScroll);
+    
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+      window.removeEventListener('scroll', checkScroll);
+    };
   }, []);
 
   useEffect(() => {
@@ -35,12 +47,10 @@ export default function Header() {
     stiffness: 80,
     damping: 15,
   });
-
   const logoX = useSpring(useTransform(scrollY, [0, 50], ['0%', isMobile ? '0%' : '-45%']), {
     stiffness: 80,
     damping: 15,
   });
-
   const opacity = useSpring(useTransform(scrollY, [0, 50], [1, 0]), {
     stiffness: 80,
     damping: 15,
@@ -48,7 +58,13 @@ export default function Header() {
 
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 bg-accent shadow-sm z-50">
+      <header 
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300
+          ${isScrolled 
+            ? 'bg-accent-90 backdrop-blur shadow-sm' 
+            : 'bg-accent'
+          }`}
+      >
         <nav className="container mx-auto py-2 flex justify-between items-center">
           <Link href="/" className="flex items-center">
             <motion.div
@@ -64,7 +80,6 @@ export default function Header() {
               </motion.span>
             </motion.div>
           </Link>
-          
           <div className="flex items-center space-x-4">
             {isOnNotesPage && (
               <AnimatedArrowButton />

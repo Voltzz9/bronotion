@@ -6,7 +6,7 @@
 :root {
   --primary: #c29be9;
   --secondary: #ceb2ff;
-  --accent: #d2bfe8;
+  --accent: 210, 191, 232;
   --tertiary: #faf4ff;
   --muted: #b2e0ff;
   --button-bg: #E59BE9;
@@ -91,6 +91,10 @@ footer {
   color: var(--accent);
 }
 
+.text-button {
+  color: var(--button-text);
+}
+
 .bg-primary {
   background-color: var(--tertiary);
 }
@@ -100,8 +104,17 @@ footer {
 }
 
 .bg-accent {
-  background-color: var(--accent);
+  background-color: rgb(var(--accent));
 }
+
+.bg-accent-90 {
+  background-color: rgba(var(--accent), 0.50);
+}
+
+.backdrop-blur {
+  backdrop-filter: blur(1px);
+}
+
 
 .border-primary {
   border-color: var(--primary);
