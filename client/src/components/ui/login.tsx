@@ -85,6 +85,7 @@ export default function Component() {
       console.log("Response to create_user:"+result);
 
       if (response.ok) {
+        console.log('Attempting to sign in user:'+email+' password:'+password);
         await signIn('credentials', {
           redirectTo: '/home',
           email,

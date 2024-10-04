@@ -95,6 +95,7 @@ try {
 
 export async function loginUser(email: string, password: string): Promise<User> {
   try {
+      console.log('Logging in user:'+email+' password:'+password); // TODO remove
       const response = await fetch(`${API_BASE_URL}/login`, {
       method: 'POST',
       headers: {

@@ -207,7 +207,7 @@ app.get('/users/:userId', async (req, res) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    res.json(user);
+    res.json({ id: user.id, username: user.username, email: user.email, image: user.image });
   } catch (error) {
     console.error('Error retrieving user:', error);
     res.status(500).json({ error: 'Internal Server Error' });
@@ -219,38 +219,28 @@ app.get('/users/:userId', async (req, res) => {
 app.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
+
     const user = await prisma.user.findFirst({
       where: {
-        email,
-        auth_methods: {
-          some: {
-            isManual: true
-          }
-        }
-      },
-      include: {
-        auth_methods: true,
+        email: email,
       },
     });
 
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
-    //TODO: Review and change
-    // if (!user.auth_methods.isManual) {
-    //   return res.status(400).json({ error: 'User has not created a password' });
-    // }
 
-    //TODO:
-    const passwordMatch = await bcrypt.compare(password, user.password_hash);
-    if (passwordMatch) {
-      return res.status(200).json({ message: 'Login successful', userId: user.id, email: user.email, name: user.name });
-    } else {
-      return res.status(401).json({ error: 'Invalid email or password' });
+    // Compare the password with the hashed password in the database
+    const passwordMatch = bcrypt.compare(password, user.password_hash);
+
+    if (!passwordMatch) {
+      return res.status(401).json({ error: 'Invalid password' });
     }
+
+    res.json({ message: 'Login successful', id: user.id, username: user.username, email: user.email, image: user.image });
   } catch (error) {
     console.error('Error logging in:', error);
-    return res.status(500).json({ error: 'Internal Server Error' });
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
