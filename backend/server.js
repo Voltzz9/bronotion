@@ -65,13 +65,13 @@ app.post('/create_user', async (req, res) => {
     }
 
     // if auth_method not defined, it is manual
-    const auth = auth_method || 'manual';
+    const auth = auth_method || 'credentials';
 
     // Create user with associated records
     // Hash the password before storing it in the database
     let hashedPassword = '';
     if (password !== undefined) {
-    const hashedPassword = await bcrypt.hash(password, 10);
+    hashedPassword = await bcrypt.hash(password, 10);
     }
 
     const user = await prisma.user.create({
@@ -84,7 +84,7 @@ app.post('/create_user', async (req, res) => {
       image: image,
       auth_methods: {
         create: {
-        isManual: auth === 'manual',
+        isManual: auth === 'credentials',
         isOAuth: auth === 'google' || auth === 'github',
         },
       },
