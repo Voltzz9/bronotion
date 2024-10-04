@@ -41,11 +41,15 @@ app.get('/users', async (req, res) => {
 // Create a new user (for OAuth)
 app.post('/create_user', async (req, res) => {
   try {
-    const { id, name, email, image } = req.body;
+    const { id, name, password,email, image, auth_method, provider_account_id } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ error: 'Missing required fields email' });
+    }
 
     // Check if user already exists
-    const existingUser = await prisma.user.findUnique({
-      where: { id: id },
+    const existingUser = await prisma.user.findFirst({
+      where: { email: email },
     });
 
     if (existingUser) {
@@ -53,29 +57,128 @@ app.post('/create_user', async (req, res) => {
     }
 
     // Generate a username from email
-    const username = email.split('@')[0];
+    let username = '';
+    if (name) {
+      username = name;
+    } else {
+      username = email.split('@')[0];
+    }
+
+    // if auth_method not defined, it is manual
+    const auth = auth_method || 'manual';
+
+    // Create user with associated records
+    // Hash the password before storing it in the database
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = await prisma.user.create({
       data: {
-        id: id,
-        name: name,
-        username: username, // Add this line
-        email: email,
-        emailVerified: new Date(),
-        image: image,
-        auth_methods: {
-          create: {
-            isManual: false,
-            isOAuth: true,
-          },
+      id: id,
+      username: username,
+      password_hash: hashedPassword,
+      email: email,
+      emailVerified: new Date(),
+      image: image,
+      auth_methods: {
+        create: {
+        isManual: auth === 'manual',
+        isOAuth: auth === 'google' || auth === 'github',
         },
+      },
+      accounts: auth === 'google' || auth === 'github' ? {
+        create: {
+        type: 'oauth',
+        provider: auth,
+        provider_account_id: provider_account_id,
+        // TODO add access_token and refresh_token etc.
+        },
+      } : undefined,
+      },
+      include: {
+      auth_methods: true,
+      accounts: true,
       },
     });
 
-    res.status(201).json({ message: 'User created successfully', userId: user.id });
+    res.status(201).json({ 
+      message: 'User created successfully', 
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        username: user.username,
+      }
+    });
   } catch (error) {
     console.error('Error creating user:', error);
-    res.status(500).json({ error: 'Internal Server Error', details: error.message });
+    res.status(500).json({ 
+      error: 'Internal Server Error', 
+      details: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
+  }
+});
+
+// Get User ID from email
+app.get('/users/email/:email', async (req, res) => {
+  try {
+    const email = req.params.email;
+    const user = await prisma.user.findFirst({
+      where: {
+        email: email,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json(user);
+  } catch (error) {
+    console.error('Error retrieving user:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// Enable OAuth for a user
+app.post('/users/:userId/oauth', async (req, res) => {
+  try {
+    const userId = req.params.userId;
+
+    // Await the result of findFirst to get the data
+    const data = await prisma.userAuthMethod.findFirst({
+      where: {
+        user_id: userId,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (!data) {
+      // If no data is found, return a 404 response
+      return res.status(404).json({ error: 'UserAuthMethod not found for this user' });
+    }
+
+    const id = data.id;
+
+    await prisma.userAuthMethod.update({
+      where: {
+        id: id,
+      },
+      data: {
+        isOAuth: true,
+      },
+    });
+
+    res.status(200).json({ message: 'OAuth enabled successfully' });
+
+  } catch (error) {
+    console.error('Error enabling OAuth:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
@@ -103,17 +206,18 @@ app.get('/users/:userId', async (req, res) => {
   }
 });
 
-// Login user
+// Login user manually
 app.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
-
     const user = await prisma.user.findFirst({
       where: {
         email,
         auth_methods: {
-          isManual: true,
-        },
+          some: {
+            isManual: true
+          }
+        }
       },
       include: {
         auth_methods: true,
@@ -123,26 +227,28 @@ app.post('/login', async (req, res) => {
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
+    //TODO: Review and change
+    // if (!user.auth_methods.isManual) {
+    //   return res.status(400).json({ error: 'User has not created a password' });
+    // }
 
+    //TODO:
     const passwordMatch = await bcrypt.compare(password, user.password_hash);
-
     if (passwordMatch) {
-      res.status(200).json({ message: 'Login successful', userId: user.id });
-      res.status(200).json({ message: 'Login successful', userId: user.id });
+      return res.status(200).json({ message: 'Login successful', userId: user.id, email: user.email });
     } else {
-      res.status(401).json({ error: 'Invalid email or password' });
+      return res.status(401).json({ error: 'Invalid email or password' });
     }
   } catch (error) {
     console.error('Error logging in:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
-    res.status(500).json({ error: 'Internal Server Error' });
+    return res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
 // Delete user
 app.delete('/users/:userId', async (req, res) => {
   try {
-    const userId = parseInt(req.params.userId);
+    const userId = req.params.userId;
 
     await prisma.user.delete({
       where: { id: userId },
@@ -166,11 +272,7 @@ app.post('/notes', async (req, res) => {
       data: {
         title,
         content,
-        user_id,
-        tags: {
-          connect: { tag_id: tag_id },
-        },
-        is_deleted: false,
+        userId,
       },
     });
 
@@ -184,7 +286,7 @@ app.post('/notes', async (req, res) => {
 // Fetch all notes for a user
 app.get('/users/:userId/notes', async (req, res) => {
   try {
-    const userId = parseInt(req.params.userId);
+    const userId = req.params.userId;
     const notes = await prisma.note.findMany({
       where: {
         user_id: userId,
@@ -209,9 +311,6 @@ app.put('/notes/:noteId', async (req, res) => {
       data: {
         title,
         content,
-        tags: {
-          connect: { tag_id: tag_id },
-        },
         updated_at: new Date(),
       },
     });
@@ -255,6 +354,7 @@ app.get('/notes/:noteId', async (req, res) => {
         tags: true,
         created_at: true,
         updated_at: true,
+        is_deleted: true,
       },
     });
 
@@ -273,16 +373,16 @@ app.get('/notes/:noteId', async (req, res) => {
 
 // Share a note with another user
 app.post('/notes/:noteId/share', async (req, res) => {
+  //TODO: Currently users can share note with themselves.
   try {
-    const noteId = parseInt(req.params.noteId);
-    const { sharedWithUserId, canEdit } = req.body;
+    const noteId = parseInt(req.params.noteId); // Note IDs are integers
+    const { sharedWithUserId, canEdit } = req.body; // User IDs are strings
 
-    const existingShare = await prisma.sharedNote.findUnique({
+    // Check if the note has already been shared with this user
+    const existingShare = await prisma.sharedNote.findFirst({
       where: {
-        note_id_shared_with_user_id: {
-          note_id: noteId,
-          shared_with_user_id: sharedWithUserId,
-        },
+        note_id: noteId,
+        shared_with_user_id: sharedWithUserId,
       },
     });
 
@@ -293,6 +393,7 @@ app.post('/notes/:noteId/share', async (req, res) => {
       });
     }
 
+    // Create a new shared note entry
     const result = await prisma.sharedNote.create({
       data: {
         note_id: noteId,
@@ -317,12 +418,16 @@ app.post('/notes/:noteId/share', async (req, res) => {
 // Get all notes shared with a user
 app.get('/users/:userId/shared-notes', async (req, res) => {
   try {
-    const userId = parseInt(req.params.userId);
+    const userId = req.params.userId;
     const sharedNotes = await prisma.sharedNote.findMany({
-      where: { shared_with_user_id: userId },
+      where: {
+        shared_with_user_id: userId,
+        note: {
+          is_deleted: false,
+        },
+      },
       include: {
         note: {
-          where: { is_deleted: false },
           select: {
             note_id: true,
             title: true,
@@ -342,22 +447,29 @@ app.get('/users/:userId/shared-notes', async (req, res) => {
   }
 });
 
-// Get all users from a shared note
+// Get all users a note has been shared with
+// Important: Must use the note id not the shared note id
 app.get('/notes/:noteId/shared-users', async (req, res) => {
   try {
     const noteId = parseInt(req.params.noteId);
-    const sharedUsers = await prisma.sharedNote.findMany({
+
+    // Fetch shared notes with user information
+    const sharedNotes = await prisma.sharedNote.findMany({
       where: { note_id: noteId },
       include: {
-        shared_with_users: {
+        shared_with_user: {
           select: {
             id: true,
+            name: true,
             username: true,
             email: true,
           },
         },
       },
     });
+
+    // Extract user information from shared notes
+    const sharedUsers = sharedNotes.map(sharedNote => sharedNote.shared_with_user);
 
     res.json(sharedUsers);
   } catch (error) {
@@ -367,7 +479,7 @@ app.get('/notes/:noteId/shared-users', async (req, res) => {
 });
 
 // Update shared note permissions
-app.put('/shared-notes/:noteId/permissions', async (req, res) => {
+app.put('/notes/:noteId/permissions', async (req, res) => {
   try {
     const noteId = parseInt(req.params.noteId);
     const { sharedWithUserId, canEdit } = req.body;
@@ -396,12 +508,32 @@ app.put('/shared-notes/:noteId/permissions', async (req, res) => {
 });
 
 // Remove shared access to a note
+// Important: Must use the shared note id not the note id (Open to suggestions on better endpoint)
 app.delete('/shared-notes/:sharedNoteId', async (req, res) => {
   try {
     const sharedNoteId = parseInt(req.params.sharedNoteId);
+    const { sharedWithUserId } = req.body;
 
-    await prisma.sharedNote.delete({
-      where: { shared_note_id: sharedNoteId },
+    // Check if the shared note exists
+    const existingShare = await prisma.sharedNote.findFirst({
+      where: {
+        shared_note_id: sharedNoteId,
+        shared_with_user_id: sharedWithUserId,
+      },
+    });
+
+    if (!existingShare) {
+      return res.status(404).json({
+        message: 'Shared note not found or not shared with the specified user.',
+      });
+    }
+
+    // Ensure both shared_note_id and shared_with_user_id are used in the deletion
+    await prisma.sharedNote.deleteMany({
+      where: {
+        shared_note_id: sharedNoteId,
+        shared_with_user_id: sharedWithUserId,
+      },
     });
 
     res.json({ message: 'Shared access removed successfully' });
@@ -451,7 +583,7 @@ app.get('/notes/:noteId/active-editors', async (req, res) => {
     const activeEditors = await prisma.activeEditor.findMany({
       where: { note_id: noteId },
       include: {
-        users: {
+        user: {
           select: {
             id: true,
             username: true,
@@ -460,7 +592,10 @@ app.get('/notes/:noteId/active-editors', async (req, res) => {
       },
     });
 
-    res.json(activeEditors);
+    // Extract user information from active editors
+    const editors = activeEditors.map(editor => editor.user);
+
+    res.json(editors);
   } catch (error) {
     console.error('Error fetching active editors:', error);
     res.status(500).json({ error: 'Internal Server Error' });
@@ -468,10 +603,10 @@ app.get('/notes/:noteId/active-editors', async (req, res) => {
 });
 
 // Remove active editor from a note
-app.delete('/notes/:noteId/active-editors/:userId', async (req, res) => {
+app.delete('/notes/:noteId/active-editors', async (req, res) => {
   try {
     const noteId = parseInt(req.params.noteId);
-    const userId = parseInt(req.params.userId);
+    const { userId } = req.body;
 
     const result = await prisma.activeEditor.deleteMany({
       where: {
@@ -508,8 +643,13 @@ app.post('/tags', async (req, res) => {
 
     res.status(201).json({ message: 'Tag created successfully', tag: result });
   } catch (error) {
-    console.error('Error creating tag:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    if (error.code === 'P2002' && error.meta.target.includes('name')) {
+      console.error('Unique constraint failed on the fields:', error.meta.target);
+      res.status(409).json({ error: 'Tag with this name already exists' });
+    } else {
+      console.error('Error creating tag:', error);
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
   }
 });
 
@@ -581,10 +721,10 @@ app.post('/notes/:noteId/tags', async (req, res) => {
 });
 
 // Remove a tag from a note
-app.delete('/notes/:noteId/tags/:tagId', async (req, res) => {
+app.delete('/notes/:noteId/tags', async (req, res) => {
   try {
     const noteId = parseInt(req.params.noteId);
-    const tagId = parseInt(req.params.tagId);
+    const tagId = parseInt(req.body.tagId);
 
     await prisma.noteTag.delete({
       where: {
@@ -603,6 +743,7 @@ app.delete('/notes/:noteId/tags/:tagId', async (req, res) => {
 });
 
 // Get all notes with a specific tag
+// Note sure if this endpoint is what we need
 app.get('/tags/:tagId/notes', async (req, res) => {
   try {
     const tagId = parseInt(req.params.tagId);
