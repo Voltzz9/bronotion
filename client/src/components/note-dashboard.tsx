@@ -11,7 +11,6 @@ import { PlusIcon, SearchIcon, CalendarIcon, UserIcon } from 'lucide-react'
 import Link from 'next/link'
 import { useSession } from 'next-auth/react'
 import { TagCombobox } from '@/components/tag-combobox'
-import SignOutButton from './ui/sign-out';
 
 const URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -232,6 +231,8 @@ export function NoteDashboardV2() {
     }
 
     try {
+      let newTagId = '';
+
       // contact the API to create a new tag
       const response = await fetch(URL + 'tags', {
         method: 'POST',
@@ -242,13 +243,25 @@ export function NoteDashboardV2() {
         credentials: 'include'
       });
 
+      // if response 409 tag already exists, get the tag id
+      if (response.status === 409) {
+        const response2 = await fetch(URL + 'tagnames/' + tag);
+        if (!response2.ok) {
+          throw new Error(`HTTP error! status: ${response2.status}`);
+        }
+        const data = await response2.json();
+        newTagId = data.tag_id;
+        addTagToNote(noteId, tag, newTagId);
+        return;
+      }
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       // Get the new tag id
       const data = await response.json();
-      const newTagId = data.tag.tag_id;
+      newTagId = data.tag.tag_id;
 
       // Add the new tag to the note
       addTagToNote(noteId, tag, newTagId);
