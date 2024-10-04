@@ -6,6 +6,7 @@ import DOMPurify from 'dompurify';
 import { FloatingCollaborators } from '@/components/floating-collaborators';
 import useNoteId from '@/app/hooks/useNoteId';
 import { Button } from '@/components/ui/button';
+import { useRouter } from 'next/navigation'; 
 
 const URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -22,6 +23,7 @@ export default function Notes() {
   const [note, setNote] = useState('')
   const [parsedNote, setParsedNote] = useState(`# Rendered Markdown`)
   const noteId = useNoteId()
+  const router = useRouter();
 
   useEffect(() => {
     const parseMarkdown = async () => {
@@ -58,8 +60,15 @@ export default function Notes() {
       const fetchNote = async () => {
         try {
           const response = await fetch(URL+`notes/${noteId}`);
+          
+          // Check if note not found (status 404)
+          if (response.status === 404) {
+            router.push('/404');
+            return;
+          }
+
           const data: Note = await response.json();
-          setNote(data.content);  // Assuming the response has a 'content' field
+          setNote(data.content);
         } catch (error) {
           console.error("Error fetching note:", error);
         }
@@ -67,7 +76,7 @@ export default function Notes() {
 
       fetchNote();
     }
-  }, [noteId]);
+  }, [noteId, router]);
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
