@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import GitHubSignInForm from './git-hub';
 import GoogleSignInButton from './google';
+import { auth } from '../../../auth';
 
 export default function Component() {
   const [isLogin, setIsLogin] = useState(true);
@@ -73,6 +74,7 @@ export default function Component() {
           username,
           email,
           password,
+          auth_method : 'credentials',
         }),
       });
 

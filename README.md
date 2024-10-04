@@ -26,7 +26,6 @@ npx prisma migrate dev --name init
 5. Run the following command to populate the tables:
 ```bash
 psql -U admin -d bronotion -a -f ./sql/DML.sql;
-psql -U admin -d bronotion -a -f ./sql/DML.sql;
 ```
 
 

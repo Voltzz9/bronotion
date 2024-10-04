@@ -41,7 +41,7 @@ app.get('/users', async (req, res) => {
 // Create a new user (for OAuth)
 app.post('/create_user', async (req, res) => {
   try {
-    const { id, name, password,email, image, auth_method, provider_account_id } = req.body;
+    const { id, name, password, email, image, auth_method, provider_account_id } = req.body;
 
     if (!email) {
       return res.status(400).json({ error: 'Missing required fields email' });
@@ -65,11 +65,14 @@ app.post('/create_user', async (req, res) => {
     }
 
     // if auth_method not defined, it is manual
-    const auth = auth_method || 'manual';
+    const auth = auth_method || 'credentials';
 
     // Create user with associated records
     // Hash the password before storing it in the database
-    const hashedPassword = await bcrypt.hash(password, 10);
+    let hashedPassword = '';
+    if (password !== undefined) {
+    hashedPassword = await bcrypt.hash(password, 10);
+    }
 
     const user = await prisma.user.create({
       data: {
@@ -81,7 +84,7 @@ app.post('/create_user', async (req, res) => {
       image: image,
       auth_methods: {
         create: {
-        isManual: auth === 'manual',
+        isManual: auth === 'credentials',
         isOAuth: auth === 'google' || auth === 'github',
         },
       },
@@ -235,7 +238,7 @@ app.post('/login', async (req, res) => {
     //TODO:
     const passwordMatch = await bcrypt.compare(password, user.password_hash);
     if (passwordMatch) {
-      return res.status(200).json({ message: 'Login successful', userId: user.id, email: user.email });
+      return res.status(200).json({ message: 'Login successful', userId: user.id, email: user.email, name: user.name });
     } else {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
