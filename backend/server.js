@@ -32,7 +32,6 @@ const vapidKeys = {
 app.post("/subscribe", (req, res) => {
   // Get pushSubscription object
   const subscription = req.body;
-  console.log(subscription)
   const settings = {
     web: {
       vapidDetails: {
@@ -47,7 +46,9 @@ app.post("/subscribe", (req, res) => {
     },
     isAlwaysUseFCM: false,
   };
-
+  console.log("\n")
+  console.log("Received subscribe option")
+  console.log("\n")
   // Send 201 - resource created
   const push = new PushNotifications(settings);
 
@@ -57,7 +58,7 @@ app.post("/subscribe", (req, res) => {
     if (err) {
       console.log(err);
     } else {
-      console.log(result);
+      console.log("sent")
     }
   });
 });

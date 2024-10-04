@@ -1,4 +1,4 @@
-self.addEventListener("push", (event) => {
+/* self.addEventListener("push", (event) => {
     const data = event.data.json();
     const title = data.title;
     const body = data.body;
@@ -15,4 +15,16 @@ self.addEventListener("push", (event) => {
     };
 
     self.registration.showNotification(title, notificationOptions);
+});
+ */
+
+console.log("Service Worker Loaded...");
+
+self.addEventListener("push", (e) => {
+    const data = e.data.json();
+    console.log("Push Recieved...");
+
+    self.registration.showNotification(data.title, {
+        body: "Knock Knock",
+    });
 });
