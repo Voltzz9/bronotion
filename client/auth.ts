@@ -76,7 +76,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             auth_method: account?.provider,
             provider_account_id: account?.providerAccountId,
           };
-
+          console.log('Existing user:', newUser);
           existingUser = await createUser(newUser);
         } else {
           // Enable OAuth for account
@@ -85,10 +85,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             enableOAuth(id);
           }
         }
-
         token.isOAuth = true;
         token.email = existingUser.email;
         token.role = "USER"; // You might want to set a default role
+        console.log('JWT token:', token);
         return token;
       } catch (error) {
         console.error('Error in jwt callback:', error);
