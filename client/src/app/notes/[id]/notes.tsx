@@ -6,6 +6,8 @@ import DOMPurify from 'dompurify';
 import { FloatingCollaborators } from '@/components/floating-collaborators';
 import useNoteId from '@/app/hooks/useNoteId';
 
+const URL = process.env.NEXT_PUBLIC_API_URL;
+
 interface Note {
   note_id: number,
   title: string,
@@ -37,7 +39,7 @@ export default function Notes() {
     if (noteId) {
       const fetchNote = async () => {
         try {
-          const response = await fetch(`http://localhost:8080/notes/${noteId}`);
+          const response = await fetch(URL+`notes/${noteId}`);
           const data: Note = await response.json();
           setNote(data.content);  // Assuming the response has a 'content' field
         } catch (error) {

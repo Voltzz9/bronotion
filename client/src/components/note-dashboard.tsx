@@ -384,27 +384,30 @@ export function NoteDashboardV2() {
                     <Link  href={`/notes/${note.note_id}`} passHref>
                       <CardTitle className="text-lg text-secondary">{note.title}</CardTitle>
                     </Link>
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {note.tags.map((tag) => (
-                        <Badge
-                          key={tag}
-                          variant="destructive"
-                          className="cursor-pointer"
-                          onClick={() => {
-                            removeTag(tag, note.note_id.toString());
-                          }}
-                        >
-                          {tag}
-                        </Badge>
-                      ))}
-                      <TagCombobox
-                        initTags={allTags}
-                        selectedTags={note.tags}
-                        noteId={note.note_id.toString()}
-                        onTagToggle={addTagToNote}
-                        handleCreateTag={addNewTag}
-                      />
-                    </div>
+                    <ScrollArea className="h-12 w-full overflow-x-auto rounded-md ">
+                      <div className="flex flex-nowrap gap-2 mt-2">
+                        {note.tags.map((tag) => (
+                          <Badge
+                            key={tag}
+                            variant="destructive"
+                            className="cursor-pointer"
+                            onClick={() => {
+                              removeTag(tag, note.note_id.toString());
+                            }}
+                          >
+                            {tag}
+                          </Badge>
+                        ))}
+                        <TagCombobox
+                          initTags={allTags}
+                          selectedTags={note.tags}
+                          noteId={note.note_id.toString()}
+                          onTagToggle={addTagToNote}
+                          handleCreateTag={addNewTag}
+                        />
+                      </div>
+                      <ScrollBar orientation="horizontal" />
+                    </ScrollArea>
                   </CardHeader>
                   <CardFooter className="mt-auto">
                     <div className="flex justify-between items-center w-full text-sm text-muted-foreground">
