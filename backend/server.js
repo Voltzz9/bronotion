@@ -445,20 +445,10 @@ app.get('/notes/:noteId/check', async (req, res) => {
     const authHeader = req.headers['authorization']; // Lowercase 'authorization' for case sensitivity issues.
     const userId = authHeader && authHeader.split(' ')[1]; // Extract the token part after "Bearer"
     const noteId = parseInt(req.params.noteId, 10);
-
-    
-    console.log('Authorization Header:', authHeader);
-    console.log('Extracted User ID:', userId);
-    console.log('Note ID:', noteId);
-
-
     const note = await prisma.note.findUnique({
       where: { note_id: noteId},
       select: { user_id: true },
     });
-    console.log(note);
-
-
     if (userId !== note.user_id) {
       return res.status(401).json({ error: 'Unauthorized' });
     }

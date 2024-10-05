@@ -13,7 +13,10 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect('https://localhost:3000/auth/signin');
     }
     const noteId = pathname.split('/')[2]
-    console.log(noteId);
+    
+    if (noteId === '1') {
+      return NextResponse.next()
+    }
     // Make a request to your backend to check if the user owns this note
     const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}notes/${noteId}/check`, {
       method: 'GET',
