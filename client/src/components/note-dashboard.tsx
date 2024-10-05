@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
-import { PlusIcon, SearchIcon, CalendarIcon, UserIcon, Trash2 } from 'lucide-react'
+import { PlusIcon, SearchIcon, CalendarIcon, UserIcon, Trash2, Pencil } from 'lucide-react'
 import Link from 'next/link'
 import { useSession } from 'next-auth/react'
 import { NoteSelector } from "@/components/note-selector"
@@ -59,6 +59,8 @@ export function NoteDashboardV2() {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [allTags, setAllTags] = useState<string[]>([]);
   const [noteView, setNoteView] = useState('all'); // 'all', 'my', 'shared'
+  const [editingNoteId, setEditingNoteId] = useState<number | null>(null);
+  const [editingTitle, setEditingTitle] = useState<string>('');
 
   const fetchNotesAndTags = useCallback(async (userId: string) => {
     try {
@@ -335,6 +337,37 @@ export function NoteDashboardV2() {
     return 0;
   });
 
+  const updateNoteTitle = async (noteId: number) => {
+    if (!session?.user?.id) return;
+
+    try {
+      const response = await fetch(`${URL}notes/${noteId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ title: editingTitle }),
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      // Update the notes state
+      setNotes(prevNotes => prevNotes.map(note => note.note_id === noteId ? { ...note, title: editingTitle } : note));
+      setEditingNoteId(null);
+      setEditingTitle('');
+    } catch (error) {
+      console.error('Failed to update note title:', error);
+    }
+  };
+
+  const handleEditClick = (note: Note) => {
+    setEditingNoteId(note.note_id);
+    setEditingTitle(note.title);
+  };
+
   const deleteNote = async (noteId: number) => {
     if (!session?.user?.id) return;
 
@@ -402,18 +435,55 @@ export function NoteDashboardV2() {
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
             {filteredNotes.map((note) => (
+              <Link href={`/notes/${note.note_id}`} passHref>
               <Card key={note.note_id} className="flex flex-col cursor-pointer h-52 relative">
                 <CardHeader className="flex-grow pb-2">
                   <div className="flex justify-between items-start">
-                    <Link href={`/notes/${note.note_id}`} passHref>
-                      <CardTitle className="text-lg text-secondary">{note.title}</CardTitle>
-                    </Link>
+                    <div className="flex">
+                      <CardTitle className="mt-1 text-lg text-secondary">
+                        {editingNoteId === note.note_id ? (
+                          <Input
+                            value={editingTitle}
+                            onChange={(e) => setEditingTitle(e.target.value)}
+                            onBlur={() => updateNoteTitle(note.note_id)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                updateNoteTitle(note.note_id);
+                              }
+                            }}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation()}}// Stop event propagation
+                            autoFocus
+                          />
+                        ) : (
+                          note.title
+                        )}
+                      </CardTitle>
+                        {editingNoteId !== note.note_id && (
+                        <Button 
+                          variant="ghost"
+                          size="icon"
+                          className="ml-2 text-muted-foreground hover:bg-muted-foreground/20" 
+                          onClick={(e) => {
+                          e.preventDefault(); // Prevent default button behavior
+                          e.stopPropagation(); // Prevent link navigation
+                          handleEditClick(note);
+                          }}
+                        >
+                          <Pencil className="h-4 w-4"/>
+                        </Button>
+                        )}
+                    
+                    </div>
+            
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="absolute top-2 right-2 text-gray-400 hover:text-red-500 transition-colors"
+                      className="absolute top-6 right-2 text-gray-400 hover:text-red-500 hover:bg-muted-foreground/20 transition-colors"
                       onClick={(e) => {
-                        e.preventDefault();
+                        e.preventDefault(); // Prevent default button behavior
+                        e.stopPropagation(); // Prevent link navigation
                         deleteNote(note.note_id);
                       }}
                     >
@@ -427,7 +497,9 @@ export function NoteDashboardV2() {
                             key={tag}
                             variant="destructive"
                             className="cursor-pointer"
-                            onClick={() => {
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
                               removeTag(tag, note.note_id.toString());
                             }}
                           >
@@ -438,13 +510,18 @@ export function NoteDashboardV2() {
                           initTags={allTags}
                           selectedTags={note.tags}
                           noteId={note.note_id.toString()}
-                          onTagToggle={addTagToNote}
-                          handleCreateTag={addNewTag}
+                          onTagToggle={(tagName, tagId) => {
+                            addTagToNote(note.note_id.toString(), tagName, tagId);
+                          }}
+                          handleCreateTag={(tagName) => {
+                            addNewTag(tagName, note.note_id.toString());
+                          }}
                         />
                       </div>
                       <ScrollBar orientation="horizontal" />
                       </ScrollArea>
                 </CardHeader>
+                
                 <CardFooter className="mt-auto pt-2">
                   <div className="flex justify-between items-center w-full text-sm text-muted-foreground">
                     <div className="flex items-center">
@@ -473,6 +550,7 @@ export function NoteDashboardV2() {
                   </div>
                 </CardFooter>
               </Card>
+            </Link>
             ))}
           </div>
         </CardContent>

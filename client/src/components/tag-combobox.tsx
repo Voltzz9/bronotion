@@ -68,7 +68,10 @@ export const TagCombobox: React.FC<TagComboboxProps> = ({ initTags, selectedTags
                   <Button
                     variant="ghost"
                     className="w-full justify-start"
-                    onClick={() => createTag(inputValue)}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      createTag(inputValue);}}
                   >
                     <Plus className="mr-2 h-4 w-4" />
                     Create &quot;{inputValue}&quot;
@@ -80,7 +83,7 @@ export const TagCombobox: React.FC<TagComboboxProps> = ({ initTags, selectedTags
                 <CommandItem
                   key={tag}
                   value={tag}
-                  onSelect={() => onTagToggle(noteId, tag)}
+                  onSelect={(e) => onTagToggle(noteId, tag)}
                 >
                   <Check
                     className={cn(
