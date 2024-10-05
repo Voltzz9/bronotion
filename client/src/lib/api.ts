@@ -66,31 +66,31 @@ export async function getUserByEmail(email: string): Promise<User | null> {
 }
 
 export async function createUser(user: User): Promise<User> {
-try {
+  try {
     // Generate a username if it's not provided
     const userData = {
-    ...user,
-    username: user.username || user.email.split('@')[0],
+      ...user,
+      username: user.username || user.email.split('@')[0],
     };
 
     const response = await fetch(`${API_BASE_URL}/create_user`, {
-    method: 'POST',
-    headers: {
+      method: 'POST',
+      headers: {
         'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(userData),
+      },
+      body: JSON.stringify(userData),
     });
     if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(`Error creating user: ${response.status} ${response.statusText}. ${JSON.stringify(errorData)}`);
+      const errorData = await response.json();
+      throw new Error(`Error creating user: ${response.status} ${response.statusText}. ${JSON.stringify(errorData)}`);
     }
     const data: User = await response.json();
     console.log('User created:', data);
     return data;
-} catch (error) {
+  } catch (error) {
     console.error('Error creating user:', error);
     throw error;
-}
+  }
 }
 
 export async function loginUser(email: string, password: string): Promise<User> {

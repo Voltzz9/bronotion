@@ -86,7 +86,7 @@ app.post('/create_user', async (req, res) => {
     hashedPassword = await bcrypt.hash(password, 10);
     }
 
-    const user = await prisma.user.create({
+    let user = await prisma.user.create({
       data: {
       id: id,
       username: username,
@@ -115,11 +115,21 @@ app.post('/create_user', async (req, res) => {
       },
     });
 
+    user = await prisma.user.findFirst({
+      where: {
+        email: email,
+      },
+      select: {
+        id: true,
+        email: true,
+        username: true,
+      },
+    });
+
     res.status(201).json({ 
       message: 'User created successfully', 
       user: {
         id: user.id,
-        name: user.name,
         email: user.email,
         username: user.username,
       }
