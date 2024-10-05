@@ -48,26 +48,31 @@ app.get('/users', async (req, res) => {
 // Create a new user (for OAuth)
 app.post('/create_user', async (req, res) => {
   try {
-    const { id, name, password, email, image, auth_method, provider_account_id } = req.body;
+    const { id, username, password, email, image, auth_method, provider_account_id } = req.body;
 
     if (!email) {
       return res.status(400).json({ error: 'Missing required fields email' });
     }
 
     // Check if user already exists
-    const existingUser = await prisma.user.findFirst({
+    const existingEmail = await prisma.user.findFirst({
       where: { email: email },
     });
 
-    if (existingUser) {
-      return res.status(409).json({ error: 'User already exists' });
+    const existingUsername = await prisma.user.findFirst({
+      where: { username: username },
+    });
+
+    if (existingEmail) {
+      return res.status(409).json({ error: 'Email already exists' });
+    }
+
+    if (existingUsername) {
+      return res.status(409).json({ error: 'Username already exists' });
     }
 
     // Generate a username from email
-    let username = '';
-    if (name) {
-      username = name;
-    } else {
+    if (!username) {
       username = email.split('@')[0];
     }
 
