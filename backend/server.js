@@ -1,10 +1,11 @@
-const express = require('express');
-const { PrismaClient } = require('@prisma/client');
-const bcrypt = require('bcrypt');
-const cors = require('cors');
-const https = require('https'); // Import HTTPS
-const fs = require('fs'); // Import File System
-require('dotenv').config();
+import express from 'express';
+import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcrypt';
+import cors from 'cors';
+import https from 'https'; // Import HTTPS
+import fs from 'fs'; // Import File System
+import dotenv from 'dotenv';
+dotenv.config();
 
 const prisma = new PrismaClient();
 const app = express();
