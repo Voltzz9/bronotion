@@ -8,10 +8,10 @@ import useNoteId from '@/app/hooks/useNoteId'
 const URL = process.env.NEXT_PUBLIC_API_URL;
 
 interface Collaborator {
+  image: string
   user_id: number
   username: string
   email: string
-  avatar_url: string
   is_manual: boolean
   registration_date: Date
 }
@@ -65,17 +65,19 @@ export function FloatingCollaborators() {
             className="overflow-hidden w-32"
           >
             <ul className="p-1 space-y-1 rounded-lg">
-              {collaborators.map((collaborator) => (
-                <li key={collaborator.user_id} className="flex items-center space-x-2 rounded-lg">
-                  <img
-                    src={collaborator.avatar_url}
-                    alt={`${collaborator.username}'s avatar`}
-                    className="w-4 h-4 rounded-full"
-                  />
-                  <span className="text-sm rounded-lg">{collaborator.username}</span>
-                </li>
-              ))}
-            </ul>
+                {collaborators.map((collaborator) => (
+                  <li key={collaborator.user_id} className="flex items-center space-x-2 rounded-lg">
+                    {collaborator.image && (
+                      <img
+                        src={collaborator.image}
+                        alt={`${collaborator.username}'s avatar`}
+                        className="w-4 h-4 rounded-full"
+                      />
+                    )}
+                    <span className="text-sm rounded-lg">{collaborator.username}</span>
+                  </li>
+                ))}
+              </ul>
           </motion.div>
         )}
       </AnimatePresence>
