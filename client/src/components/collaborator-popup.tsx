@@ -8,6 +8,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 import useNoteId from "@/app/hooks/useNoteId"
 
+const URL = process.env.NEXT_PUBLIC_API_URL;
+
 interface User {
   user_id: number
   username: string
@@ -28,7 +30,7 @@ export function CollaboratorPopup() {
   const fetchSearchResults = useCallback(async (query: string) => {
     setIsLoading(true);
     try {
-      const response = await fetch(`http://localhost:8080/users/search?prefix=${encodeURIComponent(query)}`);
+      const response = await fetch(URL+`users/search?prefix=${encodeURIComponent(query)}`);
       if (!response.ok) {
         throw new Error('Failed to fetch Users');
       }

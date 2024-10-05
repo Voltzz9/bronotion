@@ -449,6 +449,14 @@ app.post('/notes/:noteId/share', async (req, res) => {
       });
     }
 
+    // Check if userId exists
+    const user = await prisma.user.findFirst({
+      where: { id: sharedWithUserId },
+    });
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
     // Create a new shared note entry
     const result = await prisma.sharedNote.create({
       data: {
@@ -531,16 +539,20 @@ app.get('/notes/:noteId/shared-users', async (req, res) => {
         shared_with_user: {
           select: {
             id: true,
-            name: true,
             username: true,
             email: true,
-          },
-        },
-      },
+            image: true
+          }
+        }
+      }
     });
 
     // Extract user information from shared notes
-    const sharedUsers = sharedNotes.map(sharedNote => sharedNote.shared_with_user);
+    const sharedUsers = sharedNotes.map(sharedNote => ({
+      ...sharedNote.shared_with_user,
+      canEdit: sharedNote.can_edit,
+      sharedAt: sharedNote.shared_at
+    }));
 
     res.json(sharedUsers);
   } catch (error) {

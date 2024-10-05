@@ -5,6 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronUp, ChevronDown } from 'lucide-react'
 import useNoteId from '@/app/hooks/useNoteId'
 
+const URL = process.env.NEXT_PUBLIC_API_URL;
+
 interface Collaborator {
   user_id: number
   username: string
@@ -23,7 +25,7 @@ export function FloatingCollaborators() {
     if (noteId !== null && noteId !== undefined) {
       const fetchCollaborators = async () => {
         try {
-          const response = await fetch(`http://localhost:8080/notes/${noteId}/shared-users`)
+          const response = await fetch(URL+`notes/${noteId}/shared-users`)
           if (!response.ok) {
             throw new Error('Failed to fetch Users')
           }
