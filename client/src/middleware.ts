@@ -14,7 +14,7 @@ export async function middleware(request: NextRequest) {
     }
     const noteId = pathname.split('/')[2]
     
-    if (noteId === '1') {
+    if (noteId === '2') {
       return NextResponse.next()
     }
     // Make a request to your backend to check if the user owns this note
