@@ -83,7 +83,7 @@ export const TagCombobox: React.FC<TagComboboxProps> = ({ initTags, selectedTags
                 <CommandItem
                   key={tag}
                   value={tag}
-                  onSelect={(e) => onTagToggle(noteId, tag)}
+                  onSelect={() => onTagToggle(noteId, tag)}
                 >
                   <Check
                     className={cn(

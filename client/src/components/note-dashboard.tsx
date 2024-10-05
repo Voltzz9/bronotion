@@ -435,7 +435,7 @@ export function NoteDashboardV2() {
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
             {filteredNotes.map((note) => (
-              <Link href={`/notes/${note.note_id}`} passHref>
+              <Link key={note.note_id} href={`/notes/${note.note_id}`} passHref>
               <Card key={note.note_id} className="flex flex-col cursor-pointer h-52 relative">
                 <CardHeader className="flex-grow pb-2">
                   <div className="flex justify-between items-start">
