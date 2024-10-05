@@ -16,7 +16,11 @@ interface Collaborator {
   registration_date: Date
 }
 
-export function FloatingCollaborators() {
+interface FloatingCollaboratorsProps {
+  current_user: string;
+}
+
+export const FloatingCollaborators: React.FC<FloatingCollaboratorsProps> = ({ current_user }) => {
   const [isExpanded, setIsExpanded] = useState(false)
   const [collaborators, setCollaborators] = useState<Collaborator[]>([])
   const noteId = useNoteId()
@@ -30,6 +34,13 @@ export function FloatingCollaborators() {
             throw new Error('Failed to fetch Users')
           }
           const data: Collaborator[] = await response.json()
+          // Remove the current user from the list of collaborators
+          console.log("Before:"+data)
+          const currentUser = data.findIndex((collaborator) => collaborator.username === current_user)
+          if (currentUser > -1) {
+            data.splice(currentUser, 1)
+          }
+          console.log(data)
           setCollaborators(data)
           console.log(data)
         } catch (error) {
@@ -38,7 +49,7 @@ export function FloatingCollaborators() {
       }
       fetchCollaborators()
     }
-  }, [noteId])
+  }, [noteId, current_user])
 
 
   return (

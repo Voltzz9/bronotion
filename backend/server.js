@@ -46,12 +46,10 @@ io.on('connection', (socket) => {
   console.log('A user connected');
 
   socket.on('join-note', (noteId) => {
-    console.log('User joining note:', noteId);
     socket.join(noteId);
   });
 
   socket.on('update-note', (data) => {
-    console.log('Note updated for noteId:', data.noteId, 'Content:', data.content);
     socket.to(data.noteId).emit('note-updated', data.content);
   });
 
@@ -627,6 +625,26 @@ app.get('/notes/:noteId/shared-users', async (req, res) => {
         }
       }
     });
+
+    // Fetch owner of the note
+    const note = await prisma.note.findUnique({
+      where: { note_id: noteId },
+      select: {
+        user_id: true
+      }
+    });
+    // Fetch owner information
+    const owner = await prisma.user.findUnique({
+      where: { id: note.user_id },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        image: true
+      }
+    });
+    // Add owner to the shared users list
+    sharedNotes.push({ shared_with_user: owner, can_edit: true, shared_at: null });
 
     // Extract user information from shared notes
     const sharedUsers = sharedNotes.map(sharedNote => ({
