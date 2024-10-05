@@ -14,10 +14,6 @@ RUN rm -rf /usr/local/bin/yarn /usr/local/bin/yarnpkg && npm install -g yarn
 # Install dependencies (including devDependencies from both npm and yarn environments)
 RUN npm install && yarn install
 
-
-# Prisma stage
-FROM base AS prisma
-
 # Install Prisma CLI globally
 RUN npm install -g prisma
 
@@ -26,6 +22,9 @@ COPY . .
 
 # Generate Prisma client
 RUN npx prisma generate
+
+# Prisma stage
+FROM base AS prisma
 
 # Expose the port Prisma Studio runs on
 EXPOSE 5555
