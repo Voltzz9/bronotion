@@ -12,6 +12,8 @@ if [ $# -eq 0 ]; then
     exit 1
 fi
 
+sudo chown -R $(id -u):$(id -g) $HOME/.docker
+
 # Get the first argument
 MODE=$1
 MODE1=$2
@@ -42,12 +44,20 @@ if [ "$MODE1" = "clean" ]; then
         echo "No images to remove."
     fi
 
+    # Remove all Docker volumes
+    if [ "$(docker volume ls -q)" ]; then
+        echo "Removing all Docker volumes..."
+        docker volume rm $(docker volume ls -q) || { echo "Failed to remove volumes"; exit 1; }
+    else
+        echo "No volumes to remove."
+    fi
+
     # Display status after cleanup
     echo "Docker cleanup complete."
 fi
 
 # Define ports that need to be cleared
-ports=("8080" "5432" "3000")
+ports=("8080" "5432" "3000" "5555")
 
 echo "Killing processes on conflicting ports..."
 for port in "${ports[@]}"; do
@@ -62,8 +72,12 @@ for port in "${ports[@]}"; do
     echo "No process found on port $port"
 done
 
+# Pull the base image (node:22-alpine) to utilize caching
+echo "Pulling base image node:22-alpine..."
+docker pull node:22-alpine || { echo "Failed to pull base image"; exit 1; }
+
 echo "Starting Docker Compose build..."
-docker-compose build
+docker-compose build --pull
 
 echo "Starting db services..."
 docker-compose up -d db
@@ -83,12 +97,17 @@ table_count=$(docker exec postgres-db psql -U admin -d bronotion -tAc "SELECT CO
 
 if [ -n "$table_count" ] && [ "$table_count" -eq "0" ]; then
     echo "No tables found. Running DDL.sql to create tables..."
-    docker exec -i postgres-db psql -U admin -d bronotion -f /docker-entrypoint-initdb.d/DDL.sql
+    docker-compose run --rm prisma-migration-init
     echo "Tables created successfully."
-    echo "Running DML.sql manually will populate tables..."
+    echo "Populating tables with seed data..."
+    docker-compose run --rm prisma-init-seed
+    echo "Seed data populated successfully."
 else
     echo "Tables already exist. Skipping DDL execution."
 fi
+
+echo "Starting Prisma Studio..."
+docker-compose up --no-start prisma-studio
 
 echo "Starting backend"
 docker-compose up -d backend
@@ -96,7 +115,6 @@ docker-compose up -d backend
 echo "Creating both frontend containers..."
 docker-compose up --no-start frontend-dev frontend-prod
 
-echo "Starting frontend based on ./run.sh argument..."
 # Check the argument and run the appropriate command
 if [ "$MODE" = "dev" ]; then
     echo "Running in development mode (hot reload enabled)"

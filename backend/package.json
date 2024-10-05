@@ -1,9 +1,15 @@
 {
   "name": "group-37-api",
   "version": "0.1.0",
+  "type": "module",
   "private": true,
   "scripts": {
-    "start:server": "node server.js"
+    "start:server": "node server.js",
+    "seed": "node prisma/seed.cjs"
+  },
+  "prisma": {
+    "schema": "./prisma/schema.prisma",
+    "seed": "node prisma/seed.cjs"
   },
   "dependencies": {
     "@prisma/client": "^5.20.0",
