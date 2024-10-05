@@ -197,6 +197,49 @@ app.post('/users/:userId/oauth', async (req, res) => {
   }
 });
 
+// Search users with prefix support
+app.get('/users/search', async (req, res) => {
+  try {
+    const { query, prefix } = req.query;
+
+    if (!query) {
+      return res.status(400).json({ error: 'Search query is required' });
+    }
+
+    let whereClause;
+
+    if (prefix === 'true') {
+      whereClause = {
+        OR: [
+          { username: { startsWith: query, mode: 'insensitive' } },
+          { email: { startsWith: query, mode: 'insensitive' } },
+        ],
+      };
+    } else {
+      whereClause = {
+        OR: [
+          { username: { contains: query, mode: 'insensitive' } },
+          { email: { contains: query, mode: 'insensitive' } },
+        ],
+      };
+    }
+
+    const users = await prisma.user.findMany({
+      where: whereClause,
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        image: true,
+      },
+    });
+
+    res.json(users);
+  } catch (error) {
+    console.error('Error searching users:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
 
 // View user info
 app.get('/users/:userId', async (req, res) => {
