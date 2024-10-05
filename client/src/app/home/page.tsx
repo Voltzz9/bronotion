@@ -2,8 +2,6 @@ import React from 'react'
 import { NoteDashboardV2 } from '@/components/note-dashboard';
 import  Header  from '@/components/ui/header'
 import { SessionWrapper } from '../SessionProvider';
-import { auth } from '../../../auth';
-import { redirect } from 'next/navigation';
 
 
 export default async function Dashboard (){
