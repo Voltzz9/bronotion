@@ -445,6 +445,73 @@ app.post('/users/:userId/notes', async (req, res) => {
   }
 });
 
+// Get notes associated with tags for a specific user
+app.put('/users/:userId/tags/notes', async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const { tagId } = req.body;
+
+    // Fetch the tag IDs for the user
+    const tagIdResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/tag-ids/${userId}`);
+    if (!tagIdResponse.ok) {
+      throw new Error(`Failed to fetch tag IDs for user: ${tagIdResponse.status}`);
+    }
+    const userTagIds = await tagIdResponse.json();
+
+    // Fetch the user's own notes with the specified tag
+    const userNotes = await prisma.note.findMany({
+      where: {
+        user_id: userId,
+        tags: {
+          some: {
+            tag_id: {
+              in: userTagIds, // Use the tag IDs fetched earlier
+            },
+          },
+        },
+        is_deleted: false,
+      },
+      include: {
+        tags: {
+          include: {
+            tag: true,
+          },
+        },
+      },
+    });
+
+    // Organize notes by tag
+    const tagNotesMap = {};
+
+    userNotes.forEach(note => {
+      note.tags.forEach(noteTag => {
+        const tagId = noteTag.tag.tag_id;
+        const tagName = noteTag.tag.name;
+
+        if (!tagNotesMap[tagId]) {
+          tagNotesMap[tagId] = {
+            tagId,
+            tagName,
+            noteIds: [],
+            noteTitles: [],
+          };
+        }
+
+        tagNotesMap[tagId].noteIds.push(note.id);
+        tagNotesMap[tagId].noteTitles.push(note.title);
+      });
+    });
+
+    // Convert the map to an array
+    const formattedResponse = Object.values(tagNotesMap);
+
+    res.json(formattedResponse);
+  } catch (error) {
+    console.error('Error fetching notes by tag:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 // Update a note
 app.put('/notes/:noteId', async (req, res) => {
   try {
@@ -1054,6 +1121,40 @@ app.get('/tags/:userId', async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
+
+// Get all tag IDs for a specific user
+app.get('/tag-ids/:userId', async (req, res) => {
+  try {
+    const userId = req.params.userId;
+
+    // Query to get all tags associated with the user's notes
+    const tags = await prisma.tag.findMany({
+      where: {
+        notes: {
+          some: {
+            note: {
+              user_id: userId,
+              is_deleted: false,
+            },
+          },
+        },
+      },
+      select: {
+        tag_id: true,
+      },
+    });
+
+    // Extract the tag IDs
+    const tagIds = tags.map(tag => tag.tag_id);
+    
+    // Return the tag IDs
+    res.json(tagIds);
+  } catch (error) {
+    console.error('Error fetching tag IDs for user:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 
 // Start the server
 server.listen(PORT, () => {

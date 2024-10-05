@@ -3,12 +3,12 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion, useScroll, useSpring, useTransform } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import AnimatedArrowButton from './animated-arrow-button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { usePathname } from 'next/navigation';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import SignOutButton from './sign-out';
 import { useSession } from 'next-auth/react';
+import { LayoutComponent } from '@/components/layout-component';
 
 export default function Header() {
   const { data: session, status } = useSession();
@@ -81,9 +81,6 @@ export default function Header() {
             </motion.div>
             </Link>
           <div className="flex items-center space-x-4">
-            {isOnNotesPage && (
-              <AnimatedArrowButton />
-            )}
             {isAuthenticated ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -105,6 +102,7 @@ export default function Header() {
                 <Button>Login</Button>
               </Link>
             )}
+          <LayoutComponent />
           </div>
         </nav>
       </header>
