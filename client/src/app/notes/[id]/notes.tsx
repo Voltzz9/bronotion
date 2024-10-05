@@ -103,6 +103,7 @@ export default function Notes() {
     const fetchData = async () => {
       if (!session?.user?.id) {
         router.push('/login');
+        return;
       } else {
         // Fetch Username
         const resp = await fetch(URL+`users/`+session.user.id);
@@ -134,7 +135,7 @@ export default function Notes() {
     };
   
     fetchData();
-  }, [noteId, router]);
+  }, [noteId, router,  session?.user?.id]);
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">

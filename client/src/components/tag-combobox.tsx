@@ -71,7 +71,7 @@ export const TagCombobox: React.FC<TagComboboxProps> = ({ initTags, selectedTags
                     onClick={() => createTag(inputValue)}
                   >
                     <Plus className="mr-2 h-4 w-4" />
-                    Create "{inputValue}"
+                    Create &quot;{inputValue}&quot;
                   </Button>
                 </CommandEmpty>
               )}

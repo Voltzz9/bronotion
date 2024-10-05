@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronUp, ChevronDown } from 'lucide-react'
 import useNoteId from '@/app/hooks/useNoteId'
+import Image from 'next/image'
 
 const URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -79,11 +80,13 @@ export const FloatingCollaborators: React.FC<FloatingCollaboratorsProps> = ({ cu
                 {collaborators.map((collaborator) => (
                   <li key={collaborator.username} className="flex items-center space-x-2 rounded-lg">
                     {collaborator.image && (
-                      <img
-                        src={collaborator.image}
-                        alt={`${collaborator.username}'s avatar`}
-                        className="w-4 h-4 rounded-full"
-                      />
+                      <Image
+                      src={collaborator.image}
+                      alt={`${collaborator.username}'s avatar`}
+                      width={16} // Set width
+                      height={16} // Set height
+                      className="rounded-full"
+                    />
                     )}
                     <span className="text-sm rounded-lg">{collaborator.username}</span>
                   </li>
