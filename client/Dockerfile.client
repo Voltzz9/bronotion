@@ -1,0 +1,30 @@
+# Base stage
+FROM node:22-alpine AS base
+
+# Create app directory
+WORKDIR /app
+
+# Copy package.json and install yarn globally
+COPY package.json .
+RUN rm -rf /usr/local/bin/yarn /usr/local/bin/yarnpkg && npm install -g yarn
+
+# Install dependencies
+RUN yarn install
+
+# Development stage
+FROM base AS development
+
+# Copy the entire project
+COPY . .
+
+# Start the app in development mode
+CMD ["yarn", "dev"]
+
+# Production stage
+FROM base AS production
+
+# Copy the entire project
+COPY . .
+
+# Build the app and start it in production mode
+CMD ["sh", "-c", "yarn build && yarn start"]

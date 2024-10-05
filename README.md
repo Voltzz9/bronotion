@@ -76,7 +76,7 @@ Before you can run the project in Docker, you need to have the following install
 
 To run the Docker container for this project, follow these steps:
 
-Don't forget to have docker desktop running.
+Don't forget to have docker desktop running and ensure you have logged in!
 
 1. **In the Terminal**: Make sure that you are in the root directory of the project.
 
@@ -89,7 +89,16 @@ Don't forget to have docker desktop running.
 
         ./run.sh [dev|prod] [clean]
 
-   **The clean arguement is optional and will delete all containers and images.**
+   **The clean arguement is optional and will delete all containers, images and volumes.**
+
+4. **Viewing and Manipulating the Database**:
+   - You can view the database using the Prisma Studio. To do this, you need to run the Prisma Studio container. You can do this by running the "prisma-studio" container in Docker Desktop. Once the database container is running, you can access the Prisma Studio in your browser by clicking the link "5555:5555" which is highlighted blue under the Ports column in Docker Desktop.
+   - ***NOTE: You can only access the Prisma Studio when the database container is running.***
+
+5. **Access the Application**:
+   - Once the script has completed, you can access the application at the following URL:
+     - [http://localhost:3000](http://localhost:3000)
+     - Or you can follow the port "3000:3000" which is highlighted blue under the Ports column in Docker Desktop. 
 <br>
 <hr>
 <br>

@@ -1,0 +1,47 @@
+#Dockerfile.backend
+# Base stage
+FROM node:22-alpine AS base
+
+# Set the working directory in the container
+WORKDIR /app
+
+# Copy package.json and package-lock.json (if available)
+COPY package*.json ./
+
+# Remove existing yarn and install the latest version
+RUN rm -rf /usr/local/bin/yarn /usr/local/bin/yarnpkg && npm install -g yarn
+
+# Install dependencies (including devDependencies from both npm and yarn environments)
+RUN npm install && yarn install
+
+
+# Prisma stage
+FROM base AS prisma
+
+# Install Prisma CLI globally
+RUN npm install -g prisma
+
+# Copy the rest of the application code
+COPY . .
+
+# Generate Prisma client
+RUN npx prisma generate
+
+# Expose the port Prisma Studio runs on
+EXPOSE 5555
+
+# Command to run Prisma Studio
+CMD ["npx", "prisma", "studio"]
+
+
+# Backend stage
+FROM base AS backend
+
+# Copy the rest of the application code
+COPY . .
+
+# Expose the port the backend runs on
+EXPOSE 8080
+
+# Command to start the backend
+CMD ["yarn", "start:server"]
