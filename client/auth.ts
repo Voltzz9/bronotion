@@ -27,6 +27,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           if (user) {
             return user; // Make sure the user object returned contains the ID
           }
+          console.error('User not found');
           return null;
         } catch (error) {
           console.error('Error during login:', error);
