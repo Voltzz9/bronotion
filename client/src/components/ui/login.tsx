@@ -58,7 +58,7 @@ export default function Component() {
       } else {
         router.push('/home')
       }
-    } catch (error) {
+    } catch {
       setError('An unexpected error occurred. Please try again later.')
     } finally {
       setIsLoading(false)
@@ -108,7 +108,7 @@ export default function Component() {
       } else {
         setError(result.error || 'An error occurred during signup. Please try again.')
       }
-    } catch (error) {
+    } catch {
       setError('An unexpected error occurred. Please try again later.')
     } finally {
       setIsLoading(false)
