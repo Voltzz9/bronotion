@@ -7,16 +7,20 @@ export async function middleware(request: NextRequest) {
 
   // Check if the path is for a specific note
   if (pathname.startsWith('/notes')) {
-    const session = await auth();
-    if (!session) {
-      // If there's no token, deny access
-      return NextResponse.redirect('https://localhost:3000/auth/signin');
-    }
     const noteId = pathname.split('/')[2]
-    
+
+    // Special case for note 2: allow access without authentication
     if (noteId === '2') {
       return NextResponse.next()
     }
+
+    // For all other notes, check authentication
+    const session = await auth();
+    if (!session) {
+      // If there's no session, redirect to sign in
+      return NextResponse.redirect(new URL('/auth/signin', request.url))
+    }
+
     // Make a request to your backend to check if the user owns this note
     const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}notes/${noteId}/check`, {
       method: 'GET',
@@ -26,14 +30,14 @@ export async function middleware(request: NextRequest) {
     })
 
     if (!response.ok) {
-      return NextResponse.redirect('https://localhost:3000/home');
+      return NextResponse.redirect(new URL('/home', request.url))
     }
   }
 
   if (pathname === '/home') {
     const session = await auth();
     if (!session) {
-      return NextResponse.redirect('https://localhost:3000/auth/signin');
+      return NextResponse.redirect(new URL('/auth/signin', request.url))
     }
   }
 
