@@ -7,11 +7,6 @@ import { redirect } from 'next/navigation';
 
 
 export default async function Dashboard (){
-  const session = await auth();
-  if (!session) {
-    redirect("/auth/signin");
-    return null;
-  }
   return (
     <SessionWrapper>
     <div className="min-h-screen flex flex-col bg-primary text-foreground">

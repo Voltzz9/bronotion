@@ -59,6 +59,8 @@ export default function Notes() {
     if (noteId) {
       const fetchNote = async () => {
         try {
+          
+
           const response = await fetch(URL+`notes/${noteId}`);
           
           // Check if note not found (status 404)
