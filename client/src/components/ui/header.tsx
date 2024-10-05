@@ -7,8 +7,9 @@ import AnimatedArrowButton from './animated-arrow-button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { usePathname } from 'next/navigation';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import SignOutButton from './sign-out';
+import SignOutButton from './auth-buttons';
 import { useSession } from 'next-auth/react';
+import AuthButtons from './auth-buttons';
 
 export default function Header() {
   const { data: session, status } = useSession();
@@ -97,7 +98,8 @@ export default function Header() {
                   </Avatar>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <SignOutButton />
+                  {/* TODO: Add user profile settings */}
+                  <AuthButtons />
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (

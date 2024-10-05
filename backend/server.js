@@ -6,6 +6,8 @@ import https from 'https'; // Import HTTPS
 import fs from 'fs'; // Import File System
 import dotenv from 'dotenv';
 import { Server as SocketIOServer } from "socket.io";
+import { createUploadthing } from 'uploadthing/express'; // Import UploadThing properly
+import formidable from 'formidable'; // Ensure you have formidable for parsing form data
 dotenv.config();
 
 const prisma = new PrismaClient();
@@ -27,6 +29,9 @@ app.use(cors({
 
 app.use(express.json());
 
+const uploadThing = createUploadthing({
+  apiKey: process.env.UPLOADTHING_TOKEN, // Ensure this is set in the environment variables
+});
 
 // ********************************* Socket.io *********************************
 
@@ -348,6 +353,56 @@ app.delete('/users/:userId', async (req, res) => {
     console.error('Error deleting user:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
+});
+
+// Update user image
+app.post('/users/:userId/update-image', async (req, res) => {
+  // Initialize formidable to parse multipart form data
+  const form = new formidable.IncomingForm();
+
+  form.parse(req, async (err, fields, files) => {
+    if (err) {
+      console.error('Error parsing form:', err);
+      return res.status(500).json({ error: 'Internal Server Error' });
+    }
+
+    const file = files.image; // The image file from the form
+    if (!file) {
+      return res.status(400).json({ error: 'No image file uploaded' });
+    }
+
+    try {
+      // Upload the image using UploadThing's FileRouter
+      const uploadResponse = await uploadThing.upload({
+        file,
+        fileType: 'image', // Ensure the file type is correctly set
+        maxSize: '4MB',    // Optional: Max size of the image
+      });
+
+      if (!uploadResponse || !uploadResponse.url) {
+        throw new Error('Failed to upload image');
+      }
+
+      const imageUrl = uploadResponse.url; // Get the uploaded image URL
+      const userId = req.params.userId;
+
+      // Update the user's image URL in the database
+      const user = await prisma.user.update({
+        where: { id: userId },
+        data: { image: imageUrl },
+      });
+
+      res.json({
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        image: user.image, // Return the updated image URL
+      });
+    } catch (error) {
+      console.error('Error updating user image:', error);
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
+  });
 });
 
 // ********************************* Note Routes *********************************
