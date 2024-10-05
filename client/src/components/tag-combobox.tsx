@@ -63,16 +63,18 @@ export const TagCombobox: React.FC<TagComboboxProps> = ({ initTags, selectedTags
             onValueChange={setInputValue}
           />
           <CommandList>
-            <CommandEmpty>
-              <Button
-                variant="ghost"
-                className="w-full justify-start"
-                onClick={() => createTag(inputValue)}
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Create "{inputValue}"
-              </Button>
-            </CommandEmpty>
+            {inputValue.trim() && (
+                <CommandEmpty>
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start"
+                    onClick={() => createTag(inputValue)}
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    Create "{inputValue}"
+                  </Button>
+                </CommandEmpty>
+              )}
             <CommandGroup heading="Existing tags">
               {tags.map((tag) => (
                 <CommandItem
