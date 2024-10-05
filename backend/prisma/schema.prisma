@@ -24,6 +24,16 @@
     sessions        Session[]        @relation("UserSessions") // Added relation
     notes           Note[]           @relation("UserNotes") // Added relation
     shared_notes    SharedNote[]     @relation("UserSharedNotes") // Added relation
+    push_notifications      UserPushNoti[] @relation("UserPushNoti")
+  }
+
+  model UserPushNoti { 
+    id              String @id @default(uuid())
+    endpoint        String
+    p256dh          String
+    auth            String 
+
+    user              User     @relation("UserPushNoti", fields: [user_id], references: [id], onDelete: Cascade)
   }
 
   model UserAuthMethod {

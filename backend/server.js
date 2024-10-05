@@ -6,6 +6,7 @@ const cors = require('cors');
 // const fs = require('fs'); // Import File System
 require('dotenv').config();
 const PushNotifications = require("node-pushnotifications");
+const { subscribe } = require('diagnostics_channel');
 
 const prisma = new PrismaClient();
 const app = express();
@@ -29,9 +30,31 @@ const vapidKeys = {
 };
 
 
-app.post("/subscribe", (req, res) => {
+app.post("/subscribe", async (req, res) => {
   // Get pushSubscription object
-  const subscription = req.body;
+  try {
+    const { subscription, id } = req.body;
+    const endpoint = subscription.endpoint;
+    const p256dh = subscription.keys.p256dh;
+    const auth = subscription.keys.auth;
+
+    const newUserPushNoti = await prisma.userPushNoti.create({
+      data: {
+        endpoint,
+        p256dh,
+        auth,
+        user: {
+          connect: { userId: id }
+        }
+      }
+    });
+
+  } catch (error) {
+    console.log("Errorrr!!!!! weewooo")
+  }
+});
+
+const sendPushNotif = async (userId, title) => {
   const settings = {
     web: {
       vapidDetails: {
@@ -46,14 +69,24 @@ app.post("/subscribe", (req, res) => {
     },
     isAlwaysUseFCM: false,
   };
-  console.log("\n")
-  console.log("Received subscribe option")
-  console.log("\n")
   // Send 201 - resource created
   const push = new PushNotifications(settings);
 
+  const dbresults = await prisma.userPushNoti.findFirst({
+    where: {
+      user_id: userId
+    },
+    select: {
+      endpoint: true,
+      p256dh: true,
+      auth: true
+    }
+  });
+  subscription["endpoint"] = dbresults.endpoint;
+  subscription["keys"]["p256dh"] = dbresults.p256dh;
+  subscription["keys"]["auth"] = dbresults.auth;
   // Create payload
-  const payload = { title: "Notification from Knock" };
+  const payload = { title: title, body: "A note has been shared with you" };
   push.send(subscription, payload, (err, result) => {
     if (err) {
       console.log(err);
@@ -61,7 +94,8 @@ app.post("/subscribe", (req, res) => {
       console.log("sent")
     }
   });
-});
+
+}
 
 // ********************************* User Routes *********************************
 
