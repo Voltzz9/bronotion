@@ -5,6 +5,7 @@ import cors from 'cors';
 import https from 'https'; // Import HTTPS
 import fs from 'fs'; // Import File System
 import dotenv from 'dotenv';
+import { Server as SocketIOServer } from "socket.io";
 dotenv.config();
 
 const prisma = new PrismaClient();
@@ -18,13 +19,46 @@ const options = {
 };
 
 app.use(cors({
-  origin: 'https://localhost:3000',
+  origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type'],
   credentials: true,
 }));
 
 app.use(express.json());
+
+
+// ********************************* Socket.io *********************************
+
+// Create HTTPS server
+const server = https.createServer(options, app);
+
+// Initialize Socket.IO with the server instance
+const io = new SocketIOServer(server, {
+  cors: {
+    origin: "https://localhost:3000",
+    methods: ["GET", "POST"]
+  }
+});
+
+// Socket.IO connection handling
+io.on('connection', (socket) => {
+  console.log('A user connected');
+
+  socket.on('join-note', (noteId) => {
+    console.log('User joining note:', noteId);
+    socket.join(noteId);
+  });
+
+  socket.on('update-note', (data) => {
+    console.log('Note updated for noteId:', data.noteId, 'Content:', data.content);
+    socket.to(data.noteId).emit('note-updated', data.content);
+  });
+
+  socket.on('disconnect', () => {
+    console.log('User disconnected');
+  });
+});
 
 // ********************************* User Routes *********************************
 
@@ -968,7 +1002,7 @@ app.get('/tags/:userId', async (req, res) => {
   }
 });
 
-// Start HTTPS server
-https.createServer(options, app).listen(PORT, () => {
+// Start the server
+server.listen(PORT, () => {
   console.log(`Server is running on https://localhost:${PORT}`);
 });

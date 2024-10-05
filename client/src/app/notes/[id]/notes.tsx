@@ -7,6 +7,7 @@ import { FloatingCollaborators } from '@/components/floating-collaborators';
 import useNoteId from '@/app/hooks/useNoteId';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation'; 
+import io, { Socket } from 'socket.io-client'; 
 
 const URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -20,10 +21,36 @@ interface Note {
 }
 
 export default function Notes() {
-  const [note, setNote] = useState('')
-  const [parsedNote, setParsedNote] = useState(`# Rendered Markdown`)
-  const noteId = useNoteId()
+  const [note, setNote] = useState('');
+  const [parsedNote, setParsedNote] = useState(`# Rendered Markdown`);
+  const noteId = useNoteId();
   const router = useRouter();
+  const [socket, setSocket] = useState<Socket | null>(null);
+
+  useEffect(() => {
+    console.log("Connecting to:", URL);
+  
+    const newSocket = io(URL);
+    setSocket(newSocket);
+  
+    return () => {
+      newSocket.close();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (socket && noteId) {
+      socket.emit('join-note', noteId);
+
+      socket.on('note-updated', (updatedContent) => {
+        setNote(updatedContent);
+      });
+
+      return () => {
+        socket.off('note-updated');
+      };
+    }
+  }, [socket, noteId]);
 
   useEffect(() => {
     const parseMarkdown = async () => {
@@ -35,8 +62,11 @@ export default function Notes() {
   }, [note]);
 
   const setNoteContent = (content: string) => {
-    setNote(content)
-  }
+    setNote(content);
+    if (socket && noteId) {
+      socket.emit('update-note', { noteId, content });
+    }
+  };
 
   const saveNote = async () => {
     try {
@@ -53,27 +83,23 @@ export default function Notes() {
     } catch (error) {
       console.error('Error saving note:', error);
     }
-  }
+  };
 
   useEffect(() => {
     if (noteId) {
       const fetchNote = async () => {
         try {
           const response = await fetch(URL+`notes/${noteId}`);
-          
-          // Check if note not found (status 404)
           if (response.status === 404) {
             router.push('/404');
             return;
           }
-
           const data: Note = await response.json();
           setNote(data.content);
         } catch (error) {
-          console.error("Error fetching note:", error);
+          console.error('Error fetching note:', error);
         }
       };
-
       fetchNote();
     }
   }, [noteId, router]);

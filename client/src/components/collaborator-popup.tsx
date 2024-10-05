@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState, useCallback } from "react"
-import { Key, Search } from "lucide-react"
+import { Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
@@ -64,14 +64,26 @@ export function CollaboratorPopup() {
   }
 
   const handleConfirmAdd = async () => {
-    // Here you would typically send a request to your backend to add the collaborator
+    // Fetch User Id
+    const resp = await fetch(URL+`users/email/`+selectedCollaborator?.email)
+    const data = await resp.json()
+    if (!resp.ok) {
+      console.error('Failed to fetch User Id')
+      return
+    }
+
+    if (!selectedCollaborator) {
+      console.error('No selected collaborator')
+      return
+    }
+
+    selectedCollaborator.user_id = data.id
+
     const selectedCollaboratorPostInfo = {
       sharedWithUserId: `${selectedCollaborator?.user_id}`, canEdit: true
     }
-    console.log(`Added collaborator: ${selectedCollaborator?.username}`)
     try {
-
-      const response = await fetch(`http://localhost:8080/notes/${noteId}/share`, {
+      const response = await fetch(URL+`notes/${noteId}/share`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -84,7 +96,7 @@ export function CollaboratorPopup() {
       console.error('Error sending POST request:', error);
     }
     setSelectedCollaborator(null)
-    setIsOpen(false)
+    setIsOpen(false)  
   }
 
   return (
@@ -136,7 +148,7 @@ export function CollaboratorPopup() {
         </DialogFooter>
       </DialogContent>
 
-      <AlertDialog open={!!selectedCollaborator} onOpenChange={() => setSelectedCollaborator(null)}>
+      <AlertDialog open={!!selectedCollaborator} onOpenChange={() => setSelectedCollaborator(selectedCollaborator)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Add Collaborator</AlertDialogTitle>

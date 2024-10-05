@@ -91,6 +91,7 @@ export function NoteDashboardV2() {
       if (noteView === 'own') {
         requestOptions.body = JSON.stringify({ includeShared: false });
       } else if (noteView === 'shared') {
+        console.log('Fetching shared notes for user:', userId);
         fetchUrl = `${URL}users/${userId}/shared-notes`;
         requestOptions = {
           method: 'GET',
