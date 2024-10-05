@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { format } from 'date-fns'
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -416,17 +416,23 @@ export function NoteDashboardV2() {
                       {format(note.updated_at, 'MMM d, yyyy')}
                     </div>
                     <div className="flex items-center">
-                    {note.user.image ? (
-                      <Image
-                        src={note.user.image}
-                        alt={note.user.username}
-                        className="mr-2 h-4 w-4 rounded-full"
-                        width={64}
-                        height={64} 
-                      />
-                    ) : (
-                      <UserIcon className="mr-2 h-4 w-4" />
-)}
+                      {note.user.image ? (
+                        <>
+                          <Image
+                            src={note.user.image}
+                            alt={note.user.username}
+                            className="mr-2 h-4 w-4 rounded-full"
+                            width={64}
+                            height={64}
+                          />
+                          <span className="mr-2">{note.user.username}</span>
+                        </>
+                      ) : (
+                        <>
+                          <UserIcon className="mr-2 h-4 w-4" />
+                          <span className="mr-2">{note.user.username}</span>
+                        </>
+                      )}
                     </div>
                   </div>
                 </CardFooter>
@@ -437,5 +443,4 @@ export function NoteDashboardV2() {
       </Card>
     </div>
   );
-
 }
