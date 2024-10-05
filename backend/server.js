@@ -446,26 +446,38 @@ app.post('/users/:userId/notes', async (req, res) => {
 });
 
 // Get notes associated with tags for a specific user
-app.put('/users/:userId/tags/notes', async (req, res) => {
+app.get('/users/:userId/tags/notes', async (req, res) => {
   try {
     const userId = req.params.userId;
-    const { tagId } = req.body;
 
     // Fetch the tag IDs for the user
-    const tagIdResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/tag-ids/${userId}`);
-    if (!tagIdResponse.ok) {
-      throw new Error(`Failed to fetch tag IDs for user: ${tagIdResponse.status}`);
-    }
-    const userTagIds = await tagIdResponse.json();
+    const tags = await prisma.tag.findMany({
+      where: {
+        notes: {
+          some: {
+            note: {
+              user_id: userId,
+              is_deleted: false,
+            },
+          },
+        },
+      },
+      select: {
+        tag_id: true,
+      },
+    });
 
-    // Fetch the user's own notes with the specified tag
+    // Extract the tag IDs
+    const tagIds = tags.map(tag => tag.tag_id);
+    
+    // Fetch the user's own notes with the specified tags
     const userNotes = await prisma.note.findMany({
       where: {
         user_id: userId,
         tags: {
           some: {
             tag_id: {
-              in: userTagIds, // Use the tag IDs fetched earlier
+              in: tagIds, // Use the tag IDs fetched earlier
             },
           },
         },
@@ -497,7 +509,7 @@ app.put('/users/:userId/tags/notes', async (req, res) => {
           };
         }
 
-        tagNotesMap[tagId].noteIds.push(note.id);
+        tagNotesMap[tagId].noteIds.push(note.note_id);
         tagNotesMap[tagId].noteTitles.push(note.title);
       });
     });
@@ -505,6 +517,7 @@ app.put('/users/:userId/tags/notes', async (req, res) => {
     // Convert the map to an array
     const formattedResponse = Object.values(tagNotesMap);
 
+    // Return the formatted response
     res.json(formattedResponse);
   } catch (error) {
     console.error('Error fetching notes by tag:', error);

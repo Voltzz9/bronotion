@@ -6,18 +6,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useSession } from "next-auth/react"
 
-interface Note {
-  note_id: number;
-  title: string;
-  content?: string;
-  user_id: string;
-  created_at: Date;
-  updated_at: Date;
-  is_deleted: boolean;
-  user: User;
-  tags: TagType[];
-}
-
 interface User {
   id: string;
   username: string;
@@ -30,63 +18,61 @@ interface TagType {
 }
 
 interface TagWithNotes {
-  tag_id: number;
-  name: string;
-  notes_id: number[];
-  notes_title: string[];
+  tagId: number;
+  tagName: string;
+  noteIds: number[];
+  noteTitles: string[];
 }
 
 const URL = process.env.NEXT_PUBLIC_API_URL;
 
 export function LayoutComponent() {
   const [isSidepanelOpen, setIsSidepanelOpen] = useState(false);
-  const [openTag, setOpenTag] = useState<number | null>(null);  // Ensure the type here is correct
-  const [tagsWithNotes, setTagsWithNotes] = useState<TagWithNotes[]>([]); // Correctly typed state
+  const [openTag, setOpenTag] = useState<number | null>(null);
+  const [tagsWithNotes, setTagsWithNotes] = useState<TagWithNotes[]>([]);
   const { data: session } = useSession();
 
   const toggleSidepanel = () => setIsSidepanelOpen(!isSidepanelOpen);
 
-  const toggleTag = (id: number) => {  // Ensure the parameter is of type number
+  const toggleTag = (id: number) => {
     setOpenTag(openTag === id ? null : id);
-  }
+  };
 
   const fetchNotesAndTags = useCallback(async (userId: string) => {
     try {
-      // Fetching tags
       const fetchUrl = `${URL}users/${userId}/tags/notes`;
       const requestOptions: RequestInit = {
-          method: 'GET',
-          headers: {
-              'Content-Type': 'application/json',
-          },
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
       };
 
       const response = await fetch(fetchUrl, requestOptions);
-
       if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const tagsData = await response.json();  // Renamed variable to avoid confusion
+      const tagsData = await response.json();
 
-      if (!tagsData || !Array.isArray(tagsData)) {
-          throw new Error('Invalid data format for tags');
+      if (!Array.isArray(tagsData)) {
+        throw new Error('Invalid data format for tags');
       }
-      console.log(tagsData);
       setTagsWithNotes(tagsData);
+      console.log('Fetched tags and notes:', tagsWithNotes);
     } catch (error) {
-        console.error('Failed to fetch notes and tags:', error);
+      console.error('Failed to fetch notes and tags:', error);
     }
   }, []);
 
-
-  if (session?.user?.id) {
-    fetchNotesAndTags(session.user.id);
-  }
+  useEffect(() => {
+    if (session?.user?.id) {
+      fetchNotesAndTags(session.user.id);
+    }
+  }, [session, fetchNotesAndTags]);
 
   return (
     <>
-      {/* Button for toggling side panel */}
       <Button
         variant="ghost"
         size="icon"
@@ -96,8 +82,7 @@ export function LayoutComponent() {
       >
         <Menu className="h-6 w-6" />
       </Button>
-
-      {/* Side panel */}
+  
       {isSidepanelOpen && (
         <aside
           className={`fixed inset-y-0 right-0 z-50 w-64 bg-background transform transition-transform duration-300 ease-in-out ${
@@ -115,38 +100,42 @@ export function LayoutComponent() {
                 />
               </div>
             </div>
-
+  
             <Button className="mb-4 flex items-center justify-center" variant="outline">
               <UserPlus className="mr-2 h-4 w-4" />
               Add Collaborator
             </Button>
-
+  
             <nav className="space-y-2">
               {tagsWithNotes.map((tag) => (
-                <div key={tag.tag_id} className="border-b border-border last:border-b-0">
+                <div key={tag.tagId} className="border-b border-border last:border-b-0">
                   <Button
                     variant="ghost"
                     className="w-full justify-between"
-                    onClick={() => toggleTag(tag.tag_id)}
+                    onClick={() => toggleTag(tag.tagId)}
                   >
                     <span className="flex items-center">
                       <Tag className="mr-2 h-4 w-4" />
-                      {tag.name}
+                      {tag.tagName}
                     </span>
-                    {openTag === tag.tag_id ? (
+                    {openTag === tag.tagId ? (
                       <ChevronUp className="h-4 w-4" />
                     ) : (
                       <ChevronDown className="h-4 w-4" />
                     )}
                   </Button>
-                  {openTag === tag.tag_id && (
+                  {openTag === tag.tagId && (
                     <div className="pl-4 py-2 space-y-2">
-                      {tag.notes_title.map((noteTitle: string, index: number) => (
-                        <Button key={index} variant="ghost" className="w-full justify-start">
-                          <FileText className="mr-2 h-4 w-4" />
-                          {noteTitle}
-                        </Button>
-                      ))}
+                      {Array.isArray(tag.noteTitles) && tag.noteTitles.length > 0 ? (
+                        tag.noteTitles.map((noteTitle: string, index: number) => (
+                          <Button key={index} variant="ghost" className="w-full justify-start">
+                            <FileText className="mr-2 h-4 w-4" />
+                            {noteTitle}
+                          </Button>
+                        ))
+                      ) : (
+                        <p>No notes available</p>
+                      )}
                     </div>
                   )}
                 </div>
