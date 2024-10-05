@@ -112,7 +112,7 @@ footer {
 }
 
 .backdrop-blur {
-  backdrop-filter: blur(1px);
+  backdrop-filter: blur(10px);
 }
 
 
