@@ -5,6 +5,7 @@ import cors from 'cors';
 import https from 'https'; // Import HTTPS
 import fs from 'fs'; // Import File System
 import dotenv from 'dotenv';
+import { Server as SocketIOServer } from "socket.io";
 dotenv.config();
 
 const prisma = new PrismaClient();
@@ -18,13 +19,44 @@ const options = {
 };
 
 app.use(cors({
-  origin: 'https://localhost:3000',
+  origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type'],
   credentials: true,
 }));
 
 app.use(express.json());
+
+
+// ********************************* Socket.io *********************************
+
+// Create HTTPS server
+const server = https.createServer(options, app);
+
+// Initialize Socket.IO with the server instance
+const io = new SocketIOServer(server, {
+  cors: {
+    origin: "https://localhost:3000",
+    methods: ["GET", "POST"]
+  }
+});
+
+// Socket.IO connection handling
+io.on('connection', (socket) => {
+  console.log('A user connected');
+
+  socket.on('join-note', (noteId) => {
+    socket.join(noteId);
+  });
+
+  socket.on('update-note', (data) => {
+    socket.to(data.noteId).emit('note-updated', data.content);
+  });
+
+  socket.on('disconnect', () => {
+    console.log('User disconnected');
+  });
+});
 
 // ********************************* User Routes *********************************
 
@@ -207,6 +239,49 @@ app.post('/users/:userId/oauth', async (req, res) => {
   }
 });
 
+// Search users with prefix support
+app.get('/users/search', async (req, res) => {
+  try {
+    const { query, prefix } = req.query;
+
+    if (!query) {
+      return res.status(400).json({ error: 'Search query is required' });
+    }
+
+    let whereClause;
+
+    if (prefix === 'true') {
+      whereClause = {
+        OR: [
+          { username: { startsWith: query, mode: 'insensitive' } },
+          { email: { startsWith: query, mode: 'insensitive' } },
+        ],
+      };
+    } else {
+      whereClause = {
+        OR: [
+          { username: { contains: query, mode: 'insensitive' } },
+          { email: { contains: query, mode: 'insensitive' } },
+        ],
+      };
+    }
+
+    const users = await prisma.user.findMany({
+      where: whereClause,
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        image: true,
+      },
+    });
+
+    res.json(users);
+  } catch (error) {
+    console.error('Error searching users:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
 
 // View user info
 app.get('/users/:userId', async (req, res) => {
@@ -463,6 +538,14 @@ app.post('/notes/:noteId/share', async (req, res) => {
       });
     }
 
+    // Check if userId exists
+    const user = await prisma.user.findFirst({
+      where: { id: sharedWithUserId },
+    });
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
     // Create a new shared note entry
     const result = await prisma.sharedNote.create({
       data: {
@@ -545,16 +628,40 @@ app.get('/notes/:noteId/shared-users', async (req, res) => {
         shared_with_user: {
           select: {
             id: true,
-            name: true,
             username: true,
             email: true,
-          },
-        },
-      },
+            image: true
+          }
+        }
+      }
     });
 
+    // Fetch owner of the note
+    const note = await prisma.note.findUnique({
+      where: { note_id: noteId },
+      select: {
+        user_id: true
+      }
+    });
+    // Fetch owner information
+    const owner = await prisma.user.findUnique({
+      where: { id: note.user_id },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        image: true
+      }
+    });
+    // Add owner to the shared users list
+    sharedNotes.push({ shared_with_user: owner, can_edit: true, shared_at: null });
+
     // Extract user information from shared notes
-    const sharedUsers = sharedNotes.map(sharedNote => sharedNote.shared_with_user);
+    const sharedUsers = sharedNotes.map(sharedNote => ({
+      ...sharedNote.shared_with_user,
+      canEdit: sharedNote.can_edit,
+      sharedAt: sharedNote.shared_at
+    }));
 
     res.json(sharedUsers);
   } catch (error) {
@@ -923,7 +1030,7 @@ app.get('/tags/:userId', async (req, res) => {
   }
 });
 
-// Start HTTPS server
-https.createServer(options, app).listen(PORT, () => {
+// Start the server
+server.listen(PORT, () => {
   console.log(`Server is running on https://localhost:${PORT}`);
 });

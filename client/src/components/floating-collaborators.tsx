@@ -4,17 +4,24 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronUp, ChevronDown } from 'lucide-react'
 import useNoteId from '@/app/hooks/useNoteId'
+import Image from 'next/image'
+
+const URL = process.env.NEXT_PUBLIC_API_URL;
 
 interface Collaborator {
+  image: string
   user_id: number
   username: string
   email: string
-  avatar_url: string
   is_manual: boolean
   registration_date: Date
 }
 
-export function FloatingCollaborators() {
+interface FloatingCollaboratorsProps {
+  current_user: string;
+}
+
+export const FloatingCollaborators: React.FC<FloatingCollaboratorsProps> = ({ current_user }) => {
   const [isExpanded, setIsExpanded] = useState(false)
   const [collaborators, setCollaborators] = useState<Collaborator[]>([])
   const noteId = useNoteId()
@@ -23,11 +30,18 @@ export function FloatingCollaborators() {
     if (noteId !== null && noteId !== undefined) {
       const fetchCollaborators = async () => {
         try {
-          const response = await fetch(`http://localhost:8080/notes/${noteId}/shared-users`)
+          const response = await fetch(URL+`notes/${noteId}/shared-users`)
           if (!response.ok) {
             throw new Error('Failed to fetch Users')
           }
           const data: Collaborator[] = await response.json()
+          // Remove the current user from the list of collaborators
+          console.log("Before:"+data)
+          const currentUser = data.findIndex((collaborator) => collaborator.username === current_user)
+          if (currentUser > -1) {
+            data.splice(currentUser, 1)
+          }
+          console.log(data)
           setCollaborators(data)
           console.log(data)
         } catch (error) {
@@ -36,7 +50,7 @@ export function FloatingCollaborators() {
       }
       fetchCollaborators()
     }
-  }, [noteId])
+  }, [noteId, current_user])
 
 
   return (
@@ -63,17 +77,21 @@ export function FloatingCollaborators() {
             className="overflow-hidden w-32"
           >
             <ul className="p-1 space-y-1 rounded-lg">
-              {collaborators.map((collaborator) => (
-                <li key={collaborator.user_id} className="flex items-center space-x-2 rounded-lg">
-                  <img
-                    src={collaborator.avatar_url}
-                    alt={`${collaborator.username}'s avatar`}
-                    className="w-4 h-4 rounded-full"
-                  />
-                  <span className="text-sm rounded-lg">{collaborator.username}</span>
-                </li>
-              ))}
-            </ul>
+                {collaborators.map((collaborator) => (
+                  <li key={collaborator.username} className="flex items-center space-x-2 rounded-lg">
+                    {collaborator.image && (
+                      <Image
+                      src={collaborator.image}
+                      alt={`${collaborator.username}'s avatar`}
+                      width={16} // Set width
+                      height={16} // Set height
+                      className="rounded-full"
+                    />
+                    )}
+                    <span className="text-sm rounded-lg">{collaborator.username}</span>
+                  </li>
+                ))}
+              </ul>
           </motion.div>
         )}
       </AnimatePresence>

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { format } from 'date-fns'
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -12,6 +12,7 @@ import Link from 'next/link'
 import { useSession } from 'next-auth/react'
 import { NoteSelector } from "@/components/note-selector"
 import { TagCombobox } from '@/components/tag-combobox'
+import Image from 'next/image'
 
 const URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -34,17 +35,6 @@ interface User {
   id: string;
   username: string;
   image?: string;
-}
-
-interface NoteTag {
-  note_id: number;
-  tag_id: number;
-  tag: Tag;
-}
-
-interface Tag {
-  tag_id: number;
-  name: string;
 }
 
 interface SharedNote {
@@ -70,14 +60,7 @@ export function NoteDashboardV2() {
   const [allTags, setAllTags] = useState<string[]>([]);
   const [noteView, setNoteView] = useState('all'); // 'all', 'my', 'shared'
 
-  useEffect(() => {
-    if (session?.user?.id) {
-      console.log('Session User ID:', session.user.id);
-      fetchNotesAndTags(session.user.id);
-    }
-  }, [session, noteView]); // Re-fetch notes and tags when noteView changes
-
-  const fetchNotesAndTags = async (userId: string) => {
+  const fetchNotesAndTags = useCallback(async (userId: string) => {
     try {
       let fetchUrl = `${URL}users/${userId}/notes`;
       let requestOptions: RequestInit = {
@@ -91,6 +74,7 @@ export function NoteDashboardV2() {
       if (noteView === 'own') {
         requestOptions.body = JSON.stringify({ includeShared: false });
       } else if (noteView === 'shared') {
+        console.log('Fetching shared notes for user:', userId);
         fetchUrl = `${URL}users/${userId}/shared-notes`;
         requestOptions = {
           method: 'GET',
@@ -110,7 +94,7 @@ export function NoteDashboardV2() {
         throw new Error('Invalid data format');
       }
 
-      const formattedNotes = data.map((note: any) => ({
+      const formattedNotes = data.map((note: Note) => ({
         note_id: note.note_id,
         title: note.title,
         content: note.content,
@@ -133,7 +117,14 @@ export function NoteDashboardV2() {
     } catch (error) {
       console.error('Failed to fetch notes and tags:', error);
     }
-  };
+  }, [noteView]);
+
+  useEffect(() => {
+    if (session?.user?.id) {
+      console.log('Session User ID:', session.user.id);
+      fetchNotesAndTags(session.user.id);
+    }
+  }, [session, noteView, fetchNotesAndTags]);
 
   const removeTag = async (tag: string, noteId: string) => {
     if (!session?.user?.id) return;
@@ -425,12 +416,17 @@ export function NoteDashboardV2() {
                       {format(note.updated_at, 'MMM d, yyyy')}
                     </div>
                     <div className="flex items-center">
-                      {note.user.image ? (
-                        <img src={note.user.image} alt={note.user.username} className="mr-2 h-4 w-4 rounded-full" />
-                      ) : (
-                        <UserIcon className="mr-2 h-4 w-4" />
-                      )}
-                      {note.user.username}
+                    {note.user.image ? (
+                      <Image
+                        src={note.user.image}
+                        alt={note.user.username}
+                        className="mr-2 h-4 w-4 rounded-full"
+                        width={64}
+                        height={64} 
+                      />
+                    ) : (
+                      <UserIcon className="mr-2 h-4 w-4" />
+)}
                     </div>
                   </div>
                 </CardFooter>

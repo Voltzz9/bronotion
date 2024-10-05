@@ -7,6 +7,8 @@ import { FloatingCollaborators } from '@/components/floating-collaborators';
 import useNoteId from '@/app/hooks/useNoteId';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation'; 
+import io, { Socket } from 'socket.io-client'; 
+import { useSession } from 'next-auth/react'
 
 const URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -20,10 +22,39 @@ interface Note {
 }
 
 export default function Notes() {
-  const [note, setNote] = useState('')
-  const [parsedNote, setParsedNote] = useState(`# Rendered Markdown`)
-  const noteId = useNoteId()
+  const { data: session } = useSession();
+  const [note, setNote] = useState('');
+  const [parsedNote, setParsedNote] = useState(`# Rendered Markdown`);
+  const noteId = useNoteId();
   const router = useRouter();
+  const [socket, setSocket] = useState<Socket | null>(null);
+  const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
+  const [userName, setUsername] = useState("");
+
+  useEffect(() => {
+    console.log("Connecting to:", URL);
+  
+    const newSocket = io(URL);
+    setSocket(newSocket);
+  
+    return () => {
+      newSocket.close();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (socket && noteId) {
+      socket.emit('join-note', noteId);
+
+      socket.on('note-updated', (updatedContent) => {
+        setNote(updatedContent);
+      });
+
+      return () => {
+        socket.off('note-updated');
+      };
+    }
+  }, [socket, noteId]);
 
   useEffect(() => {
     const parseMarkdown = async () => {
@@ -35,8 +66,21 @@ export default function Notes() {
   }, [note]);
 
   const setNoteContent = (content: string) => {
-    setNote(content)
-  }
+    setNote(content);
+  
+    if (timeoutId) {
+      clearTimeout(timeoutId); // Clear the previous timeout
+    }
+  
+    const newTimeoutId = setTimeout(() => {
+      if (socket && noteId) {
+        socket.emit('update-note', { noteId, content });
+        saveNote(); // Call the save function
+      }
+    }, 2000); // Debounce time of 2 seconds
+  
+    setTimeoutId(newTimeoutId);
+  };
 
   const saveNote = async () => {
     try {
@@ -53,30 +97,45 @@ export default function Notes() {
     } catch (error) {
       console.error('Error saving note:', error);
     }
-  }
+  };
 
   useEffect(() => {
-    if (noteId) {
-      const fetchNote = async () => {
-        try {
-          const response = await fetch(URL+`notes/${noteId}`);
-          
-          // Check if note not found (status 404)
-          if (response.status === 404) {
-            router.push('/404');
-            return;
-          }
-
-          const data: Note = await response.json();
-          setNote(data.content);
-        } catch (error) {
-          console.error("Error fetching note:", error);
+    const fetchData = async () => {
+      if (!session?.user?.id) {
+        router.push('/login');
+        return;
+      } else {
+        // Fetch Username
+        const resp = await fetch(URL+`users/`+session.user.id);
+        const data = await resp.json();
+        if (!resp.ok) {
+          console.error('Failed to fetch User Info');
+          return;
         }
-      };
-
-      fetchNote();
-    }
-  }, [noteId, router]);
+        console.log("Logged in username:", data.username);
+        setUsername(data.username);
+      }
+  
+      if (noteId) {
+        const fetchNote = async () => {
+          try {
+            const response = await fetch(URL+`notes/${noteId}`);
+            if (response.status === 404) {
+              router.push('/404');
+              return;
+            }
+            const data: Note = await response.json();
+            setNote(data.content);
+          } catch (error) {
+            console.error('Error fetching note:', error);
+          }
+        };
+        fetchNote();
+      }
+    };
+  
+    fetchData();
+  }, [noteId, router,  session?.user?.id]);
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
@@ -107,7 +166,7 @@ export default function Notes() {
           > Save </Button>
         </div>
       </main>
-      <FloatingCollaborators />
+      <FloatingCollaborators current_user={userName}/>
       <footer className="bg-gray-800 text-white py-4">
 
         <div className="container mx-auto px-4 text-center">
