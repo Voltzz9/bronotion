@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState, useCallback } from "react"
-import { Search } from "lucide-react"
+import { Key, Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
@@ -30,7 +30,7 @@ export function CollaboratorPopup() {
   const fetchSearchResults = useCallback(async (query: string) => {
     setIsLoading(true);
     try {
-      const response = await fetch(URL+`users/search?prefix=${encodeURIComponent(query)}`);
+      const response = await fetch(URL+`users/search?query=${encodeURIComponent(query)}&prefix=true`);
       if (!response.ok) {
         throw new Error('Failed to fetch Users');
       }
@@ -115,7 +115,7 @@ export function CollaboratorPopup() {
             ) : searchResults.length > 0 ? (
               searchResults.map((user) => (
                 <div
-                  key={user.user_id}
+                  key={user.username}
                   className="flex items-center justify-between py-2 px-1 hover:bg-accent cursor-pointer"
                   onClick={() => handleCollaboratorClick(user)}
                 >

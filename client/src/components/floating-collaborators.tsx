@@ -66,7 +66,7 @@ export function FloatingCollaborators() {
           >
             <ul className="p-1 space-y-1 rounded-lg">
                 {collaborators.map((collaborator) => (
-                  <li key={collaborator.user_id} className="flex items-center space-x-2 rounded-lg">
+                  <li key={collaborator.username} className="flex items-center space-x-2 rounded-lg">
                     {collaborator.image && (
                       <img
                         src={collaborator.image}
