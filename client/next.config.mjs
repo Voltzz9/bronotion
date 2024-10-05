@@ -3,6 +3,10 @@ const nextConfig = {
     images: {
       domains: ['lh3.googleusercontent.com'],
     },
-  };
-
-export default nextConfig;
+  
+    experimental: {
+      appDir: true,
+    },
+  }
+  
+  export default nextConfig

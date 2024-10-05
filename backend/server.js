@@ -514,6 +514,31 @@ app.get('/notes/:noteId', async (req, res) => {
   }
 });
 
+app.get('/notes/:noteId/check', async (req, res) => {
+
+  try {
+    const authHeader = req.headers['authorization']; // Lowercase 'authorization' for case sensitivity issues.
+    const userId = authHeader && authHeader.split(' ')[1]; // Extract the token part after "Bearer"
+    const noteId = parseInt(req.params.noteId, 10);
+    const note = await prisma.note.findUnique({
+      where: { note_id: noteId},
+      select: { user_id: true },
+    });
+    if (userId !== note.user_id) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    if (!note) {
+      return res.status(404).json({ error: 'Note not found' });
+    }
+
+    res.status(200).json({ message: 'Authorized' });
+  } catch (error) {
+    console.error('Error checking note:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 // ********************************* Shared Note Routes *********************************
 
 // Share a note with another user

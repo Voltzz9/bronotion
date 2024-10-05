@@ -66,20 +66,20 @@ export default function Header() {
           }`}
       >
         <nav className="container mx-auto py-2 flex justify-between items-center">
-          <Link href="/" className="flex items-center">
+            <Link href={isAuthenticated ? "/home" : "/"} className="flex items-center">
             <motion.div
               style={{ width: logoWidth, x: logoX }}
               className="flex items-center"
             >
               <span className="text-4xl font-bold text-secondary">B</span>
               <motion.span
-                style={{ opacity }}
-                className="text-4xl font-bold text-secondary"
+              style={{ opacity }}
+              className="text-4xl font-bold text-secondary"
               >
-                ronotion
+              ronotion
               </motion.span>
             </motion.div>
-          </Link>
+            </Link>
           <div className="flex items-center space-x-4">
             {isOnNotesPage && (
               <AnimatedArrowButton />
