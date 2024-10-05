@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
-import { PlusIcon, SearchIcon, CalendarIcon, UserIcon } from 'lucide-react'
+import { PlusIcon, SearchIcon, CalendarIcon, UserIcon, Trash2 } from 'lucide-react'
 import Link from 'next/link'
 import { useSession } from 'next-auth/react'
 import { NoteSelector } from "@/components/note-selector"
@@ -335,6 +335,29 @@ export function NoteDashboardV2() {
     return 0;
   });
 
+  const deleteNote = async (noteId: number) => {
+    if (!session?.user?.id) return;
+
+    try {
+      const response = await fetch(`${URL}notes/${noteId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      // Remove the deleted note from the state
+      setNotes(prevNotes => prevNotes.filter(note => note.note_id !== noteId));
+    } catch (error) {
+      console.error('Failed to delete note:', error);
+    }
+  };
+
   return (
     <div className="container mx-auto p-4">
       <Card className="w-full max-w-4xl mx-auto">
@@ -379,12 +402,25 @@ export function NoteDashboardV2() {
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
             {filteredNotes.map((note) => (
-              <Card key={note.note_id} className="flex flex-col cursor-pointer h-52"> {/* Set a fixed height */}
+              <Card key={note.note_id} className="flex flex-col cursor-pointer h-52 relative">
                 <CardHeader className="flex-grow pb-2">
-                  <Link href={`/notes/${note.note_id}`} passHref>
-                    <CardTitle className="text-lg text-secondary">{note.title}</CardTitle>
-                  </Link>
-                  <ScrollArea className="h-12 w-full overflow-x-auto rounded-md ">
+                  <div className="flex justify-between items-start">
+                    <Link href={`/notes/${note.note_id}`} passHref>
+                      <CardTitle className="text-lg text-secondary">{note.title}</CardTitle>
+                    </Link>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="absolute top-2 right-2 text-gray-400 hover:text-red-500 transition-colors"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        deleteNote(note.note_id);
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <ScrollArea className="h-12 w-full overflow-x-auto rounded-md">
                       <div className="flex flex-nowrap gap-2 mt-2">
                         {note.tags.map((tag) => (
                           <Badge
@@ -407,7 +443,7 @@ export function NoteDashboardV2() {
                         />
                       </div>
                       <ScrollBar orientation="horizontal" />
-                    </ScrollArea>
+                      </ScrollArea>
                 </CardHeader>
                 <CardFooter className="mt-auto pt-2">
                   <div className="flex justify-between items-center w-full text-sm text-muted-foreground">
