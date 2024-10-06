@@ -7,6 +7,11 @@ interface User {
     username?: string;
     auth_method?: string;
     provider_account_id?: string;
+    user?: {
+      id: string;
+      email: string;
+      username: string;
+    }
   }
 
 export async function getUserById(userId: string): Promise<User | null> {
@@ -57,7 +62,6 @@ export async function getUserByEmail(email: string): Promise<User | null> {
       throw new Error('Error fetching user');
     }
     const data: User = await response.json();
-    console.log('User data fetched with email:', data);
     return data;
   } catch (error) {
     console.error('Error fetching user:', error);
@@ -72,7 +76,7 @@ export async function createUser(user: User): Promise<User> {
       ...user,
       username: user.username || user.email.split('@')[0],
     };
-
+    console.log('Creating user:', userData);
     const response = await fetch(`${API_BASE_URL}/create_user`, {
       method: 'POST',
       headers: {
@@ -84,8 +88,8 @@ export async function createUser(user: User): Promise<User> {
       const errorData = await response.json();
       throw new Error(`Error creating user: ${response.status} ${response.statusText}. ${JSON.stringify(errorData)}`);
     }
-    const data: User = await response.json();
-    console.log('User created:', data);
+    const data = await response.json();
+
     return data;
   } catch (error) {
     console.error('Error creating user:', error);
