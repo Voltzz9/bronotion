@@ -102,7 +102,6 @@ export default function Notes() {
   useEffect(() => {
     const fetchData = async () => {
       if (!session?.user?.id) {
-        router.push('/login');
         return;
       } else {
         // Fetch Username

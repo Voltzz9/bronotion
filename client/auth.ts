@@ -52,12 +52,15 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         if (!existingUser) {
           // Create the user if they do not exist
-          const newUser = await createUser({
-            username: user.name || '',
-            email: user.email || '',
-            image: user.image || '',
-          });
-          token.id = newUser.id; // Store the newly created user's ID in token.id
+          console.log('Account:', account.providerAccountId);
+            const newUser = await createUser({
+            username: user.name as string || '',
+            email: user.email as string || '',
+            image: user.image as string || '',
+            auth_method: account.provider as string || '',
+            provider_account_id: account.providerAccountId as string || '',
+            });
+          token.id = newUser.user?.id; // Store the newly created user's ID in token.id
         } else {
           token.id = existingUser.id; // Store existing user's ID in token.id
         }

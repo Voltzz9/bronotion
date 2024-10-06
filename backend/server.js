@@ -19,7 +19,7 @@ const options = {
 };
 
 app.use(cors({
-  origin: '*',
+  origin: 'https://localhost:3000',
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type'],
   credentials: true,
