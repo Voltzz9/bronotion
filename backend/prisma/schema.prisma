@@ -1,149 +1,150 @@
-  // This section specifies the database connection details.
-  datasource db {
-    provider = "postgresql" // Specify the database provider
-    url      = env("DATABASE_URL") // The database connection URL
-  }
+// This section specifies the database connection details.
+datasource db {
+  provider = "postgresql" // Specify the database provider
+  url      = env("DATABASE_URL") // The database connection URL
+}
 
-  // This section specifies the Prisma Client generation options.
-  generator client {
-    provider = "prisma-client-js" // The client used for querying the database
-  }
+// This section specifies the Prisma Client generation options.
+generator client {
+  provider = "prisma-client-js" // The client used for querying the database
+}
 
-  model User {
-    id              String           @id @default(uuid())
-    username        String
-    password_hash   String?
-    email           String
-    emailVerified   DateTime?
-    image           String?
-    
-    // Relations
-    active_editors  ActiveEditor[]
-    auth_methods    UserAuthMethod[] @relation("UserAuthMethods")
-    accounts        Account[]        @relation("UserAccounts") // Added relation
-    sessions        Session[]        @relation("UserSessions") // Added relation
-    notes           Note[]           @relation("UserNotes") // Added relation
-    shared_notes    SharedNote[]     @relation("UserSharedNotes") // Added relation
-    push_notifications      UserPushNoti[] @relation("UserPushNoti")
-  }
+model User {
+  id            String    @id @default(uuid())
+  username      String
+  password_hash String?
+  email         String
+  emailVerified DateTime?
+  image         String?
 
-  model UserPushNoti { 
-    id              String @id @default(uuid())
-    endpoint        String
-    p256dh          String
-    auth            String 
+  // Relations
+  active_editors     ActiveEditor[]
+  auth_methods       UserAuthMethod[] @relation("UserAuthMethods")
+  accounts           Account[]        @relation("UserAccounts") // Added relation
+  sessions           Session[]        @relation("UserSessions") // Added relation
+  notes              Note[]           @relation("UserNotes") // Added relation
+  shared_notes       SharedNote[]     @relation("UserSharedNotes") // Added relation
+  push_notifications UserPushNoti[]   @relation("UserPushNoti")
+}
 
-    user              User     @relation("UserPushNoti", fields: [user_id], references: [id], onDelete: Cascade)
-  }
+model UserPushNoti {
+  id       String @id @default(uuid())
+  user_id  String
+  endpoint String
+  p256dh   String
+  auth     String
 
-  model UserAuthMethod {
-    id        Int    @id @default(autoincrement())
-    user_id   String
-    isOAuth   Boolean
-    isManual  Boolean
+  user User @relation("UserPushNoti", fields: [user_id], references: [id], onDelete: Cascade)
+}
 
-    // Relations
-    user      User   @relation("UserAuthMethods", fields: [user_id], references: [id], onDelete: Cascade)
-  }
+model UserAuthMethod {
+  id       Int     @id @default(autoincrement())
+  user_id  String
+  isOAuth  Boolean
+  isManual Boolean
 
-  model Account {
-    id                Int      @id @default(autoincrement())
-    user_id           String
-    type              String
-    provider          String
-    provider_account_id String
-    refresh_token     String?
-    access_token      String?
-    expires_at        BigInt?
-    token_type        String?
-    scope             String?
-    id_token          String?
-    session_state     String?
-    oauth_token_secret String?
-    oauth_token       String?
+  // Relations
+  user User @relation("UserAuthMethods", fields: [user_id], references: [id], onDelete: Cascade)
+}
 
-    // Relations
-    user              User     @relation("UserAccounts", fields: [user_id], references: [id], onDelete: Cascade)
+model Account {
+  id                  Int     @id @default(autoincrement())
+  user_id             String
+  type                String
+  provider            String
+  provider_account_id String
+  refresh_token       String?
+  access_token        String?
+  expires_at          BigInt?
+  token_type          String?
+  scope               String?
+  id_token            String?
+  session_state       String?
+  oauth_token_secret  String?
+  oauth_token         String?
 
-    @@unique([provider, provider_account_id])
-  }
+  // Relations
+  user User @relation("UserAccounts", fields: [user_id], references: [id], onDelete: Cascade)
 
-  model Session {
-    id           Int      @id @default(autoincrement())
-    user_id      String
-    expires      DateTime
-    sessionToken String   @unique
+  @@unique([provider, provider_account_id])
+}
 
-    // Relations
-    user         User     @relation("UserSessions", fields: [user_id], references: [id], onDelete: Cascade)
-  }
+model Session {
+  id           Int      @id @default(autoincrement())
+  user_id      String
+  expires      DateTime
+  sessionToken String   @unique
 
-  model VerificationToken {
-    identifier String
-    expires    DateTime
-    token      String
+  // Relations
+  user User @relation("UserSessions", fields: [user_id], references: [id], onDelete: Cascade)
+}
 
-    @@id([identifier, token])
-  }
+model VerificationToken {
+  identifier String
+  expires    DateTime
+  token      String
 
-  model Tag {
-    tag_id    Int      @id @default(autoincrement())
-    name      String   @unique
-    created_at DateTime @default(now())
-    updated_at DateTime @updatedAt
+  @@id([identifier, token])
+}
 
-    // Relation
-    notes     NoteTag[]
-  }
+model Tag {
+  tag_id     Int      @id @default(autoincrement())
+  name       String   @unique
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
-  model Note {
-    note_id    Int      @id @default(autoincrement())
-    title      String
-    content    String?
-    user_id    String
-    created_at DateTime @default(now())
-    updated_at DateTime @updatedAt
-    is_deleted Boolean  @default(false)
+  // Relation
+  notes NoteTag[]
+}
 
-    // Relations
-    user       User     @relation("UserNotes", fields: [user_id], references: [id], onDelete: Cascade)
-    tags       NoteTag[]
-    shared_notes SharedNote[]
-    active_editors ActiveEditor[]
-  }
+model Note {
+  note_id    Int      @id @default(autoincrement())
+  title      String
+  content    String?
+  user_id    String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  is_deleted Boolean  @default(false)
 
-  model NoteTag {
-    note_id  Int
-    tag_id   Int
+  // Relations
+  user           User           @relation("UserNotes", fields: [user_id], references: [id], onDelete: Cascade)
+  tags           NoteTag[]
+  shared_notes   SharedNote[]
+  active_editors ActiveEditor[]
+}
 
-    // Relations
-    note     Note     @relation(fields: [note_id], references: [note_id], onDelete: Cascade)
-    tag      Tag      @relation(fields: [tag_id], references: [tag_id], onDelete: Cascade)
+model NoteTag {
+  note_id Int
+  tag_id  Int
 
-    @@id([note_id, tag_id])
-  }
+  // Relations
+  note Note @relation(fields: [note_id], references: [note_id], onDelete: Cascade)
+  tag  Tag  @relation(fields: [tag_id], references: [tag_id], onDelete: Cascade)
 
-  model SharedNote {
-    shared_note_id     Int      @id @default(autoincrement())
-    note_id            Int
-    shared_with_user_id String
-    can_edit           Boolean  @default(false)
-    shared_at          DateTime @default(now())
+  @@id([note_id, tag_id])
+}
 
-    // Relations
-    note               Note     @relation(fields: [note_id], references: [note_id], onDelete: Cascade)
-    shared_with_user   User     @relation("UserSharedNotes", fields: [shared_with_user_id], references: [id], onDelete: Cascade)
-  }
+model SharedNote {
+  shared_note_id      Int      @id @default(autoincrement())
+  note_id             Int
+  shared_with_user_id String
+  can_edit            Boolean  @default(false)
+  shared_at           DateTime @default(now())
 
-  model ActiveEditor {
-    active_editor_id   Int      @id @default(autoincrement())
-    note_id            Int
-    user_id            String
-    last_active        DateTime @default(now())
+  // Relations
+  note             Note @relation(fields: [note_id], references: [note_id], onDelete: Cascade)
+  shared_with_user User @relation("UserSharedNotes", fields: [shared_with_user_id], references: [id], onDelete: Cascade)
+}
 
-    // Relations
-    note               Note     @relation(fields: [note_id], references: [note_id], onDelete: Cascade)
-    user               User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+model ActiveEditor {
+  active_editor_id Int      @id @default(autoincrement())
+  note_id          Int
+  user_id          String
+  last_active      DateTime @default(now())
 
-    @@unique([note_id, user_id])
-  }
+  // Relations
+  note Note @relation(fields: [note_id], references: [note_id], onDelete: Cascade)
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([note_id, user_id])
+}

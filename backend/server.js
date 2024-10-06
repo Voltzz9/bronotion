@@ -44,7 +44,7 @@ app.post("/subscribe", async (req, res) => {
         p256dh,
         auth,
         user: {
-          connect: { userId: id }
+          connect: { id: id }
         }
       }
     });
