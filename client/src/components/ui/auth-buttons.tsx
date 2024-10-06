@@ -11,11 +11,6 @@ const AuthButtons = () => {
     "data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
   )
 
-  const handleLoginWithAnotherAccount = async () => {
-    await signOut({ redirect: false }); // Sign out without redirecting
-    window.location.href = '/auth/signin'; // Redirect to login page
-  }
-
   return (
     <div className="space-y-2">
       <Link href="/profile">
@@ -32,10 +27,6 @@ const AuthButtons = () => {
           Sign out
         </Button>
       </form>
-      
-      <Button className={buttonClasses} onClick={handleLoginWithAnotherAccount}>
-        Login with Another Account
-      </Button>
     </div>
   )
 }

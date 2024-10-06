@@ -59,14 +59,6 @@ export default function Header() {
     damping: 15,
   });
 
-  // Debugging: Log the constructed image URL
-  useEffect(() => {
-    if (session?.user?.image) {
-      const imageUrl = session.user.image;
-      console.log('Constructed Image URL:', imageUrl);
-    }
-  }, [session]);
-
   return (
     <>
       <header 

@@ -11,7 +11,6 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
-import { Toast } from "@/components/ui/toast"
 import { Toaster } from "@/components/ui/toaster"
 import { useToast } from "@/hooks/use-toast"
 import { LogOut } from "lucide-react"
@@ -97,7 +96,6 @@ function ProfilePage() {
   const [activeTab, setActiveTab] = useState<'account' | 'password'>('account')
   const [isExitDialogOpen, setIsExitDialogOpen] = useState(false)
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
-  const [showSuccessToast, setShowSuccessToast] = useState(false)
   const router = useRouter()
   const { toast } = useToast()
 
@@ -256,13 +254,6 @@ function ProfilePage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {showSuccessToast && (
-        <Toast
-          title="Success"
-          children="Your profile has been updated successfully."
-          duration={3000}
-        />
-      )}
       <Toaster />
     </div>
   )

@@ -327,10 +327,15 @@ app.get('/users/:userId', async (req, res) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    res.json({ id: user.id, username: user.username, email: user.email, image: user.image });
+    res.json({
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      image: user.image,
+      auth_methods: user.auth_methods,
+    });
   } catch (error) {
     console.error('Error retrieving user:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
@@ -439,6 +444,50 @@ app.post('/users/:userId', async (req, res) => {
   });
 });
 
+// Change user password
+app.post('users/:userId/change_password', async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const { currentPassword, newPassword } = req.body;
+
+    if (!userId || !currentPassword || !newPassword) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    // Fetch the user from the database
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Verify the current password
+    const isPasswordValid = await bcrypt.compare(currentPassword, user.password_hash);
+    if (!isPasswordValid) {
+      return res.status(401).json({ error: 'Incorrect current password' });
+    }
+
+    // Hash the new password
+    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+
+    // Update the password in the database
+    await prisma.user.update({
+      where: { id: userId },
+      data: { password_hash: hashedNewPassword },
+    });
+
+    res.status(200).json({ message: 'Password changed successfully' });
+  } catch (error) {
+    console.error('Error changing password:', error);
+    res.status(500).json({ 
+      error: 'Internal Server Error', 
+      details: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
+  }
+});
 
 // ********************************* Note Routes *********************************
 
