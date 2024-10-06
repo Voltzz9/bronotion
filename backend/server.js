@@ -42,7 +42,7 @@ async function sendEmail(to, subject, bodyHtml) {
 
 // Send email for share notification
 
-async function sendEmailShareNote(to) {
+async function sendEmailShareNote(to, noteId) {
   try {
     await client.emailMessages.createTemplated({
       to: to,
@@ -53,9 +53,9 @@ async function sendEmailShareNote(to) {
         <div style="max-width: 600px; margin: 0 auto; background-color: #f3e8ff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
           <h2 style="color: #3c005a;">A Note Has Been Shared With You!</h2>
           <p style="color: #312359;">Hello,</p>
-          <p style="color: #312359;">User has shared a note with you through <strong style="color: #3c005a;">Bronotion</strong>.</p>
+          <p style="color: #312359;">A note has been shared with you through <strong style="color: #3c005a;">Bronotion</strong>.</p>
           <p style="color: #312359;">Click the button below to view the note:</p>
-          <a href="#" style="display: inline-block; background-color: #3c005a; color: #FFFFFF; padding: 10px 20px; text-decoration: none; border-radius: 4px;">View Note</a>
+          <a href="https://bronotion.co.za/notes/${noteId}" style="display: inline-block; background-color: #3c005a; color: #FFFFFF; padding: 10px 20px; text-decoration: none; border-radius: 4px;">View Note</a>
           <p style="color: #312359;">Thank you for using Bronotion!</p>
           <p style="color: #ceb2ff; font-size: 12px;">If you did not expect this email, please ignore it.</p>
         </div>
