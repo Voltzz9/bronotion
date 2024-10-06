@@ -1,18 +1,14 @@
 "use client"
 
-import { useState, useEffect, useCallback, useRef } from "react"
+import { useState, useEffect, useCallback, useRef, use } from "react"
 import { Menu, Search, ChevronDown, ChevronUp, UserPlus, Tag, FileText, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useSession } from "next-auth/react"
 import { CollaboratorPopup } from "./collaborator-popup"
 import { ScrollArea } from "@/components/ui/scroll-area"
-
-interface userNotes {
-  noteId: number;
-  noteTitle: string;
-  tags: string[];
-}
+import useNoteId from '@/app/hooks/useNoteId';
+import { set } from "date-fns"
 
 interface Note {
   note_id: number;
@@ -38,6 +34,7 @@ export function LayoutComponent() {
   const [isSearching, setIsSearching] = useState(false);
   const [isFocused, setIsFocused] = useState(false)
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const currentNoteID = useNoteId();
 
   const toggleSidepanel = () => setIsSidepanelOpen(!isSidepanelOpen);
 
@@ -165,11 +162,12 @@ export function LayoutComponent() {
                       {searchResults.map((result, index) => (
                         <div
                           key={index}
-                          className="cursor-pointer p-2 hover:bg-accent rounded-md"
+                          className={`cursor-pointer p-2 rounded-md ${
+                            currentNoteID && currentNoteID === result.note_id ? 'bg-purple-200' : ''
+                          } hover:bg-accent`} // Conditional class for highlighting
                           onMouseDown={(e) => e.preventDefault()}
                           onClick={() => {
-                            console.log(`Selected: ${result.title}`);
-                            // Once a note is clicked then close the sidepanel, reset the search query and open the note
+                            console.log(`Selected: ${result}`);
                           }}
                         >
                           <FileText className="inline-block mr-2 h-4 w-4" />
@@ -204,7 +202,16 @@ export function LayoutComponent() {
                     <div className="pl-4 py-2 space-y-2">
                       {Array.isArray(tag.noteTitles) && tag.noteTitles.length > 0 ? (
                         tag.noteTitles.map((noteTitle: string, index: number) => (
-                          <Button key={index} variant="ghost" className="w-full justify-start">
+                          <Button
+                            key={index}
+                            variant="ghost"
+                            className={`w-full justify-start ${
+                              currentNoteID === tag.noteIds[index] ? 'bg-purple-200' : ''
+                            }`} // Conditional class for highlighting
+                            onClick={() => {
+                              console.log(`Selected Note: ${noteTitle}`);
+                            }}
+                          >
                             <FileText className="mr-2 h-4 w-4" />
                             {noteTitle}
                           </Button>
