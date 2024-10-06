@@ -8,7 +8,7 @@ import { useSession } from "next-auth/react"
 import { CollaboratorPopup } from "./collaborator-popup"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import useNoteId from '@/app/hooks/useNoteId';
-import { set } from "date-fns"
+import Link from 'next/link'
 
 interface Note {
   note_id: number;
@@ -113,6 +113,12 @@ export function LayoutComponent() {
       return () => clearTimeout(debounceTimer); // Clean up debounce
   }, [session, searchQuery]);
 
+  const handleNoteSelect = (noteId: number) => {
+    console.log('Selected note:', noteId);
+    // Close the sidepanel
+    setIsSidepanelOpen(false);
+  };
+
   return (
     <>
       <Button
@@ -160,19 +166,18 @@ export function LayoutComponent() {
                   ) : (
                     <div className="p-4">
                       {searchResults.map((result, index) => (
-                        <div
-                          key={index}
-                          className={`cursor-pointer p-2 rounded-md ${
-                            currentNoteID && currentNoteID === result.note_id ? 'bg-purple-200' : ''
-                          } hover:bg-accent`} // Conditional class for highlighting
-                          onMouseDown={(e) => e.preventDefault()}
-                          onClick={() => {
-                            console.log(`Selected: ${result}`);
-                          }}
-                        >
-                          <FileText className="inline-block mr-2 h-4 w-4" />
-                          {result.title}
-                        </div>
+                        <Link href={`/notes/${result.note_id}`} key={index} passHref>
+                          <div
+                            className={`cursor-pointer p-2 rounded-md ${
+                              currentNoteID && currentNoteID === result.note_id ? 'bg-purple-200' : ''
+                            } hover:bg-accent`} // Conditional class for highlighting
+                            onMouseDown={(e) => e.preventDefault()} // Prevent default mouse down behavior
+                            onClick={() => handleNoteSelect(result.note_id)} // Hide the side panel on click
+                          >
+                            <FileText className="inline-block mr-2 h-4 w-4" />
+                            {result.title}
+                          </div>
+                        </Link>
                       ))}
                     </div>
                   )}
@@ -202,19 +207,18 @@ export function LayoutComponent() {
                     <div className="pl-4 py-2 space-y-2">
                       {Array.isArray(tag.noteTitles) && tag.noteTitles.length > 0 ? (
                         tag.noteTitles.map((noteTitle: string, index: number) => (
-                          <Button
-                            key={index}
-                            variant="ghost"
-                            className={`w-full justify-start ${
-                              currentNoteID === tag.noteIds[index] ? 'bg-purple-200' : ''
-                            }`} // Conditional class for highlighting
-                            onClick={() => {
-                              console.log(`Selected Note: ${noteTitle}`);
-                            }}
+                          <Link href={`/notes/${tag.noteIds[index]}`} key={index} passHref>
+                          <div
+                            className={`cursor-pointer p-2 rounded-md ${
+                            currentNoteID && currentNoteID === tag.noteIds[index] ? 'bg-purple-200' : ''
+                            } hover:bg-accent`} // Conditional class for highlighting
+                            onMouseDown={(e) => e.preventDefault()} // Prevent default mouse down behavior
+                            onClick={() => handleNoteSelect(tag.noteIds[index])} // Hide the side panel on click
                           >
-                            <FileText className="mr-2 h-4 w-4" />
+                            <FileText className="inline-block mr-2 h-4 w-4" />
                             {noteTitle}
-                          </Button>
+                          </div>
+                          </Link>
                         ))
                       ) : (
                         <p>No notes available</p>
