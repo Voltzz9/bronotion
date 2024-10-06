@@ -10,7 +10,7 @@ import Cropper from 'react-easy-crop'
 interface UserIconUpdateProps {
   currentImageUrl: string
   username: string
-  onUpdateImage: (croppedImage: Blob) => Promise<void>
+  onUpdateImage: (croppedImageUrl: string) => void
 }
 
 export default function UserIconUpdate({ currentImageUrl, username, onUpdateImage }: UserIconUpdateProps) {
@@ -46,12 +46,12 @@ export default function UserIconUpdate({ currentImageUrl, username, onUpdateImag
 
   const createCroppedImage = useCallback(async () => {
     if (previewUrl && croppedAreaPixels) {
-      const image = document.createElement('img')
+      const image = new Image()
       image.src = previewUrl
       const canvas = document.createElement('canvas')
       const ctx = canvas.getContext('2d')
       
-      return new Promise<Blob>((resolve) => {
+      return new Promise<string>((resolve) => {
         image.onload = () => {
           canvas.width = croppedAreaPixels.width
           canvas.height = croppedAreaPixels.height
@@ -66,18 +66,16 @@ export default function UserIconUpdate({ currentImageUrl, username, onUpdateImag
             croppedAreaPixels.width,
             croppedAreaPixels.height
           )
-          canvas.toBlob((blob) => {
-            if (blob) resolve(blob)
-          }, 'image/jpeg')
+          resolve(canvas.toDataURL('image/jpeg'))
         }
       })
     }
   }, [previewUrl, croppedAreaPixels])
 
   const handleSubmit = async () => {
-    const croppedImage = await createCroppedImage()
-    if (croppedImage) {
-      await onUpdateImage(croppedImage)
+    const croppedImageUrl = await createCroppedImage()
+    if (croppedImageUrl) {
+      onUpdateImage(croppedImageUrl)
       setSelectedFile(null)
       setPreviewUrl(null)
       setIsCropperOpen(false)
@@ -134,7 +132,7 @@ export default function UserIconUpdate({ currentImageUrl, username, onUpdateImag
           </div>
           <div className="flex justify-end space-x-2">
             <Button variant="outline" onClick={() => setIsCropperOpen(false)}>Cancel</Button>
-            <Button onClick={handleSubmit}>Update Profile Picture</Button>
+            <Button onClick={handleSubmit}>Apply</Button>
           </div>
         </DialogContent>
       </Dialog>

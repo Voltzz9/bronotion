@@ -40,12 +40,17 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async session({ session, token }: { session: any, token: any }) {
       if (token.id && session.user) {
         session.user.id = token.id; // Ensure session.user.id is set from token.id
+        
+        // Load user from the database to get the image
+        const existingUser = await getUserByEmail(session.user.email);
+        
+        // If user exists, set the image from the database, otherwise use the image from the provider
+        session.user.image = existingUser?.image || session.user.image;
       }
       return session;
     },
 
     async jwt({ token, user, account }: { token: any, user?: any, account?: any }) {
-
       // If this is the first time the user logs in, "user" will be set
       if (user) {
         let existingUser = await getUserByEmail(user.email as string);
@@ -55,7 +60,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           const newUser = await createUser({
             username: user.name || '',
             email: user.email || '',
-            image: user.image || '',
+            image: user.image || '', // Use image from the provider when creating a new user
           });
           token.id = newUser.id; // Store the newly created user's ID in token.id
         } else {

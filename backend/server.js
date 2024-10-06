@@ -2,17 +2,20 @@ import express from 'express';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
 import cors from 'cors';
-import https from 'https'; // Import HTTPS
-import fs from 'fs'; // Import File System
+import https from 'https';
+import fs from 'fs';
+import { promises as fsPromises } from 'fs';
 import dotenv from 'dotenv';
 import { Server as SocketIOServer } from "socket.io";
-import { createUploadthing } from 'uploadthing/express'; // Import UploadThing properly
-import formidable from 'formidable'; // Ensure you have formidable for parsing form data
+import path from 'path';
+import { v4 as uuidv4 } from 'uuid';
+import formidable from 'formidable';
 dotenv.config();
 
 const prisma = new PrismaClient();
 const app = express();
 const PORT = process.env.PORT || 8080;
+const UPLOAD_DIR = path.join(process.cwd(), 'public', 'uploads');
 
 // Load SSL certificate and key
 const options = {
@@ -28,10 +31,18 @@ app.use(cors({
 }));
 
 app.use(express.json());
+// Serve static files from the UPLOAD_DIR
+app.use('/uploads', express.static(UPLOAD_DIR));
 
-const uploadThing = createUploadthing({
-  apiKey: process.env.UPLOADTHING_TOKEN, // Ensure this is set in the environment variables
-});
+// Ensure the upload directory exists
+async function ensureUploadDir() {
+  try {
+    await fsPromises.mkdir(UPLOAD_DIR, { recursive: true });
+    console.log(`Upload directory created: ${UPLOAD_DIR}`);
+  } catch (error) {
+    console.error('Error creating upload directory:', error);
+  }
+}
 
 // ********************************* Socket.io *********************************
 
@@ -62,6 +73,17 @@ io.on('connection', (socket) => {
     console.log('User disconnected');
   });
 });
+
+// Start the server
+async function startServer() {
+  await ensureUploadDir();
+
+  server.listen(PORT, () => {
+    console.log(`Server is running on https://localhost:${PORT}`);
+  });
+}
+
+startServer();
 
 // ********************************* User Routes *********************************
 
@@ -191,6 +213,8 @@ app.get('/users/email/:email', async (req, res) => {
       },
       select: {
         id: true,
+        username: true,
+        image: true,
       },
     });
 
@@ -355,10 +379,9 @@ app.delete('/users/:userId', async (req, res) => {
   }
 });
 
-// Update user image
-app.post('/users/:userId/update-image', async (req, res) => {
-  // Initialize formidable to parse multipart form data
-  const form = new formidable.IncomingForm();
+// Update user details
+app.post('/users/:userId', async (req, res) => {
+  const form = formidable({ multiples: true });
 
   form.parse(req, async (err, fields, files) => {
     if (err) {
@@ -366,44 +389,56 @@ app.post('/users/:userId/update-image', async (req, res) => {
       return res.status(500).json({ error: 'Internal Server Error' });
     }
 
-    const file = files.image; // The image file from the form
-    if (!file) {
-      return res.status(400).json({ error: 'No image file uploaded' });
+    const { name, email } = fields;
+    const file = files.image?.[0];
+
+    let imageUrl = null;
+
+    if (file && file.size > 0) {
+      try {
+        const fileExtension = path.extname(file.originalFilename);
+        const fileName = `${uuidv4()}${fileExtension}`;
+        const filePath = path.join(UPLOAD_DIR, fileName);
+
+        await fsPromises.copyFile(file.filepath, filePath);
+        imageUrl = `/uploads/${fileName}`;
+      } catch (error) {
+        console.error('Error saving image:', error);
+        return res.status(500).json({ error: 'Internal Server Error' });
+      }
     }
 
+    const userId = req.params.userId;
+
     try {
-      // Upload the image using UploadThing's FileRouter
-      const uploadResponse = await uploadThing.upload({
-        file,
-        fileType: 'image', // Ensure the file type is correctly set
-        maxSize: '4MB',    // Optional: Max size of the image
-      });
+      // Get the server URL from the request object
+      const serverUrl = `${req.protocol}://${req.get('host')}`;
 
-      if (!uploadResponse || !uploadResponse.url) {
-        throw new Error('Failed to upload image');
-      }
+      // Construct the full image URL if an image was uploaded
+      const fullImageUrl = imageUrl ? `${serverUrl}${imageUrl}` : undefined;
 
-      const imageUrl = uploadResponse.url; // Get the uploaded image URL
-      const userId = req.params.userId;
-
-      // Update the user's image URL in the database
       const user = await prisma.user.update({
         where: { id: userId },
-        data: { image: imageUrl },
+        data: {
+          username: name ? name[0].toString() : undefined,
+          email: email ? email[0].toString() : undefined,
+          image: fullImageUrl || undefined,
+        },
       });
 
       res.json({
         id: user.id,
         username: user.username,
         email: user.email,
-        image: user.image, // Return the updated image URL
+        image: user.image,
       });
     } catch (error) {
-      console.error('Error updating user image:', error);
+      console.error('Error updating user details:', error);
       res.status(500).json({ error: 'Internal Server Error' });
     }
   });
 });
+
 
 // ********************************* Note Routes *********************************
 
@@ -1108,9 +1143,4 @@ app.get('/tags/:userId', async (req, res) => {
     console.error('Error fetching tags for user:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
-});
-
-// Start the server
-server.listen(PORT, () => {
-  console.log(`Server is running on https://localhost:${PORT}`);
 });
