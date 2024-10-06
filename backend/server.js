@@ -445,28 +445,40 @@ app.post('/users/:userId', async (req, res) => {
 });
 
 // Change user password
-app.post('users/:userId/change_password', async (req, res) => {
+app.post('/users/:userId/change_password', async (req, res) => {
   try {
     const userId = req.params.userId;
     const { currentPassword, newPassword } = req.body;
 
-    if (!userId || !currentPassword || !newPassword) {
+    if (!userId || !newPassword) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
     // Fetch the user from the database
     const user = await prisma.user.findUnique({
       where: { id: userId },
+      include: {
+        auth_methods: true,
+      },
     });
 
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    // Verify the current password
-    const isPasswordValid = await bcrypt.compare(currentPassword, user.password_hash);
-    if (!isPasswordValid) {
-      return res.status(401).json({ error: 'Incorrect current password' });
+    // Check if the password exists
+    if (user.password_hash) {
+      // Verify the current password
+      const isPasswordValid = await bcrypt.compare(currentPassword, user.password_hash);
+      if (!isPasswordValid) {
+        return res.status(401).json({ error: 'Password is incorrect' });
+      }
+    } else {
+          // Update the UserAuthMethod record to set isManual to true
+        await prisma.userAuthMethod.updateMany({
+          where: { user_id: userId },
+          data: { isManual: true },
+        });
     }
 
     // Hash the new password

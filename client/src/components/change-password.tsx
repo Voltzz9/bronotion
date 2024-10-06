@@ -63,6 +63,13 @@ export function ChangePasswordForm() {
     setError(null);
 
     const formData = new FormData(event.currentTarget);
+    const newPassword = formData.get('newPassword') as string;
+    const confirmPassword = formData.get('confirmPassword') as string;
+
+    if (newPassword !== confirmPassword) {
+      setError('New passwords do not match');
+      return;
+    }
 
     if (!session?.user?.id) {
       setError('User ID is not available');
@@ -77,6 +84,9 @@ export function ChangePasswordForm() {
         duration: 3000,
       });
       formRef.current?.reset();
+      // Refetch user auth methods to update the form state
+      const updatedAuthMethods = await getUserAuthMethods(session.user.id);
+      setAuthMethods(updatedAuthMethods);
     } catch (error) {
       setError((error as Error).message);
       toast({
