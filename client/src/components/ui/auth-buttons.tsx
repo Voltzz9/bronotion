@@ -2,7 +2,6 @@ import Link from 'next/link'
 import { handleSignOut } from "@/app/server/serverActions"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { signOut } from "next-auth/react" // Import signOut from next-auth
 
 const AuthButtons = () => {
   const buttonClasses = cn(

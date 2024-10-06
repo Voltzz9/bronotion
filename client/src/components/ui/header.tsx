@@ -7,11 +7,8 @@ import AnimatedArrowButton from './animated-arrow-button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { usePathname } from 'next/navigation';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import SignOutButton from './auth-buttons';
 import { useSession } from 'next-auth/react';
 import AuthButtons from './auth-buttons';
-
-const URL = process.env.NEXT_PUBLIC_API_URL;
 
 export default function Header() {
   const { data: session, status } = useSession();

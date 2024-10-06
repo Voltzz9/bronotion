@@ -15,7 +15,6 @@ interface UserIconUpdateProps {
 
 export default function UserIconUpdate({ currentImageUrl, username, onUpdateImage }: UserIconUpdateProps) {
   const [isHovered, setIsHovered] = useState(false)
-  const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [crop, setCrop] = useState({ x: 0, y: 0 })
   const [zoom, setZoom] = useState(1)
@@ -30,7 +29,6 @@ export default function UserIconUpdate({ currentImageUrl, username, onUpdateImag
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (file) {
-      setSelectedFile(file)
       const reader = new FileReader()
       reader.onloadend = () => {
         setPreviewUrl(reader.result as string)
@@ -40,7 +38,7 @@ export default function UserIconUpdate({ currentImageUrl, username, onUpdateImag
     }
   }
 
-  const onCropComplete = useCallback((croppedArea: any, croppedAreaPixels: { width: number; height: number; x: number; y: number }) => {
+  const onCropComplete = useCallback((croppedArea: { x: number; y: number; width: number; height: number }, croppedAreaPixels: { width: number; height: number; x: number; y: number }) => {
     setCroppedAreaPixels(croppedAreaPixels)
   }, [])
 
@@ -76,7 +74,6 @@ export default function UserIconUpdate({ currentImageUrl, username, onUpdateImag
     const croppedImageUrl = await createCroppedImage()
     if (croppedImageUrl) {
       onUpdateImage(croppedImageUrl)
-      setSelectedFile(null)
       setPreviewUrl(null)
       setIsCropperOpen(false)
       if (fileInputRef.current) {

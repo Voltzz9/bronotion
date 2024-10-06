@@ -77,7 +77,7 @@ export function ChangePasswordForm() {
     }
 
     try {
-      const result = await changePassword(session.user.id, formData);
+      await changePassword(session.user.id, formData); // Removed the unused variable 'result'
       toast({
         title: "Success",
         description: "Your password has been updated successfully.",
