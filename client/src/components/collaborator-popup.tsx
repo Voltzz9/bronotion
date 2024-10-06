@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState, useCallback } from "react"
-import { Search } from "lucide-react"
+import { Search, UserPlus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
@@ -102,7 +102,10 @@ export function CollaboratorPopup() {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="ghost" className="flex-grow w-full h-full">Add Collaborator</Button>
+        <Button className="mb-4 flex items-center justify-center" variant="outline">
+        <UserPlus className="mr-2 h-4 w-4" />
+        Add Collaborator
+        </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>

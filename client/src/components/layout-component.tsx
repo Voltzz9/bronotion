@@ -5,16 +5,12 @@ import { Menu, Search, ChevronDown, ChevronUp, UserPlus, Tag, FileText } from "l
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useSession } from "next-auth/react"
+import { CollaboratorPopup } from "./collaborator-popup"
 
-interface User {
-  id: string;
-  username: string;
-  image?: string;
-}
-
-interface TagType {
-  tag_id: number;
-  name: string;
+interface userNotes {
+  noteId: number;
+  noteTitle: string;
+  tags: string[];
 }
 
 interface TagWithNotes {
@@ -30,7 +26,9 @@ export function LayoutComponent() {
   const [isSidepanelOpen, setIsSidepanelOpen] = useState(false);
   const [openTag, setOpenTag] = useState<number | null>(null);
   const [tagsWithNotes, setTagsWithNotes] = useState<TagWithNotes[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const { data: session } = useSession();
+  const [userNotes, setUserNotes] = useState([]);
 
   const toggleSidepanel = () => setIsSidepanelOpen(!isSidepanelOpen);
 
@@ -96,15 +94,14 @@ export function LayoutComponent() {
                 <Input
                   type="search"
                   placeholder="Search notes..."
-                  className="pl-8"
+                  className="pl-8 w-full"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
             </div>
   
-            <Button className="mb-4 flex items-center justify-center" variant="outline">
-              <UserPlus className="mr-2 h-4 w-4" />
-              Add Collaborator
-            </Button>
+            <CollaboratorPopup />
   
             <nav className="space-y-2">
               {tagsWithNotes.map((tag) => (
