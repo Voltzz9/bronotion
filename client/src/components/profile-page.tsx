@@ -42,10 +42,17 @@ interface UserProfile {
   image: string
 }
 
-function AccountDetailsForm({ profile, onUpdateProfile, onChange }: { profile: UserProfile, onUpdateProfile: (updatedProfile: Partial<UserProfile>) => void, onChange: () => void }) {
+function AccountDetailsForm({ profile, onUpdateProfile, onChange }: { profile: UserProfile, onUpdateProfile: (updatedProfile: Partial<UserProfile>) => void, onChange: (hasChanges: boolean) => void }) {
   const [name, setName] = useState(profile.name)
   const [email, setEmail] = useState(profile.email)
   const [newImage, setNewImage] = useState<string | null>(null)
+  const [hasChanges, setHasChanges] = useState(false)
+
+  useEffect(() => {
+    const changes = name !== profile.name || email !== profile.email || newImage !== null
+    setHasChanges(changes)
+    onChange(changes)
+  }, [name, email, newImage, profile, onChange])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -58,7 +65,6 @@ function AccountDetailsForm({ profile, onUpdateProfile, onChange }: { profile: U
 
   const handleImageUpdate = (croppedImageUrl: string) => {
     setNewImage(croppedImageUrl)
-    onChange()
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -67,7 +73,6 @@ function AccountDetailsForm({ profile, onUpdateProfile, onChange }: { profile: U
     } else if (e.target.id === 'email') {
       setEmail(e.target.value)
     }
-    onChange()
   }
 
   return (
@@ -85,7 +90,7 @@ function AccountDetailsForm({ profile, onUpdateProfile, onChange }: { profile: U
         <Label htmlFor="email">Email</Label>
         <Input id="email" type="email" value={email} onChange={handleInputChange} />
       </div>
-      <Button type="submit">Update Details</Button>
+      <Button type="submit" disabled={!hasChanges}>Update Details</Button>
     </form>
   )
 }
@@ -154,30 +159,27 @@ function ProfilePage() {
     }
   }
 
-  const checkUnsavedChanges = useCallback(async () => {
-    if (!session?.user?.id || !profile) return false
-
-    try {
-      const currentProfile = await getUserProfile(session.user.id)
-      return (
-        currentProfile.name !== profile.name ||
-        currentProfile.email !== profile.email ||
-        currentProfile.image !== profile.image
-      )
-    } catch (error) {
-      console.error('Error checking unsaved changes:', error)
-      return false
-    }
-  }, [session, profile])
-
-  const handleExit = async () => {
-    const unsavedChanges = await checkUnsavedChanges()
-    if (unsavedChanges) {
+  const handleExit = () => {
+    if (hasUnsavedChanges) {
       setIsExitDialogOpen(true)
     } else {
       router.push('/home')
     }
   }
+
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault()
+        e.returnValue = ''
+      }
+    }
+
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload)
+    }
+  }, [hasUnsavedChanges])
 
   if (!profile) {
     return <div>Loading...</div>
@@ -227,7 +229,7 @@ function ProfilePage() {
                 <AccountDetailsForm 
                   profile={profile} 
                   onUpdateProfile={handleUpdateProfile}
-                  onChange={() => setHasUnsavedChanges(true)}
+                  onChange={setHasUnsavedChanges}
                 />
                 <div className="mt-6">
                   <DeleteAccountButton />
