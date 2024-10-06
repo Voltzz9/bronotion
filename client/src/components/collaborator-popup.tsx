@@ -8,6 +8,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 import useNoteId from "@/app/hooks/useNoteId"
 
+const URL = process.env.NEXT_PUBLIC_API_URL;
+
 interface User {
   user_id: number
   username: string
@@ -28,7 +30,7 @@ export function CollaboratorPopup() {
   const fetchSearchResults = useCallback(async (query: string) => {
     setIsLoading(true);
     try {
-      const response = await fetch(`http://localhost:8080/users/search?prefix=${encodeURIComponent(query)}`);
+      const response = await fetch(URL+`users/search?query=${encodeURIComponent(query)}&prefix=true`);
       if (!response.ok) {
         throw new Error('Failed to fetch Users');
       }
@@ -62,14 +64,26 @@ export function CollaboratorPopup() {
   }
 
   const handleConfirmAdd = async () => {
-    // Here you would typically send a request to your backend to add the collaborator
+    // Fetch User Id
+    const resp = await fetch(URL+`users/email/`+selectedCollaborator?.email)
+    const data = await resp.json()
+    if (!resp.ok) {
+      console.error('Failed to fetch User Id')
+      return
+    }
+
+    if (!selectedCollaborator) {
+      console.error('No selected collaborator')
+      return
+    }
+
+    selectedCollaborator.user_id = data.id
+
     const selectedCollaboratorPostInfo = {
       sharedWithUserId: `${selectedCollaborator?.user_id}`, canEdit: true
     }
-    console.log(`Added collaborator: ${selectedCollaborator?.username}`)
     try {
-
-      const response = await fetch(`http://localhost:8080/notes/${noteId}/share`, {
+      const response = await fetch(URL+`notes/${noteId}/share`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -82,7 +96,7 @@ export function CollaboratorPopup() {
       console.error('Error sending POST request:', error);
     }
     setSelectedCollaborator(null)
-    setIsOpen(false)
+    setIsOpen(false)  
   }
 
   return (
@@ -113,7 +127,7 @@ export function CollaboratorPopup() {
             ) : searchResults.length > 0 ? (
               searchResults.map((user) => (
                 <div
-                  key={user.user_id}
+                  key={user.username}
                   className="flex items-center justify-between py-2 px-1 hover:bg-accent cursor-pointer"
                   onClick={() => handleCollaboratorClick(user)}
                 >
@@ -134,7 +148,7 @@ export function CollaboratorPopup() {
         </DialogFooter>
       </DialogContent>
 
-      <AlertDialog open={!!selectedCollaborator} onOpenChange={() => setSelectedCollaborator(null)}>
+      <AlertDialog open={!!selectedCollaborator} onOpenChange={() => setSelectedCollaborator(selectedCollaborator)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Add Collaborator</AlertDialogTitle>

@@ -1,8 +1,8 @@
-import NextAuth from "next-auth"
-import GitHub from "next-auth/providers/github"
-import Google from "next-auth/providers/google"
-import { createUser, enableOAuth, getUserByEmail, getUserById, loginUser } from "@/lib/api"
-import Credentials from "next-auth/providers/credentials"
+import NextAuth from "next-auth";
+import GitHub from "next-auth/providers/github";
+import Google from "next-auth/providers/google";
+import { createUser, getUserByEmail, loginUser } from "@/lib/api";
+import Credentials from "next-auth/providers/credentials";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
@@ -20,13 +20,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           console.error('Missing credentials');
           return null;
         }
-      
+
         try {
-          // Your user login logic here
+          // User login logic
           const user = await loginUser(credentials.email as string, credentials.password as string);
           if (user) {
-            return user;
+            return user; // Make sure the user object returned contains the ID
           }
+          console.error('User not found');
           return null;
         } catch (error) {
           console.error('Error during login:', error);
@@ -36,66 +37,33 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     }),
   ],
   callbacks: {
-    async session({token, session}){
-      if (token.sub && session.user){
-        session.user.id = token.sub;
+    async session({ session, token }: { session: any, token: any }) {
+      if (token.id && session.user) {
+        session.user.id = token.id; // Ensure session.user.id is set from token.id
       }
       return session;
     },
-    async jwt({token, user, account}) {
-      if (user) {
-        token.sub = user.id;
-      } else {
-        user = token
-      }
-      if (!token.sub) return token;
 
-      try {
-        // Get UserID from email address
-        let existingUser = null;
-        let user_id = null;
-        if (user.email) {
-          // Does email exist user table
-          const data = await getUserByEmail(user.email);
-          user_id = data?.id;
-          if (user_id) {
-            existingUser = await getUserById(user_id);
-          }
-        }
+    async jwt({ token, user, account }: { token: any, user?: any, account?: any }) {
+
+      // If this is the first time the user logs in, "user" will be set
+      if (user) {
+        let existingUser = await getUserByEmail(user.email as string);
 
         if (!existingUser) {
-          // User doesn't exist, create a new one
-          // if not make an entry (dont specify id it will generate one)
-          // add account table entry
-          // add UserAuthMethod table entry
-          
-          const newUser = {
+          // Create the user if they do not exist
+          const newUser = await createUser({
             username: user.name || '',
             email: user.email || '',
             image: user.image || '',
-            auth_method: account?.provider,
-            provider_account_id: account?.providerAccountId,
-          };
-
-          existingUser = await createUser(newUser);
+          });
+          token.id = newUser.id; // Store the newly created user's ID in token.id
         } else {
-          // Enable OAuth for account
-          const id = existingUser.id;
-          if (id) {
-            enableOAuth(id);
-          }
+          token.id = existingUser.id; // Store existing user's ID in token.id
         }
-
-        token.isOAuth = true;
-        token.email = existingUser.email;
-        token.role = "USER"; // You might want to set a default role
-        return token;
-      } catch (error) {
-        console.error('Error in jwt callback:', error);
-        // You might want to handle this error differently
-        throw error;
       }
-    },
+      return token;
+    }
   },
-  session: { strategy: "jwt" },
+  session: { strategy: "jwt" }, // Ensure JWT is used as session strategy
 });

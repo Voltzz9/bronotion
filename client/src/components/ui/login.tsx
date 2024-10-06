@@ -1,96 +1,119 @@
 'use client'
 
-import React, { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
-import { signIn } from "next-auth/react";
+import React, { useState, useEffect, useRef } from 'react'
+import { useRouter } from 'next/navigation'
+import { signIn } from "next-auth/react"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import GitHubSignInForm from './git-hub';
-import GoogleSignInButton from './google';
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { ExclamationTriangleIcon } from '@radix-ui/react-icons'
+import GitHubSignInForm from './git-hub'
+import GoogleSignInButton from './google'
 
 export default function Component() {
-  const [isLogin, setIsLogin] = useState(true);
-  const [isAnimating, setIsAnimating] = useState(false);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [username, setUsername] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const emailRef = useRef<HTMLInputElement>(null);
-  const passwordRef = useRef<HTMLInputElement>(null);
-  const router = useRouter();
+  const [isLogin, setIsLogin] = useState(true)
+  const [isAnimating, setIsAnimating] = useState(false)
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [username, setUsername] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [error, setError] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const emailRef = useRef<HTMLInputElement>(null)
+  const passwordRef = useRef<HTMLInputElement>(null)
+  const router = useRouter()
+  const URL = process.env.NEXT_PUBLIC_API_URL
 
   useEffect(() => {
     if (emailRef.current && passwordRef.current) {
-      setEmail(emailRef.current.value);
-      setPassword(passwordRef.current.value);
+      setEmail(emailRef.current.value)
+      setPassword(passwordRef.current.value)
     }
-  }, [emailRef, passwordRef]);
+  }, [emailRef, passwordRef])
 
   const toggleForm = () => {
-    setIsAnimating(true);
+    setIsAnimating(true)
+    setError('')
     setTimeout(() => {
-      setIsLogin(!isLogin);
-      setIsAnimating(false);
-    }, 300);
-  };
+      setIsLogin(!isLogin)
+      setIsAnimating(false)
+    }, 300)
+  }
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+    e.preventDefault()
+    setIsLoading(true)
+    setError('')
     try {
       const result = await signIn('credentials', {
-        redirectTo: '/home',
+        redirect: false,
         email,
         password,
-      });
+      })
 
       if (result?.error) {
-        console.error('Login failed:', result.error);
+        setError('Invalid email or password. Please try again.')
       } else {
-        router.push('/home');
+        router.push('/home')
       }
-    } catch (error) {
-      console.error('An error occurred during login', error);
+    } catch {
+      setError('An unexpected error occurred. Please try again later.')
+    } finally {
+      setIsLoading(false)
     }
-  };
+  }
 
   const handleSignup = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
+    e.preventDefault()
+    setIsLoading(true)
+    setError('')
     if (password !== confirmPassword) {
-      console.error("Passwords do not match");
-      return;
+      setError("Passwords do not match")
+      setIsLoading(false)
+      return
     }
 
     try {
-      const response = await fetch('https://localhost:8080/create_user', {
+      const response = await fetch(`${URL}create_user`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({
           username,
           email,
           password,
+          auth_method: 'manual',
         }),
-      });
+      })
 
-      const result = await response.json();
+      const result = await response.json()
+
+      console.log(result)
 
       if (response.ok) {
-        await signIn('credentials', {
-          redirectTo: '/home',
+        const signInResult = await signIn('credentials', {
+          redirect: false,
           email,
           password,
-        });
+        })
+        if (signInResult?.error) {
+          setError('Account created, but unable to log in. Please try logging in manually.')
+        } else {
+          router.push('/home')
+        }
       } else {
-        console.error(result.message);
+        setError(result.error || 'An error occurred during signup. Please try again.')
       }
-    } catch (error) {
-      console.error('An error occurred during signup', error);
+    } catch {
+      setError('An unexpected error occurred. Please try again later.')
+    } finally {
+      setIsLoading(false)
     }
-  };
+  }
 
   return (
     <Card className="mx-auto max-w-sm overflow-hidden">
@@ -105,6 +128,12 @@ export default function Component() {
         </CardDescription>
       </CardHeader>
       <CardContent className={`space-y-4 transition-opacity duration-300 ${isAnimating ? 'opacity-0' : 'opacity-100'}`}>
+        {error && (
+          <Alert variant="destructive">
+            <ExclamationTriangleIcon className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
         <form 
           onSubmit={isLogin ? handleLogin : handleSignup}
           className={`space-y-4 transition-opacity duration-300 ${isAnimating ? 'opacity-0' : 'opacity-100'}`}
@@ -120,6 +149,7 @@ export default function Component() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               ref={emailRef}
+              aria-invalid={error ? 'true' : 'false'}
             />
           </div>
           {!isLogin && (
@@ -134,7 +164,6 @@ export default function Component() {
                 onChange={(e) => setUsername(e.target.value)}
               />
             </div>
-          
           )}
           <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
@@ -146,6 +175,7 @@ export default function Component() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               ref={passwordRef}
+              aria-invalid={error ? 'true' : 'false'}
             />
           </div>
           {!isLogin && (
@@ -164,8 +194,9 @@ export default function Component() {
           <Button 
             type="submit" 
             className="w-full"
+            disabled={isLoading}
           >
-            {isLogin ? 'Sign In' : 'Sign Up'}
+            {isLoading ? 'Processing...' : (isLogin ? 'Sign In' : 'Sign Up')}
           </Button>
         </form>
         <GitHubSignInForm />
@@ -177,5 +208,5 @@ export default function Component() {
         </div>
       </CardContent>
     </Card>
-  );
+  )
 }

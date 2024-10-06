@@ -1,12 +1,12 @@
-const express = require('express');
-const { PrismaClient } = require('@prisma/client');
-const bcrypt = require('bcrypt');
-const cors = require('cors');
-// const https = require('https'); // Import HTTPS
-// const fs = require('fs'); // Import File System
-require('dotenv').config();
-const PushNotifications = require("node-pushnotifications");
-const { subscribe } = require('diagnostics_channel');
+import express from 'express';
+import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcrypt';
+import cors from 'cors';
+import https from 'https'; // Import HTTPS
+import fs from 'fs'; // Import File System
+import dotenv from 'dotenv';
+import { Server as SocketIOServer } from "socket.io";
+dotenv.config();
 
 const prisma = new PrismaClient();
 const app = express();
@@ -18,7 +18,13 @@ const PORT = process.env.PORT || 8080;
 //  cert: fs.readFileSync('server.cert'), // Path to your certificate file
 //};
 
-app.use(cors());
+app.use(cors({
+  origin: 'https://localhost:3000',
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type'],
+  credentials: true,
+}));
+
 app.use(express.json());
 
 // ********************************* Push Notifications **************************
@@ -97,6 +103,37 @@ const sendPushNotif = async (userId, title) => {
 
 }
 
+
+// ********************************* Socket.io *********************************
+
+// Create HTTPS server
+const server = https.createServer(options, app);
+
+// Initialize Socket.IO with the server instance
+const io = new SocketIOServer(server, {
+  cors: {
+    origin: "https://localhost:3000",
+    methods: ["GET", "POST"]
+  }
+});
+
+// Socket.IO connection handling
+io.on('connection', (socket) => {
+  console.log('A user connected');
+
+  socket.on('join-note', (noteId) => {
+    socket.join(noteId);
+  });
+
+  socket.on('update-note', (data) => {
+    socket.to(data.noteId).emit('note-updated', data.content);
+  });
+
+  socket.on('disconnect', () => {
+    console.log('User disconnected');
+  });
+});
+
 // ********************************* User Routes *********************************
 
 // Get all users
@@ -119,58 +156,66 @@ app.get('/users', async (req, res) => {
 // Create a new user (for OAuth)
 app.post('/create_user', async (req, res) => {
   try {
-    const { id, name, password, email, image, auth_method, provider_account_id } = req.body;
+    const { id, username, password, email, image, auth_method, provider_account_id } = req.body;
 
     if (!email) {
       return res.status(400).json({ error: 'Missing required fields email' });
     }
 
     // Check if user already exists
-    const existingUser = await prisma.user.findFirst({
+    const existingEmail = await prisma.user.findFirst({
       where: { email: email },
     });
 
-    if (existingUser) {
-      return res.status(409).json({ error: 'User already exists' });
+    const existingUsername = await prisma.user.findFirst({
+      where: { username: username },
+    });
+
+    if (existingEmail) {
+      return res.status(409).json({ error: 'Email already exists' });
+    }
+
+    if (existingUsername) {
+      return res.status(409).json({ error: 'Username already exists' });
     }
 
     // Generate a username from email
-    let username = '';
-    if (name) {
-      username = name;
-    } else {
+    if (!username) {
       username = email.split('@')[0];
     }
 
     // if auth_method not defined, it is manual
-    const auth = auth_method || 'manual';
+    const auth = auth_method || 'credentials';
 
     // Create user with associated records
     // Hash the password before storing it in the database
-    const hashedPassword = await bcrypt.hash(password, 10);
+    let hashedPassword = '';
+    if (password !== undefined) {
+    hashedPassword = await bcrypt.hash(password, 10);
+    }
 
-    const user = await prisma.user.create({
+    let user = await prisma.user.create({
       data: {
-        id: id,
-        username: username,
-        password_hash: hashedPassword,
-        email: email,
-        emailVerified: new Date(),
-        image: image,
-        auth_methods: {
-          create: {
-            isManual: auth === 'manual',
-            isOAuth: auth === 'google' || auth === 'github',
-          },
+      id: id,
+      username: username,
+      password_hash: hashedPassword,
+      email: email,
+      emailVerified: new Date(),
+      image: image,
+      auth_methods: {
+        create: {
+        isManual: auth === 'credentials',
+        isOAuth: auth === 'google' || auth === 'github',
         },
-        accounts: auth === 'google' || auth === 'github' ? {
-          create: {
-            type: 'oauth',
-            provider: auth,
-            provider_account_id: provider_account_id,
-            // TODO add access_token and refresh_token etc.
-          },
-        } : undefined,
+      },
+      accounts: auth === 'google' || auth === 'github' ? {
+        create: {
+        type: 'oauth',
+        provider: auth,
+        provider_account_id: provider_account_id,
+        // TODO add access_token and refresh_token etc.
+        },
+      } : undefined,
       },
       include: {
         auth_methods: true,
@@ -178,11 +223,21 @@ app.post('/create_user', async (req, res) => {
       },
     });
 
+    user = await prisma.user.findFirst({
+      where: {
+        email: email,
+      },
+      select: {
+        id: true,
+        email: true,
+        username: true,
+      },
+    });
+
     res.status(201).json({
       message: 'User created successfully',
       user: {
         id: user.id,
-        name: user.name,
         email: user.email,
         username: user.username,
       }
@@ -260,6 +315,49 @@ app.post('/users/:userId/oauth', async (req, res) => {
   }
 });
 
+// Search users with prefix support
+app.get('/users/search', async (req, res) => {
+  try {
+    const { query, prefix } = req.query;
+
+    if (!query) {
+      return res.status(400).json({ error: 'Search query is required' });
+    }
+
+    let whereClause;
+
+    if (prefix === 'true') {
+      whereClause = {
+        OR: [
+          { username: { startsWith: query, mode: 'insensitive' } },
+          { email: { startsWith: query, mode: 'insensitive' } },
+        ],
+      };
+    } else {
+      whereClause = {
+        OR: [
+          { username: { contains: query, mode: 'insensitive' } },
+          { email: { contains: query, mode: 'insensitive' } },
+        ],
+      };
+    }
+
+    const users = await prisma.user.findMany({
+      where: whereClause,
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        image: true,
+      },
+    });
+
+    res.json(users);
+  } catch (error) {
+    console.error('Error searching users:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
 
 // View user info
 app.get('/users/:userId', async (req, res) => {
@@ -276,7 +374,7 @@ app.get('/users/:userId', async (req, res) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    res.json(user);
+    res.json({ id: user.id, username: user.username, email: user.email, image: user.image });
   } catch (error) {
     console.error('Error retrieving user:', error);
     res.status(500).json({ error: 'Internal Server Error' });
@@ -288,38 +386,27 @@ app.get('/users/:userId', async (req, res) => {
 app.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
+
     const user = await prisma.user.findFirst({
       where: {
-        email,
-        auth_methods: {
-          some: {
-            isManual: true
-          }
-        }
-      },
-      include: {
-        auth_methods: true,
+        email: email,
       },
     });
 
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
-    //TODO: Review and change
-    // if (!user.auth_methods.isManual) {
-    //   return res.status(400).json({ error: 'User has not created a password' });
-    // }
 
-    //TODO:
+    // Compare the password with the hashed password in the database
     const passwordMatch = await bcrypt.compare(password, user.password_hash);
-    if (passwordMatch) {
-      return res.status(200).json({ message: 'Login successful', userId: user.id, email: user.email });
-    } else {
-      return res.status(401).json({ error: 'Invalid email or password' });
+    if (!passwordMatch) {
+      return res.status(401).json({ error: 'Invalid password' });
     }
+
+    res.json({ message: 'Login successful', id: user.id, username: user.username, email: user.email, image: user.image });
   } catch (error) {
     console.error('Error logging in:', error);
-    return res.status(500).json({ error: 'Internal Server Error' });
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
@@ -346,11 +433,16 @@ app.post('/notes', async (req, res) => {
   try {
     const { title, content, userId } = req.body;
 
+    // if content not specified, set it to an empty string
+    const noteContent = content || '';
+
     const note = await prisma.note.create({
       data: {
         title,
-        content,
-        userId,
+        content: noteContent,
+        user: {
+          connect: { id: userId }, // Connect the note to an existing user
+        },
       },
     });
 
@@ -361,17 +453,68 @@ app.post('/notes', async (req, res) => {
   }
 });
 
-// Fetch all notes for a user
-app.get('/users/:userId/notes', async (req, res) => {
+app.post('/users/:userId/notes', async (req, res) => {
   try {
     const userId = req.params.userId;
-    const notes = await prisma.note.findMany({
+    const { includeShared } = req.body; // Default to false if not provided
+
+    // Fetch the user's own notes
+    const userNotes = await prisma.note.findMany({
       where: {
         user_id: userId,
         is_deleted: false,
       },
+      include: {
+        user: true, // Include user data
+        tags: {
+          include: {
+            tag: true,
+          },
+        },
+      },
     });
-    res.json(notes);
+
+    let sharedNotes = [];
+    if (includeShared) {
+      // Fetch the shared notes
+      sharedNotes = await prisma.sharedNote.findMany({
+        where: {
+          shared_with_user_id: userId,
+          note: {
+            is_deleted: false,
+          },
+        },
+        include: {
+          note: {
+            include: {
+              user: true, // Include user data
+              tags: {
+                include: {
+                  tag: true,
+                },
+              },
+            },
+          },
+        },
+      });
+
+      // Format the shared notes to include only the tag names
+      sharedNotes = sharedNotes.map(sharedNote => ({
+        ...sharedNote.note,
+        tags: sharedNote.note.tags.map(noteTag => noteTag.tag.name),
+      }));
+    }
+
+    // Format the user's own notes to include only the tag names
+    const formattedUserNotes = userNotes.map(note => ({
+      ...note,
+      tags: note.tags.map(noteTag => noteTag.tag.name),
+    }));
+
+    // Combine the user's own notes and the shared notes
+    const allNotes = [...formattedUserNotes, ...sharedNotes];
+
+    res.json(allNotes);
   } catch (error) {
     console.error('Error fetching notes:', error);
     res.status(500).json({ error: 'Internal Server Error' });
@@ -447,6 +590,31 @@ app.get('/notes/:noteId', async (req, res) => {
   }
 });
 
+app.get('/notes/:noteId/check', async (req, res) => {
+
+  try {
+    const authHeader = req.headers['authorization']; // Lowercase 'authorization' for case sensitivity issues.
+    const userId = authHeader && authHeader.split(' ')[1]; // Extract the token part after "Bearer"
+    const noteId = parseInt(req.params.noteId, 10);
+    const note = await prisma.note.findUnique({
+      where: { note_id: noteId},
+      select: { user_id: true },
+    });
+    if (userId !== note.user_id) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    if (!note) {
+      return res.status(404).json({ error: 'Note not found' });
+    }
+
+    res.status(200).json({ message: 'Authorized' });
+  } catch (error) {
+    console.error('Error checking note:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 // ********************************* Shared Note Routes *********************************
 
 // Share a note with another user
@@ -469,6 +637,14 @@ app.post('/notes/:noteId/share', async (req, res) => {
         message: 'Note has already been shared with this user.',
         sharedNoteId: existingShare.shared_note_id,
       });
+    }
+
+    // Check if userId exists
+    const user = await prisma.user.findFirst({
+      where: { id: sharedWithUserId },
+    });
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
     }
 
     // Create a new shared note entry
@@ -506,19 +682,34 @@ app.get('/users/:userId/shared-notes', async (req, res) => {
       },
       include: {
         note: {
-          select: {
-            note_id: true,
-            title: true,
-            content: true,
-            user_id: true,
-            created_at: true,
-            updated_at: true,
+          include: {
+            user: true, // Include user data
+            tags: {
+              include: {
+                tag: true,
+              },
+            },
           },
         },
       },
     });
 
-    res.json(sharedNotes);
+    // Format the shared notes to include only the tag names
+    const formattedSharedNotes = sharedNotes.map(sharedNote => ({
+      note_id: sharedNote.note.note_id,
+      title: sharedNote.note.title,
+      content: sharedNote.note.content,
+      user_id: sharedNote.note.user_id,
+      created_at: sharedNote.note.created_at,
+      updated_at: sharedNote.note.updated_at,
+      is_deleted: sharedNote.note.is_deleted,
+      user: sharedNote.note.user ? { id: sharedNote.note.user.id, username: sharedNote.note.user.username, image: sharedNote.note.user.image } : { id: '', username: '', image: '' },
+      tags: sharedNote.note.tags.map(noteTag => noteTag.tag.name),
+      shared_notes: [], // Add empty array for shared_notes
+      active_editors: [], // Add empty array for active_editors
+    }));
+
+    res.json(formattedSharedNotes);
   } catch (error) {
     console.error('Error fetching shared notes:', error);
     res.status(500).json({ error: 'Internal Server Error' });
@@ -538,16 +729,40 @@ app.get('/notes/:noteId/shared-users', async (req, res) => {
         shared_with_user: {
           select: {
             id: true,
-            name: true,
             username: true,
             email: true,
-          },
-        },
-      },
+            image: true
+          }
+        }
+      }
     });
 
+    // Fetch owner of the note
+    const note = await prisma.note.findUnique({
+      where: { note_id: noteId },
+      select: {
+        user_id: true
+      }
+    });
+    // Fetch owner information
+    const owner = await prisma.user.findUnique({
+      where: { id: note.user_id },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        image: true
+      }
+    });
+    // Add owner to the shared users list
+    sharedNotes.push({ shared_with_user: owner, can_edit: true, shared_at: null });
+
     // Extract user information from shared notes
-    const sharedUsers = sharedNotes.map(sharedNote => sharedNote.shared_with_user);
+    const sharedUsers = sharedNotes.map(sharedNote => ({
+      ...sharedNote.shared_with_user,
+      canEdit: sharedNote.can_edit,
+      sharedAt: sharedNote.shared_at
+    }));
 
     res.json(sharedUsers);
   } catch (error) {
@@ -731,6 +946,31 @@ app.post('/tags', async (req, res) => {
   }
 });
 
+// Get TagID from tag name
+app.get('/tagnames/:tagName', async (req, res) => {
+  try {
+    const tagName = req.params.tagName;
+
+    const tag = await prisma.tag.findFirst({
+      where: {
+        name: tagName,
+      },
+      select: {
+        tag_id: true,
+      },
+    });
+
+    if (!tag) {
+      return res.status(404).json({ error: 'Tag not found' });
+    }
+
+    res.json(tag);
+  } catch (error) {
+    console.error('Error fetching tag:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 // Get all tags
 app.get('/tags', async (req, res) => {
   try {
@@ -783,6 +1023,15 @@ app.post('/notes/:noteId/tags', async (req, res) => {
   try {
     const noteId = parseInt(req.params.noteId);
     const { tagId } = req.body;
+
+    // Check if the tag exists
+    const tag = await prisma.tag.findUnique({
+      where: { tag_id: tagId },
+    });
+
+    if (!tag) {
+      return res.status(404).json({ error: 'Tag not found' });
+    }
 
     await prisma.noteTag.create({
       data: {
@@ -852,9 +1101,39 @@ app.get('/tags/:tagId/notes', async (req, res) => {
   }
 });
 
-// Start HTTPS server
-app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
+// Get all tags for a specific user
+app.get('/tags/:userId', async (req, res) => {
+  try {
+    const userId = req.params.userId;
+
+    // Query to get all tags associated with the user's notes
+    const tags = await prisma.tag.findMany({
+      where: {
+        notes: {
+          some: {
+            note: {
+              user_id: userId,
+              is_deleted: false,
+            },
+          },
+        },
+      },
+      select: {
+        tag_id: true,
+        name: true,
+      },
+    });
+
+    res.json(tags);
+  } catch (error) {
+    console.error('Error fetching tags for user:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// Start the server
+server.listen(PORT, () => {
+  console.log(`Server is running on https://localhost:${PORT}`);
 });
 //https.createServer(options, app).listen(PORT, () => {
 //  console.log(`Server is running on https://localhost:${PORT}`);

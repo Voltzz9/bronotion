@@ -12,15 +12,61 @@ services:
       POSTGRES_DB: bronotion
     networks:
       - app-network
-    volumes:
-      - ./backend/sql/DDL.sql:/docker-entrypoint-initdb.d/DDL.sql
     ports:
       - "5432:5432"
+
+  prisma-migration-init:
+    container_name: prisma-migration-init
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.backend
+      target: prisma
+    networks:
+      - app-network
+    env_file:
+      - ./backend/.env
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    command: npx prisma migrate dev --name init
+  
+  prisma-init-seed:
+    container_name: prisma-init-seed
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.backend
+      target: prisma
+    networks:
+      - app-network
+    env_file:
+      - ./backend/.env
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    command: sh -c "npx prisma generate && npm run seed"
+
+  prisma-studio:
+    container_name: prisma-studio
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.backend
+      target: prisma
+    networks:
+      - app-network
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    depends_on:
+      - db
+    command: ["npx", "prisma", "studio"]
+    ports:
+      - "5555:5555"
   
   backend:
     build:
       context: ./backend
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.backend
+      target: backend
     container_name: bronotion-express-backend
     depends_on:
       - db
@@ -42,7 +88,8 @@ services:
   frontend-dev:
     build:
       context: ./client
-      dockerfile: Dockerfile.dev
+      dockerfile: Dockerfile.client
+      target: development
     container_name: bronotion-frontend-app-dev
     ports:
       - "3000:3000"
@@ -62,7 +109,8 @@ services:
   frontend-prod:
     build:
       context: ./client
-      dockerfile: Dockerfile.prod
+      dockerfile: Dockerfile.client
+      target: production
     container_name: bronotion-frontend-app-prod
     ports:
       - "3000:3000"

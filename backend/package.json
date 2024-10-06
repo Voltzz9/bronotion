@@ -1,9 +1,15 @@
 {
   "name": "group-37-api",
   "version": "0.1.0",
+  "type": "module",
   "private": true,
   "scripts": {
-    "start:server": "node server.js"
+    "start:server": "node server.js",
+    "seed": "node prisma/seed.cjs"
+  },
+  "prisma": {
+    "schema": "./prisma/schema.prisma",
+    "seed": "node prisma/seed.cjs"
   },
   "dependencies": {
     "@prisma/client": "^5.20.0",
@@ -14,7 +20,8 @@
     "node-pushnotifications": "^3.1.1",
     "pg": "^8.13.0",
     "pg-promise": "^11.9.1",
-    "prisma": "^5.20.0"
+    "prisma": "^5.20.0",
+    "socket.io": "^4.8.0"
   },
   "devDependencies": {
     "@types/express": "^5.0.0",
