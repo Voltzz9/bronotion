@@ -445,6 +445,36 @@ app.post('/users/:userId/notes', async (req, res) => {
   }
 });
 
+// Search for notes associated with a specific user id
+app.get('/users/:userId/notes/search', async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const { query } = req.query;
+
+    // Check if the query is provided and not empty.
+    if (query !== undefined && query.trim() !== '') {
+      let whereClause = {
+        user_id: userId,
+        title: { contains: query, mode: 'insensitive' },
+        is_deleted: false,
+      };
+
+      const notes = await prisma.note.findMany({
+        where: whereClause,
+        select: {
+          note_id: true,
+          title: true,
+        },
+      });
+      
+      res.json(notes);
+    }
+  } catch (error) {
+    console.error('Error searching notes:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 // Get notes associated with tags for a specific user
 app.get('/users/:userId/tags/notes', async (req, res) => {
   try {
