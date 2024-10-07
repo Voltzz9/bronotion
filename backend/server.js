@@ -6,11 +6,18 @@ import https from 'https'; // Import HTTPS
 import fs from 'fs'; // Import File System
 import dotenv from 'dotenv';
 import { Server as SocketIOServer } from "socket.io";
+import PushNotifications from "node-pushnotifications";
+import { subscribe } from 'diagnostics_channel';
 dotenv.config();
 
 const prisma = new PrismaClient();
 const app = express();
 const PORT = process.env.PORT || 8080;
+
+const options = {
+  key: fs.readFileSync('server.key'), // Path to your key file
+  cert: fs.readFileSync('server.cert'), // Path to your certificate file
+};
 
 // Load SSL certificate and key
 //const options = {
@@ -54,9 +61,10 @@ app.post("/subscribe", async (req, res) => {
         }
       }
     });
-
+    console.log(id)
+    console.log(subscription)
   } catch (error) {
-    console.log("Errorrr!!!!! weewooo")
+    console.log("Errorrr!!!!! weewooo", error)
   }
 });
 
@@ -103,6 +111,52 @@ const sendPushNotif = async (userId, title) => {
 
 }
 
+
+app.get('/send-push-test', async (req, res) => {
+  const settings = {
+    web: {
+      vapidDetails: {
+        subject: "mailto: <jonty09090@gmail.com>", // REPLACE_WITH_YOUR_EMAIL
+        publicKey: vapidKeys.publicKey,
+        privateKey: vapidKeys.privateKey,
+      },
+      gcmAPIKey: "gcmkey",
+      TTL: 2419200,
+      contentEncoding: "aes128gcm",
+      headers: {},
+    },
+    isAlwaysUseFCM: false,
+  };
+  // Send 201 - resource created
+  const push = new PushNotifications(settings);
+
+  const dbresults = await prisma.userPushNoti.findFirst({
+    where: {
+      user_id: "3497860f-cc38-437b-8d2d-fa1cb7de3087"
+    },
+    select: {
+      endpoint: true,
+      p256dh: true,
+      auth: true
+    }
+  });
+  const subscription = {};
+  console.log(dbresults)
+  subscription["endpoint"] = dbresults.endpoint;
+  subscription["p256dh"] = dbresults.p256dh;
+  subscription["auth"] = dbresults.auth;
+  // Create payload
+  const title = "Test push noti"
+  const payload = { title: title, body: "A note has been shared with you" };
+  push.send(subscription, payload, (err, result) => {
+    if (err) {
+      console.log(err);
+    } else {
+      console.log("sent")
+    }
+  });
+
+})
 
 // ********************************* Socket.io *********************************
 
@@ -191,31 +245,31 @@ app.post('/create_user', async (req, res) => {
     // Hash the password before storing it in the database
     let hashedPassword = '';
     if (password !== undefined) {
-    hashedPassword = await bcrypt.hash(password, 10);
+      hashedPassword = await bcrypt.hash(password, 10);
     }
 
     let user = await prisma.user.create({
       data: {
-      id: id,
-      username: username,
-      password_hash: hashedPassword,
-      email: email,
-      emailVerified: new Date(),
-      image: image,
-      auth_methods: {
-        create: {
-        isManual: auth === 'credentials',
-        isOAuth: auth === 'google' || auth === 'github',
+        id: id,
+        username: username,
+        password_hash: hashedPassword,
+        email: email,
+        emailVerified: new Date(),
+        image: image,
+        auth_methods: {
+          create: {
+            isManual: auth === 'credentials',
+            isOAuth: auth === 'google' || auth === 'github',
+          },
         },
-      },
-      accounts: auth === 'google' || auth === 'github' ? {
-        create: {
-        type: 'oauth',
-        provider: auth,
-        provider_account_id: provider_account_id,
-        // TODO add access_token and refresh_token etc.
-        },
-      } : undefined,
+        accounts: auth === 'google' || auth === 'github' ? {
+          create: {
+            type: 'oauth',
+            provider: auth,
+            provider_account_id: provider_account_id,
+            // TODO add access_token and refresh_token etc.
+          },
+        } : undefined,
       },
       include: {
         auth_methods: true,
@@ -597,7 +651,7 @@ app.get('/notes/:noteId/check', async (req, res) => {
     const userId = authHeader && authHeader.split(' ')[1]; // Extract the token part after "Bearer"
     const noteId = parseInt(req.params.noteId, 10);
     const note = await prisma.note.findUnique({
-      where: { note_id: noteId},
+      where: { note_id: noteId },
       select: { user_id: true },
     });
     if (userId !== note.user_id) {
