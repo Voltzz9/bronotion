@@ -1,7 +1,8 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 "use client"
 
-import { useState, useEffect, useCallback, useRef, use } from "react"
-import { Menu, Search, ChevronDown, ChevronUp, UserPlus, Tag, FileText, Loader2 } from "lucide-react"
+import { useState, useEffect, useCallback, useRef } from "react"
+import { Search, ChevronDown, ChevronUp, Tag, FileText, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useSession } from "next-auth/react"
@@ -67,7 +68,7 @@ export function LayoutComponent() {
     } catch (error) {
       console.error('Failed to fetch notes and tags:', error);
     }
-  }, []);
+  }, [tagsWithNotes]);
 
   useEffect(() => {
     if (session?.user?.id) {
@@ -104,7 +105,7 @@ export function LayoutComponent() {
         if (searchQuery) {
           setIsSearching(true)
           if (session?.user?.id) {
-            fetchSearchResults(session.user.id, searchQuery).then(results => {
+            fetchSearchResults(session.user.id, searchQuery).then(() => {
               setIsSearching(false)
             })
           }
@@ -121,16 +122,17 @@ export function LayoutComponent() {
 
   return (
     <>
-      <Button
-        variant="ghost"
-        size="icon"
+      <button
+        id="burger"
+        className={isSidepanelOpen ? "open" : ""}
         onClick={toggleSidepanel}
         aria-label="Toggle sidebar"
-        className="top-5.5 right-8 z-40 text-bold text-secondary"
       >
-        <Menu className="h-6 w-6" />
-      </Button>
-  
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
       {isSidepanelOpen && (
         <aside
           className={`fixed inset-y-0 right-0 z-50 w-64 bg-background transform transition-transform duration-300 ease-in-out ${
