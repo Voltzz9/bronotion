@@ -1,13 +1,17 @@
 self.addEventListener("push", (event) => {
-    const data = event.data.json();
-    const title = data.title;
-    const body = data.body;
-    const icon = data.icon;
-
-    const notificationOptions = {
-        body: body,
-        icon: icon,
-    };
-
-    self.registration.showNotification(title, notificationOptions);
+    try {
+        const data = event.data.json();
+        const title = data.title || 'New Notification';
+        const body = data.body || '';
+        const icon = data.icon || '/default-icon.png';
+        const notificationOptions = {
+            body: body,
+            icon: icon,
+        };
+        event.waitUntil(
+            self.registration.showNotification(title, notificationOptions)
+        );
+    } catch (error) {
+        console.error('Error showing notification:', error);
+    }
 });

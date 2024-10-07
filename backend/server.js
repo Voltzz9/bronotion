@@ -38,125 +38,88 @@ app.use(express.json());
 
 
 const vapidKeys = {
-  publicKey: process.env.VAPID_PUBLIC_KEY,
-  privateKey: process.env.VAPID_PRIVATE_KEY,
+  publicKey: process.env.VAPID_PUBLIC_KEY || "BG-iCoGsGvQ4B6R5GL--aerOPJHKj-EyFkEZjgP2w-HIvhjqMEVo4W-oGTt7_Ok1YuH_tegUtiahMkUzuVMT6xk",
+  privateKey: process.env.VAPID_PRIVATE_KEY || "0O45q8aWmc-iZ4v6W8H98kRavhzdWacFq1rdLiNfNEk",
 };
 
-
 app.post("/subscribe", async (req, res) => {
-  // Get pushSubscription object
   try {
     const { subscription, id } = req.body;
-    const endpoint = subscription.endpoint;
-    const p256dh = subscription.keys.p256dh;
-    const auth = subscription.keys.auth;
+
+    if (!subscription || !id) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    const { endpoint, keys } = subscription;
+    if (!endpoint || !keys || !keys.p256dh || !keys.auth) {
+      return res.status(400).json({ error: "Invalid subscription object" });
+    }
 
     const newUserPushNoti = await prisma.userPushNoti.create({
       data: {
         endpoint,
-        p256dh,
-        auth,
+        p256dh: keys.p256dh,
+        auth: keys.auth,
         user: {
-          connect: { id: id }
+          connect: { id }
         }
       }
     });
-    console.log(id)
-    console.log(subscription)
+
+    res.status(201).json({ message: "Subscription created successfully", data: newUserPushNoti });
   } catch (error) {
-    console.log("Errorrr!!!!! weewooo", error)
+    console.error("Error in /subscribe endpoint:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
 const sendPushNotif = async (userId, title) => {
-  const settings = {
-    web: {
-      vapidDetails: {
-        subject: "mailto: <jonty09090@gmail.com>", // REPLACE_WITH_YOUR_EMAIL
-        publicKey: vapidKeys.publicKey,
-        privateKey: vapidKeys.privateKey,
+  try {
+    const settings = {
+      web: {
+        vapidDetails: {
+          subject: "mailto:jonty09090@gmail.com",
+          publicKey: vapidKeys.publicKey,
+          privateKey: vapidKeys.privateKey,
+        },
+        gcmAPIKey: "gcmkey",
+        TTL: 2419200,
+        contentEncoding: "aes128gcm",
+        headers: {},
       },
-      gcmAPIKey: "gcmkey",
-      TTL: 2419200,
-      contentEncoding: "aes128gcm",
-      headers: {},
-    },
-    isAlwaysUseFCM: false,
-  };
-  // Send 201 - resource created
-  const push = new PushNotifications(settings);
+      isAlwaysUseFCM: false,
+    };
 
-  const dbresults = await prisma.userPushNoti.findFirst({
-    where: {
-      user_id: userId
-    },
-    select: {
-      endpoint: true,
-      p256dh: true,
-      auth: true
+    const push = new PushNotifications(settings);
+
+    const dbresults = await prisma.userPushNoti.findFirst({
+      where: { user_id: userId },
+      select: { endpoint: true, p256dh: true, auth: true }
+    });
+
+    if (!dbresults) {
+      throw new Error(`No push notification subscription found for user ${userId}`);
     }
-  });
-  subscription["endpoint"] = dbresults.endpoint;
-  subscription["keys"]["p256dh"] = dbresults.p256dh;
-  subscription["keys"]["auth"] = dbresults.auth;
-  // Create payload
-  const payload = { title: title, body: "A note has been shared with you" };
-  push.send(subscription, payload, (err, result) => {
-    if (err) {
-      console.log(err);
-    } else {
-      console.log("sent")
-    }
-  });
 
-}
+    const subscription = {
+      endpoint: dbresults.endpoint,
+      keys: {
+        p256dh: dbresults.p256dh,
+        auth: dbresults.auth
+      }
+    };
 
+    const payload = JSON.stringify({ title, body: "A note has been shared with you" });
 
-app.get('/send-push-test', async (req, res) => {
-  const settings = {
-    web: {
-      vapidDetails: {
-        subject: "mailto: <jonty09090@gmail.com>", // REPLACE_WITH_YOUR_EMAIL
-        publicKey: vapidKeys.publicKey,
-        privateKey: vapidKeys.privateKey,
-      },
-      gcmAPIKey: "gcmkey",
-      TTL: 2419200,
-      contentEncoding: "aes128gcm",
-      headers: {},
-    },
-    isAlwaysUseFCM: false,
-  };
-  // Send 201 - resource created
-  const push = new PushNotifications(settings);
+    const result = await push.sendNotification(subscription, payload);
+    console.log("Push notification sent successfully:", result);
+    return result;
+  } catch (error) {
+    console.error("Error sending push notification:", error);
+    throw error;
+  }
+};
 
-  const dbresults = await prisma.userPushNoti.findFirst({
-    where: {
-      user_id: "3497860f-cc38-437b-8d2d-fa1cb7de3087"
-    },
-    select: {
-      endpoint: true,
-      p256dh: true,
-      auth: true
-    }
-  });
-  const subscription = {};
-  console.log(dbresults)
-  subscription["endpoint"] = dbresults.endpoint;
-  subscription["p256dh"] = dbresults.p256dh;
-  subscription["auth"] = dbresults.auth;
-  // Create payload
-  const title = "Test push noti"
-  const payload = { title: title, body: "A note has been shared with you" };
-  push.send(subscription, payload, (err, result) => {
-    if (err) {
-      console.log(err);
-    } else {
-      console.log("sent")
-    }
-  });
-
-})
 
 // ********************************* Socket.io *********************************
 
