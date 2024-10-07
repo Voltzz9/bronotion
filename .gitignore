@@ -56,3 +56,4 @@
 .DS_Store
 
 /backend/prisma/migrations/
+/backend/public/

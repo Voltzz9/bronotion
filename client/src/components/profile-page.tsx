@@ -159,13 +159,13 @@ function ProfilePage() {
     }
   }
 
-  const handleExit = () => {
+  const handleExit = useCallback(() => {
     if (hasUnsavedChanges) {
       setIsExitDialogOpen(true)
     } else {
       router.push('/home')
     }
-  }
+  }, [hasUnsavedChanges, router])
 
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -180,6 +180,10 @@ function ProfilePage() {
       window.removeEventListener('beforeunload', handleBeforeUnload)
     }
   }, [hasUnsavedChanges])
+
+  const handleFormChange = useCallback((changes: boolean) => {
+    setHasUnsavedChanges(changes)
+  }, [])
 
   if (!profile) {
     return <div>Loading...</div>
@@ -229,7 +233,7 @@ function ProfilePage() {
                 <AccountDetailsForm 
                   profile={profile} 
                   onUpdateProfile={handleUpdateProfile}
-                  onChange={setHasUnsavedChanges}
+                  onChange={handleFormChange}
                 />
                 <div className="mt-6">
                   <DeleteAccountButton />
