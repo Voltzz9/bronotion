@@ -11,6 +11,7 @@ import AuthButtons from './auth-buttons';
 
 export default function Header() {
   const { data: session, status } = useSession();
+  console.log(session);
   const { scrollY } = useScroll();
   const [isMobile, setIsMobile] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(status === 'authenticated');
@@ -83,10 +84,10 @@ export default function Header() {
                 <DropdownMenuTrigger asChild>
                   <Avatar className="cursor-pointer">
                     {session && (
-                      <>
+                        <>
                         <AvatarImage src={session.user?.image || ''} alt={session.user?.name || 'User'} />
                         <AvatarFallback className="font-bold bg-white">{session.user?.name?.[0] || 'U'}</AvatarFallback>
-                      </>
+                        </>
                     )}
                   </Avatar>
                 </DropdownMenuTrigger>

@@ -43,6 +43,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         
         // Load user from the database to get the image
         const existingUser = await getUserByEmail(session.user.email);
+        session.user.name = existingUser?.username;
         
         // If user exists, set the image from the database, otherwise use the image from the provider
         session.user.image = existingUser?.image || session.user.image;
