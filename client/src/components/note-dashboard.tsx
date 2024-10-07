@@ -13,6 +13,7 @@ import { useSession } from 'next-auth/react'
 import { NoteSelector } from "@/components/note-selector"
 import { TagCombobox } from '@/components/tag-combobox'
 import Image from 'next/image'
+import { motion, AnimatePresence } from 'framer-motion' // Add this import
 
 const URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -61,6 +62,21 @@ export function NoteDashboardV2() {
   const [noteView, setNoteView] = useState('all'); // 'all', 'my', 'shared'
   const [editingNoteId, setEditingNoteId] = useState<number | null>(null);
   const [editingTitle, setEditingTitle] = useState<string>('');
+  const [newNoteId, setNewNoteId] = useState<number | null>(null);
+  const [isAddingNote, setIsAddingNote] = useState(false);
+
+
+  const filteredNotes = notes.filter(note =>
+    note.title && note.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
+    (selectedTags.length === 0 || selectedTags.some(tag => note.tags.includes(tag)))
+  );
+
+  // Animation variants
+  const noteVariants = {
+    hidden: { opacity: 0, scale: 0.8 },
+    visible: { opacity: 1, scale: 1 },
+    exit: { opacity: 0, scale: 0.8, transition: { duration: 0.15 } }
+  };
 
   const fetchNotesAndTags = useCallback(async (userId: string) => {
     try {
@@ -176,19 +192,19 @@ export function NoteDashboardV2() {
 
   const addNewNote = async () => {
     if (!session?.user?.id) return;
-
+  
+    setIsAddingNote(true);
+  
     console.log('Adding new note for user:', session.user.id);
-
+  
     const newNote = {
       title: 'New Note',
       content: "# This is a sample note \n\nYou can edit this note using Markdown syntax.",
       userId: session.user.id,
     };
-
+  
     try {
-      // contact the API to create a new note
-      console.log('Contacting API to add new note:', newNote);
-      const response = await fetch(URL + 'notes', {
+      const response = await fetch(`${URL}notes`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -196,19 +212,31 @@ export function NoteDashboardV2() {
         body: JSON.stringify(newNote),
         credentials: 'include'
       });
-      console.log(response);
+  
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-
-      // update the notes state with the new note
-      const userId = session?.user?.id;
-      if (userId) {
-        setTimeout(() => fetchNotesAndTags(userId), 2000);
-      }
-      fetchNotesAndTags(session.user.id);
+  
+      const createdNote = await response.json();
+      const formattedNote: Note = {
+        note_id: createdNote.noteId,
+        title: newNote.title,
+        content: newNote.content,
+        user_id: newNote.userId,
+        created_at: new Date(),
+        updated_at: new Date(),
+        is_deleted: false,
+        user: session.user as User,
+        tags: [],
+        shared_notes: [],
+        active_editors: [],
+      };
+      setNewNoteId(formattedNote.note_id);
+      setNotes(prevNotes => [...prevNotes, formattedNote]);
     } catch (error) {
       console.error('Failed to add new note:', error);
+    } finally {
+      setIsAddingNote(false);
     }
   };
 
@@ -323,11 +351,6 @@ export function NoteDashboardV2() {
     );
   };
 
-  const filteredNotes = notes.filter(note =>
-    note.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
-    (selectedTags.length === 0 || selectedTags.some(tag => note.tags.includes(tag)))
-  );
-
   // Sorting tags to display selected tags first
   const sortedTags = [...allTags].sort((a, b) => {
     const aSelected = selectedTags.includes(a);
@@ -384,8 +407,13 @@ export function NoteDashboardV2() {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      // Remove the deleted note from the state
-      setNotes(prevNotes => prevNotes.filter(note => note.note_id !== noteId));
+      setNotes(prevNotes => prevNotes.map(note => 
+        note.note_id === noteId ? { ...note, isDeleting: true } : note
+      ));
+
+      setTimeout(() => {
+        setNotes(prevNotes => prevNotes.filter(note => note.note_id !== noteId));
+      }, 200); // This should match the animation duration
     } catch (error) {
       console.error('Failed to delete note:', error);
     }
@@ -397,8 +425,13 @@ export function NoteDashboardV2() {
         <CardHeader>
           <div className="flex justify-between items-center">
             <CardTitle className="text-2xl font-bold text-secondary">Notes Dashboard</CardTitle>
-            <Button onClick={addNewNote}>
-              <PlusIcon className="mr-2 h-4 w-4" /> New Note
+            <Button onClick={addNewNote} disabled={isAddingNote}>
+              {isAddingNote ? (
+                <span className="animate-spin mr-2">&#8987;</span>
+              ) : (
+                <PlusIcon className="mr-2 h-4 w-4" />
+              )}
+              {isAddingNote ? 'Adding...' : 'New Note'}
             </Button>
           </div>
           <div className="relative mt-4">
@@ -431,33 +464,48 @@ export function NoteDashboardV2() {
               <NoteSelector value={noteView} onChange={setNoteView} />
             </div>
           </div>
-        </CardHeader>
+          </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+          <AnimatePresence>
             {filteredNotes.map((note) => (
-              <Link key={note.note_id} href={`/notes/${note.note_id}`} passHref>
-              <Card key={note.note_id} className="flex flex-col cursor-pointer h-52 relative">
+              <motion.div
+                key={note.note_id}
+                layout
+                initial="hidden"
+                animate={note.note_id === newNoteId ? "visible" : "visible"}
+                exit="exit"
+                variants={noteVariants}
+                transition={{ duration: 0.2 }}
+              >
+                
+                  <Card className={`flex flex-col cursor-pointer h-52 relative`}>
+                  
                 <CardHeader className="flex-grow pb-2">
                   <div className="flex justify-between items-start">
                     <div className="flex">
                       <CardTitle className="mt-1 text-lg text-secondary">
-                        {editingNoteId === note.note_id ? (
-                          <Input
-                            value={editingTitle}
-                            onChange={(e) => setEditingTitle(e.target.value)}
-                            onBlur={() => updateNoteTitle(note.note_id)}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') {
-                                updateNoteTitle(note.note_id);
-                              }
-                            }}
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation()}}// Stop event propagation
-                            autoFocus
-                          />
+                      {editingNoteId !== note.note_id ? (
+                          <Link href={`/notes/${note.note_id}`} passHref className="cursor-pointer">
+                            {note.title}
+                          </Link>
+                          
                         ) : (
-                          note.title
+                          <Input
+                          value={editingTitle}
+                          onChange={(e) => setEditingTitle(e.target.value)}
+                          onBlur={() => updateNoteTitle(note.note_id)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                            updateNoteTitle(note.note_id);
+                            }
+                          }}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                          }}
+                          autoFocus
+                          />
                         )}
                       </CardTitle>
                         {editingNoteId !== note.note_id && (
@@ -521,7 +569,7 @@ export function NoteDashboardV2() {
                       <ScrollBar orientation="horizontal" />
                       </ScrollArea>
                 </CardHeader>
-                
+                <Link href={`/notes/${note.note_id}`} passHref>
                 <CardFooter className="mt-auto pt-2">
                   <div className="flex justify-between items-center w-full text-sm text-muted-foreground">
                     <div className="flex items-center">
@@ -549,11 +597,13 @@ export function NoteDashboardV2() {
                     </div>
                   </div>
                 </CardFooter>
-              </Card>
-            </Link>
+                </Link>
+                </Card>
+              </motion.div>
             ))}
-          </div>
-        </CardContent>
+          </AnimatePresence>
+        </div>
+      </CardContent>
       </Card>
     </div>
   );
