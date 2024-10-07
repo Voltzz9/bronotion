@@ -1348,9 +1348,3 @@ app.get('/tag-ids/:userId', async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
-
-
-// Start the server
-server.listen(PORT, () => {
-  console.log(`Server is running on https://localhost:${PORT}`);
-});
