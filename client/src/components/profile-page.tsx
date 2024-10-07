@@ -194,14 +194,14 @@ function ProfilePage() {
               <nav className="flex flex-col space-y-1">
                 <Button
                   variant={activeTab === "account" ? "default" : "ghost"}
-                  className="justify-start"
+                  className={`justify-start ${activeTab === "account" ? "" : "hover:bg-slate-200 hover:text-black"}`}
                   onClick={() => setActiveTab("account")}
                 >
                   Account Details
                 </Button>
                 <Button
                   variant={activeTab === "password" ? "default" : "ghost"}
-                  className="justify-start"
+                  className={`justify-start ${activeTab === "password" ? "" : "hover:bg-slate-200 hover:text-black"}`}
                   onClick={() => setActiveTab("password")}
                 >
                   Change Password
