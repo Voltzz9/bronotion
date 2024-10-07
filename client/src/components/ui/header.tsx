@@ -11,7 +11,6 @@ import AuthButtons from './auth-buttons';
 
 export default function Header() {
   const { data: session, status } = useSession();
-  console.log(session);
   const { scrollY } = useScroll();
   const [isMobile, setIsMobile] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(status === 'authenticated');
