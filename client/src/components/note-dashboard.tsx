@@ -226,7 +226,7 @@ export function NoteDashboardV2() {
         created_at: new Date(),
         updated_at: new Date(),
         is_deleted: false,
-        user: session.user as User,
+        user: { id: createdNote.user.id, username: createdNote.user.username, image: createdNote.user.image },
         tags: [],
         shared_notes: [],
         active_editors: [],
