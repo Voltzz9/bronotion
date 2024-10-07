@@ -21,6 +21,7 @@ export default function Component() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [showForgotPassword, setShowForgotPassword] = useState(false)
   const emailRef = useRef<HTMLInputElement>(null)
   const passwordRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
@@ -36,6 +37,7 @@ export default function Component() {
   const toggleForm = () => {
     setIsAnimating(true)
     setError('')
+    setShowForgotPassword(false)
     setTimeout(() => {
       setIsLogin(!isLogin)
       setIsAnimating(false)
@@ -55,6 +57,7 @@ export default function Component() {
 
       if (result?.error) {
         setError('Invalid email or password. Please try again.')
+        setShowForgotPassword(true)
       } else {
         router.push('/home')
       }
@@ -134,18 +137,18 @@ export default function Component() {
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
-        <form 
+        <form
           onSubmit={isLogin ? handleLogin : handleSignup}
           className={`space-y-4 transition-opacity duration-300 ${isAnimating ? 'opacity-0' : 'opacity-100'}`}
         >
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
-            <Input 
-              id="email" 
+            <Input
+              id="email"
               name="email"
-              type="email" 
-              placeholder="bill@example.com" 
-              required 
+              type="email"
+              placeholder="bill@example.com"
+              required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               ref={emailRef}
@@ -155,23 +158,23 @@ export default function Component() {
           {!isLogin && (
             <div className="space-y-2">
               <Label htmlFor="username">Username</Label>
-              <Input 
-                id="username" 
+              <Input
+                id="username"
                 name="username"
-                type="text" 
-                required 
-                value={username} 
+                type="text"
+                required
+                value={username}
                 onChange={(e) => setUsername(e.target.value)}
               />
             </div>
           )}
           <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
-            <Input 
-              id="password" 
+            <Input
+              id="password"
               name="password"
-              type="password" 
-              required 
+              type="password"
+              required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               ref={passwordRef}
@@ -181,24 +184,31 @@ export default function Component() {
           {!isLogin && (
             <div className="space-y-2">
               <Label htmlFor="confirmPassword">Confirm Password</Label>
-              <Input 
-                id="confirmPassword" 
+              <Input
+                id="confirmPassword"
                 name="confirmPassword"
-                type="password" 
-                required 
-                value={confirmPassword} 
+                type="password"
+                required
+                value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
               />
             </div>
           )}
-          <Button 
-            type="submit" 
+          <Button
+            type="submit"
             className="w-full"
             disabled={isLoading}
           >
             {isLoading ? 'Processing...' : (isLogin ? 'Sign In' : 'Sign Up')}
           </Button>
         </form>
+        {showForgotPassword && (
+          <div className="text-center">
+            <a href="https://localhost:3000/forgot-password" className="text-blue-500 hover:underline text-sm">
+              Have you forgotten your password?
+            </a>
+          </div>
+        )}
         <GitHubSignInForm />
         <GoogleSignInButton />
         <div className="text-center text-secondary">

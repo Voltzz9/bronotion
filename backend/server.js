@@ -1,12 +1,3 @@
-const express = require('express');
-const { PrismaClient } = require('@prisma/client');
-const bcrypt = require('bcrypt');
-const cors = require('cors');
-const https = require('https'); // Import HTTPS
-const fs = require('fs'); // Import File System
-const { createClient } = require("@usewaypoint/client");
-require('dotenv').config();
-
 const client = createClient(process.env.API_KEY_USERNAME, process.env.API_KEY_PASSWORD);
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
@@ -20,6 +11,8 @@ import { Server as SocketIOServer } from "socket.io";
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import formidable from 'formidable';
+import { createClient } from "@usewaypoint/client";
+import crypto from 'node:crypto';
 dotenv.config();
 
 const prisma = new PrismaClient();
@@ -43,6 +36,7 @@ app.use(cors({
 app.use(express.json());
 
 // ********************************* Emails **************************************
+
 
 async function sendEmail(to, subject, bodyHtml) {
   try {
@@ -90,6 +84,127 @@ async function sendEmailShareNote(to, noteId) {
     return { success: false, error: 'Error sending email' }
   }
 }
+
+async function sendPasswordReset(to, token) {
+  try {
+    await client.emailMessages.createTemplated({
+      to: to,
+      subject: "Password Reset Request",
+      bodyHtml: `
+      <html>
+      <body style="font-family: Arial, sans-serif; background-color: #f3e8ff; padding: 20px; text-align: center;">
+        <div style="max-width: 600px; margin: 0 auto; background-color: #f3e8ff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
+          <h2 style="color: #3c005a;">Password Reset Request</h2>
+          <p style="color: #312359;">Hello,</p>
+          <p style="color: #312359;">You have requested to reset your password for <strong style="color: #3c005a;">Bronotion</strong>.</p>
+          <p style="color: #312359;">Click the button below to reset your password:</p>
+          <a href="https://localhost:8080/password-reset?token=${token}" style="display: inline-block; background-color: #3c005a; color: #FFFFFF; padding: 10px 20px; text-decoration: none; border-radius: 4px;">Reset Password</a>
+          <p style="color: #312359;">If you did not request this, please ignore this email.</p>
+          <p style="color: #ceb2ff; font-size: 12px;">Thank you for using Bronotion!</p>
+        </div>
+      </body>
+    </html> 
+    `
+    });
+    console.log('Email sent successfully');
+    return { success: true, message: 'Email sent successfully' };
+  } catch (error) {
+    console.log('Error sending email:', error);
+    return { success: false, error: 'Error sending email' }
+  }
+}
+
+app.post('/password-reset', async (req, res) => {
+  try {
+    const { token, password } = req.body;
+    console.log(token)
+
+    const resetToken = await prisma.passwordResetToken.findUnique({
+      where: {
+        token: token,
+      },
+      include: {
+        user: true,
+      },
+    });
+
+    if (!resetToken || resetToken.token_expiry < new Date()) {
+      return res.status(400).json({ error: 'Invalid or expired token' });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Update user's password
+    await prisma.user.update({
+      where: { id: resetToken.user_id },
+      data: {
+        password_hash: hashedPassword,
+      },
+    });
+
+    // Delete used token
+    await prisma.passwordResetToken.delete({
+      where: {
+        token: token,
+      },
+    });
+
+    res.json({ message: 'Password has been reset successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'An error occurred while resetting password' });
+  }
+});
+
+app.post('/password-reset-request', async (req, res) => {
+  try {
+    const email = req.body.email;
+    const user = await prisma.user.findFirst({
+      where: {
+        email: email,
+      },
+      select: {
+        id: true,
+        email: true,
+      },
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const token = generateToken();
+    console.log(token)
+    const tokenExpiry = new Date(Date.now() + 3600000); // Token expiry set to 1 hour from now
+
+    // Save token in the database
+    await prisma.passwordResetToken.create({
+      data: {
+        token: token,
+        token_expiry: tokenExpiry,
+        user_id: user.id,
+      },
+    });
+
+    // Send reset email
+    const emailResponse = await sendPasswordReset(user.email, token);
+
+    if (emailResponse.success) {
+      res.json({ message: 'Password reset email sent' });
+    } else {
+      res.status(500).json({ error: 'Error sending password reset email' });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'An error occurred' });
+  }
+});
+
+function generateToken(length = 32) {
+  return crypto.randomBytes(length).toString('hex');
+}
+
+//********************************************************************** */
 // Serve static files from the UPLOAD_DIR
 app.use('/uploads', express.static(UPLOAD_DIR));
 
@@ -201,35 +316,35 @@ app.post('/create_user', async (req, res) => {
     // Hash the password before storing it in the database
     let hashedPassword = '';
     if (password !== undefined) {
-    hashedPassword = await bcrypt.hash(password, 10);
+      hashedPassword = await bcrypt.hash(password, 10);
     }
 
     let user = await prisma.user.create({
       data: {
-      id: id,
-      username: username,
-      password_hash: hashedPassword,
-      email: email,
-      emailVerified: new Date(),
-      image: image,
-      auth_methods: {
-        create: {
-        isManual: auth === 'credentials',
-        isOAuth: auth === 'google' || auth === 'github',
+        id: id,
+        username: username,
+        password_hash: hashedPassword,
+        email: email,
+        emailVerified: new Date(),
+        image: image,
+        auth_methods: {
+          create: {
+            isManual: auth === 'credentials',
+            isOAuth: auth === 'google' || auth === 'github',
+          },
         },
-      },
-      accounts: auth === 'google' || auth === 'github' ? {
-        create: {
-        type: 'oauth',
-        provider: auth,
-        provider_account_id: provider_account_id,
-        // TODO add access_token and refresh_token etc.
-        },
-      } : undefined,
+        accounts: auth === 'google' || auth === 'github' ? {
+          create: {
+            type: 'oauth',
+            provider: auth,
+            provider_account_id: provider_account_id,
+            // TODO add access_token and refresh_token etc.
+          },
+        } : undefined,
       },
       include: {
-      auth_methods: true,
-      accounts: true,
+        auth_methods: true,
+        accounts: true,
       },
     });
 
@@ -244,8 +359,8 @@ app.post('/create_user', async (req, res) => {
       },
     });
 
-    res.status(201).json({ 
-      message: 'User created successfully', 
+    res.status(201).json({
+      message: 'User created successfully',
       user: {
         id: user.id,
         email: user.email,
@@ -254,8 +369,8 @@ app.post('/create_user', async (req, res) => {
     });
   } catch (error) {
     console.error('Error creating user:', error);
-    res.status(500).json({ 
-      error: 'Internal Server Error', 
+    res.status(500).json({
+      error: 'Internal Server Error',
       details: error.message,
       stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
@@ -533,11 +648,11 @@ app.post('/users/:userId/change_password', async (req, res) => {
         return res.status(401).json({ error: 'Password is incorrect' });
       }
     } else {
-          // Update the UserAuthMethod record to set isManual to true
-        await prisma.userAuthMethod.updateMany({
-          where: { user_id: userId },
-          data: { isManual: true },
-        });
+      // Update the UserAuthMethod record to set isManual to true
+      await prisma.userAuthMethod.updateMany({
+        where: { user_id: userId },
+        data: { isManual: true },
+      });
     }
 
     // Hash the new password
@@ -552,8 +667,8 @@ app.post('/users/:userId/change_password', async (req, res) => {
     res.status(200).json({ message: 'Password changed successfully' });
   } catch (error) {
     console.error('Error changing password:', error);
-    res.status(500).json({ 
-      error: 'Internal Server Error', 
+    res.status(500).json({
+      error: 'Internal Server Error',
       details: error.message,
       stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
@@ -676,7 +791,7 @@ app.get('/users/:userId/notes/search', async (req, res) => {
           title: true,
         },
       });
-      
+
       res.json(notes);
     }
   } catch (error) {
@@ -709,7 +824,7 @@ app.get('/users/:userId/tags/notes', async (req, res) => {
 
     // Extract the tag IDs
     const tagIds = tags.map(tag => tag.tag_id);
-    
+
     // Fetch the user's own notes with the specified tags
     const userNotes = await prisma.note.findMany({
       where: {
@@ -841,7 +956,7 @@ app.get('/notes/:noteId/check', async (req, res) => {
     const userId = authHeader && authHeader.split(' ')[1]; // Extract the token part after "Bearer"
     const noteId = parseInt(req.params.noteId, 10);
     const note = await prisma.note.findUnique({
-      where: { note_id: noteId},
+      where: { note_id: noteId },
       select: { user_id: true },
     });
     if (userId !== note.user_id) {
@@ -1414,7 +1529,7 @@ app.get('/tag-ids/:userId', async (req, res) => {
 
     // Extract the tag IDs
     const tagIds = tags.map(tag => tag.tag_id);
-    
+
     // Return the tag IDs
     res.json(tagIds);
   } catch (error) {
