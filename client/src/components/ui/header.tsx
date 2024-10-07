@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { motion, useScroll, useSpring, useTransform } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { usePathname } from 'next/navigation';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useSession } from 'next-auth/react';
 import { LayoutComponent } from '@/components/layout-component';
@@ -12,8 +11,6 @@ import AuthButtons from './auth-buttons';
 
 export default function Header() {
   const { data: session, status } = useSession();
-  const pathname = usePathname();
-  const isOnNotesPage = pathname.startsWith('/notes');
   const { scrollY } = useScroll();
   const [isMobile, setIsMobile] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(status === 'authenticated');

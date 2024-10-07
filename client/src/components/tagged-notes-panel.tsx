@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react'
 import { ChevronDown } from 'lucide-react'
 import InlineSearchBar from './inline-search-bar'
-import { CollaboratorPopup } from '@/components/collaborator-popup'
 
 interface Note {
   note_id: string
