@@ -90,9 +90,7 @@ export function TaggedNotesPanelComponent() {
         <div className="border-b">
           <InlineSearchBar />
         </div>
-        <div className="p-2 border-b">
-          <CollaboratorPopup />
-        </div>
+        
         {uniqueTagIds.map((tagId) => (
           <div key={tagId}>
             <button

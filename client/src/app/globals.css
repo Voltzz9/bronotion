@@ -315,3 +315,59 @@ footer {
 body {
   @apply bg-background text-foreground;
 }
+
+#burger {
+  width: 24px;
+  height: 24px;
+  position: relative;
+  right: -10px;
+  top: 2px;
+  margin: 5px;
+  cursor: pointer;
+  z-index: 50;
+}
+
+#burger span {
+  display: block;
+  position: absolute;
+  height: 3px;
+  width: 100%;
+  background: var(--foreground);
+  border-radius: 2px;
+  opacity: 1;
+  left: 0;
+  transition: all 0.25s ease-in-out;
+}
+
+#burger span:nth-child(1) {
+  top: 0px;
+}
+
+#burger span:nth-child(2),
+#burger span:nth-child(3) {
+  top: 9px;
+}
+
+#burger span:nth-child(4) {
+  top: 18px;
+}
+
+#burger.open span:nth-child(1) {
+  top: 18px;
+  width: 0%;
+  left: 50%;
+}
+
+#burger.open span:nth-child(2) {
+  transform: rotate(45deg);
+}
+
+#burger.open span:nth-child(3) {
+  transform: rotate(-45deg);
+}
+
+#burger.open span:nth-child(4) {
+  top: 18px;
+  width: 0%;
+  left: 50%;
+}
