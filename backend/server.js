@@ -695,7 +695,18 @@ app.post('/notes', async (req, res) => {
       },
     });
 
-    res.status(201).json({ message: 'Note created successfully', noteId: note.note_id });
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        image: true,
+      },
+    });
+
+
+    res.status(201).json({ message: 'Note created successfully', noteId: note.note_id, user: user });
   } catch (error) {
     console.error('Error creating note:', error);
     res.status(500).json({ error: 'Internal Server Error' });
