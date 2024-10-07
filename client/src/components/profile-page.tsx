@@ -45,26 +45,24 @@ interface UserProfile {
 function AccountDetailsForm({ profile, onUpdateProfile, onChange }: { profile: UserProfile, onUpdateProfile: (updatedProfile: Partial<UserProfile>) => void, onChange: (hasChanges: boolean) => void }) {
   const [name, setName] = useState(profile.name)
   const [email, setEmail] = useState(profile.email)
-  const [newImage, setNewImage] = useState<string | null>(null)
+  const [image, setImage] = useState(profile.image)
   const [hasChanges, setHasChanges] = useState(false)
 
   useEffect(() => {
-    const changes = name !== profile.name || email !== profile.email || newImage !== null
+    const changes = name !== profile.name || email !== profile.email || image !== profile.image
     setHasChanges(changes)
     onChange(changes)
-  }, [name, email, newImage, profile, onChange])
+  }, [name, email, image, profile, onChange])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    const updatedProfile: Partial<UserProfile> = { name, email }
-    if (newImage) {
-      updatedProfile.image = newImage
-    }
+    const updatedProfile: Partial<UserProfile> = { name, email, image }
     onUpdateProfile(updatedProfile)
+    setHasChanges(false)
   }
 
   const handleImageUpdate = (croppedImageUrl: string) => {
-    setNewImage(croppedImageUrl)
+    setImage(croppedImageUrl)
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -78,7 +76,7 @@ function AccountDetailsForm({ profile, onUpdateProfile, onChange }: { profile: U
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <UserIconUpdate
-        currentImageUrl={newImage || profile.image}
+        currentImageUrl={image}
         username={name}
         onUpdateImage={handleImageUpdate}
       />
@@ -101,6 +99,7 @@ function ProfilePage() {
   const [activeTab, setActiveTab] = useState<'account' | 'password'>('account')
   const [isExitDialogOpen, setIsExitDialogOpen] = useState(false)
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
+  const [reloadKey, setReloadKey] = useState(0)
   const router = useRouter()
   const { toast } = useToast()
 
@@ -125,7 +124,7 @@ function ProfilePage() {
       formData.append('name', updatedProfile.name || '');
       formData.append('email', updatedProfile.email || '');
       
-      if (updatedProfile.image) {
+      if (updatedProfile.image && updatedProfile.image !== profile?.image) {
         // Convert base64 to blob
         const response = await fetch(updatedProfile.image);
         const blob = await response.blob();
@@ -143,6 +142,7 @@ function ProfilePage() {
   
       await fetchUserProfile()
       setHasUnsavedChanges(false)
+      setReloadKey(prevKey => prevKey + 1) // Increment reloadKey to force re-render
       toast({
         title: "Success",
         description: "Your profile has been updated successfully.",
@@ -231,6 +231,7 @@ function ProfilePage() {
             {activeTab === "account" && (
               <>
                 <AccountDetailsForm 
+                  key={reloadKey} // Use reloadKey to force re-render
                   profile={profile} 
                   onUpdateProfile={handleUpdateProfile}
                   onChange={handleFormChange}
