@@ -13,6 +13,8 @@ import { v4 as uuidv4 } from 'uuid';
 import formidable from 'formidable';
 import { createClient } from "@usewaypoint/client";
 import crypto from 'node:crypto';
+import PushNotifications from "node-pushnotifications";
+import { subscribe } from 'diagnostics_channel';
 dotenv.config();
 
 const prisma = new PrismaClient();
@@ -20,11 +22,16 @@ const app = express();
 const PORT = process.env.PORT || 8080;
 const UPLOAD_DIR = path.join(process.cwd(), 'public', 'uploads');
 
-// Load SSL certificate and key
 const options = {
   key: fs.readFileSync('server.key'), // Path to your key file
   cert: fs.readFileSync('server.cert'), // Path to your certificate file
 };
+
+// Load SSL certificate and key
+//const options = {
+//  key: fs.readFileSync('server.key'), // Path to your key file
+//  cert: fs.readFileSync('server.cert'), // Path to your certificate file
+//};
 
 app.use(cors({
   origin: 'https://localhost:3000',
@@ -34,6 +41,92 @@ app.use(cors({
 }));
 
 app.use(express.json());
+
+// ********************************* Push Notifications **************************
+
+
+const vapidKeys = {
+  publicKey: process.env.VAPID_PUBLIC_KEY || "BG-iCoGsGvQ4B6R5GL--aerOPJHKj-EyFkEZjgP2w-HIvhjqMEVo4W-oGTt7_Ok1YuH_tegUtiahMkUzuVMT6xk",
+  privateKey: process.env.VAPID_PRIVATE_KEY || "0O45q8aWmc-iZ4v6W8H98kRavhzdWacFq1rdLiNfNEk",
+};
+
+app.post("/subscribe", async (req, res) => {
+  try {
+    const { subscription, id } = req.body;
+
+    if (!subscription || !id) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    const { endpoint, keys } = subscription;
+    if (!endpoint || !keys || !keys.p256dh || !keys.auth) {
+      return res.status(400).json({ error: "Invalid subscription object" });
+    }
+
+    const newUserPushNoti = await prisma.userPushNoti.create({
+      data: {
+        endpoint,
+        p256dh: keys.p256dh,
+        auth: keys.auth,
+        user: {
+          connect: { id }
+        }
+      }
+    });
+
+    res.status(201).json({ message: "Subscription created successfully", data: newUserPushNoti });
+  } catch (error) {
+    console.error("Error in /subscribe endpoint:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+const sendPushNotif = async (userId, title) => {
+  try {
+    const settings = {
+      web: {
+        vapidDetails: {
+          subject: "mailto:jonty09090@gmail.com",
+          publicKey: vapidKeys.publicKey,
+          privateKey: vapidKeys.privateKey,
+        },
+        gcmAPIKey: "gcmkey",
+        TTL: 2419200,
+        contentEncoding: "aes128gcm",
+        headers: {},
+      },
+      isAlwaysUseFCM: false,
+    };
+
+    const push = new PushNotifications(settings);
+
+    const dbresults = await prisma.userPushNoti.findFirst({
+      where: { user_id: userId },
+      select: { endpoint: true, p256dh: true, auth: true }
+    });
+
+    if (!dbresults) {
+      throw new Error(`No push notification subscription found for user ${userId}`);
+    }
+
+    const subscription = {
+      endpoint: dbresults.endpoint,
+      keys: {
+        p256dh: dbresults.p256dh,
+        auth: dbresults.auth
+      }
+    };
+
+    const payload = JSON.stringify({ title, body: "A note has been shared with you" });
+
+    const result = await push.sendNotification(subscription, payload);
+    console.log("Push notification sent successfully:", result);
+    return result;
+  } catch (error) {
+    console.error("Error sending push notification:", error);
+    throw error;
+  }
+};
 
 // ********************************* Emails **************************************
 
@@ -1548,3 +1641,6 @@ app.get('/tag-ids/:userId', async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
+//https.createServer(options, app).listen(PORT, () => {
+//  console.log(`Server is running on https://localhost:${PORT}`);
+//});
