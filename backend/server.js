@@ -1,3 +1,13 @@
+const express = require('express');
+const { PrismaClient } = require('@prisma/client');
+const bcrypt = require('bcrypt');
+const cors = require('cors');
+const https = require('https'); // Import HTTPS
+const fs = require('fs'); // Import File System
+const { createClient } = require("@usewaypoint/client");
+require('dotenv').config();
+
+const client = createClient(process.env.API_KEY_USERNAME, process.env.API_KEY_PASSWORD);
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
@@ -31,6 +41,55 @@ app.use(cors({
 }));
 
 app.use(express.json());
+
+// ********************************* Emails **************************************
+
+async function sendEmail(to, subject, bodyHtml) {
+  try {
+    await client.emailMessages.createTemplated({
+      to: to,
+      subject: subject,
+      bodyHtml: bodyHtml
+    });
+    console.log('Email sent successfully');
+    return { success: true, message: 'Email sent successfully' };
+  } catch (error) {
+    console.error('Error sending email:', error);
+    return { success: false, error: 'Error sending email' };
+  }
+}
+
+
+// Send email for share notification
+
+async function sendEmailShareNote(to, noteId) {
+  try {
+    await client.emailMessages.createTemplated({
+      to: to,
+      subject: "NOTE HAS BEEN SHARED WITH YOU",
+      bodyHtml: `
+      <html>
+      <body style="font-family: Arial, sans-serif; background-color: #f3e8ff; padding: 20px; text-align: center;">
+        <div style="max-width: 600px; margin: 0 auto; background-color: #f3e8ff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
+          <h2 style="color: #3c005a;">A Note Has Been Shared With You!</h2>
+          <p style="color: #312359;">Hello,</p>
+          <p style="color: #312359;">A note has been shared with you through <strong style="color: #3c005a;">Bronotion</strong>.</p>
+          <p style="color: #312359;">Click the button below to view the note:</p>
+          <a href="https://bronotion.co.za/notes/${noteId}" style="display: inline-block; background-color: #3c005a; color: #FFFFFF; padding: 10px 20px; text-decoration: none; border-radius: 4px;">View Note</a>
+          <p style="color: #312359;">Thank you for using Bronotion!</p>
+          <p style="color: #ceb2ff; font-size: 12px;">If you did not expect this email, please ignore it.</p>
+        </div>
+      </body>
+    </html> 
+    `
+    });
+    console.log('Email sent successfully');
+    return { success: true, message: 'Email sent succesfully' };
+  } catch (error) {
+    console.log('Error sending email:', error);
+    return { success: false, error: 'Error sending email' }
+  }
+}
 // Serve static files from the UPLOAD_DIR
 app.use('/uploads', express.static(UPLOAD_DIR));
 
@@ -844,6 +903,8 @@ app.post('/notes/:noteId/share', async (req, res) => {
       },
     });
 
+    sendEmailToSharie(emailAddr)
+
     res.status(201).json({
       message: 'Note shared successfully',
       sharedNoteId: result.shared_note_id,
@@ -853,6 +914,19 @@ app.post('/notes/:noteId/share', async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
+
+async function sendEmailToSharie(username) {
+  const sharieEmail = await prisma.user.findUnique({
+    where: {
+      username: username,
+    },
+    select: {
+      email: true,
+    },
+  });
+
+  sendEmailShareNote(sharieEmail)
+}
 
 // Get all notes shared with a user
 app.get('/users/:userId/shared-notes', async (req, res) => {
