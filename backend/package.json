@@ -22,7 +22,8 @@
     "pg-promise": "^11.9.1",
     "prisma": "^5.20.0",
     "socket.io": "^4.8.0",
-    "uploadthing": "^7.0.2"
+    "uploadthing": "^7.0.2",
+    "uuid": "^10.0.0"
   },
   "devDependencies": {
     "@types/express": "^5.0.0",
