@@ -68,7 +68,7 @@ export function LayoutComponent() {
     } catch (error) {
       console.error('Failed to fetch notes and tags:', error);
     }
-  }, [tagsWithNotes]);
+  }, []);
 
   useEffect(() => {
     if (session?.user?.id) {
