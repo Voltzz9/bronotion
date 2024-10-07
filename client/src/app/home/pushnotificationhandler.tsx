@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { useSession } from 'next-auth/react'
 
 function urlBase64ToUint8Array(base64String: string) {
@@ -54,6 +54,6 @@ export function PushNotificationHandler() {
             };
             handleServiceWorker();
         }
-    }, []);
+    }, [session?.user?.id]);
     return null;
 }
