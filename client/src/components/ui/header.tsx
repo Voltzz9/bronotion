@@ -8,6 +8,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/compon
 import { useSession } from 'next-auth/react';
 import { LayoutComponent } from '@/components/layout-component';
 import AuthButtons from './auth-buttons';
+import { usePathname } from 'next/navigation';
 
 export default function Header() {
   const { data: session, status } = useSession();
@@ -15,6 +16,7 @@ export default function Header() {
   const [isMobile, setIsMobile] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(status === 'authenticated');
   const [isScrolled, setIsScrolled] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
     const checkMobile = () => {
@@ -52,6 +54,10 @@ export default function Header() {
     stiffness: 80,
     damping: 15,
   });
+
+  // Check if the current page is a note page by checking the pathname this allows for conditional rendering of 
+  // the layout component (sidepanel)
+  const isNotePage = /^\/notes\/\d+$/.test(pathname)
 
   return (
     <>
@@ -99,7 +105,7 @@ export default function Header() {
                 <Button>Login</Button>
               </Link>
             )}
-          <LayoutComponent />
+            {isNotePage && <LayoutComponent />}
           </div>
         </nav>
       </header>
