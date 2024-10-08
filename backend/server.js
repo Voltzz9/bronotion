@@ -1028,6 +1028,7 @@ app.delete('/notes/:noteId', async (req, res) => {
 // Fetch a single note
 app.get('/notes/:noteId', async (req, res) => {
   try {
+    console.log("Tried to fetch")
     const noteId = parseInt(req.params.noteId);
     const note = await prisma.note.findUnique({
       where: { note_id: noteId },
@@ -1056,18 +1057,27 @@ app.get('/notes/:noteId', async (req, res) => {
 app.get('/notes/:noteId/check', async (req, res) => {
 
   try {
+    console.log("tried to auth")
     const authHeader = req.headers['authorization']; // Lowercase 'authorization' for case sensitivity issues.
     const userId = authHeader && authHeader.split(' ')[1]; // Extract the token part after "Bearer"
     const noteId = parseInt(req.params.noteId, 10);
+    const ret = false;
     const note = await prisma.note.findUnique({
       where: { note_id: noteId },
       select: { user_id: true },
     });
-    if (userId !== note.user_id) {
+    const sharedNote = await prisma.sharedNote.findFirst({
+      where: {
+        note_id: noteId,
+        shared_with_user_id: userId,
+      },
+    });
+
+    if (userId !== note.user_id && !sharedNote) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    if (!note) {
+    if (!note && !sharedNote) {
       return res.status(404).json({ error: 'Note not found' });
     }
 
@@ -1122,7 +1132,7 @@ app.post('/notes/:noteId/share', async (req, res) => {
       },
     });
 
-    sendEmailToSharie(emailAddr)
+    //   sendEmailToSharie(emailAddr)
 
     res.status(201).json({
       message: 'Note shared successfully',
