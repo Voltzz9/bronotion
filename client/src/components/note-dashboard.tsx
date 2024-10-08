@@ -15,7 +15,6 @@ import { TagCombobox } from '@/components/tag-combobox'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion' // Add this import
 import { OrderDropdown } from '@/components/order-dropdown'
-import { Select } from '@/components/ui/select'
 
 const URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -66,10 +65,8 @@ export function NoteDashboardV2() {
   const [editingTitle, setEditingTitle] = useState<string>('');
   const [newNoteId, setNewNoteId] = useState<number | null>(null);
   const [isAddingNote, setIsAddingNote] = useState(false);
-  const [order, setOrder] = useState("Order")
 
   const sortNotesByUpdatedAt = (order: 'asc' | 'desc') => {
-    console.log("Order Function Ran")
     const sortedNotes = [...notes].sort((a, b) => {
       const dateA = new Date(a.updated_at).getTime();
       const dateB = new Date(b.updated_at).getTime();
