@@ -11,10 +11,10 @@ import { Server as SocketIOServer } from "socket.io";
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import formidable from 'formidable';
-import { createClient } from "@usewaypoint/client";
+import { createClient } from '@usewaypoint/client';
 import crypto from 'node:crypto';
 import PushNotifications from "node-pushnotifications";
-import { subscribe } from 'diagnostics_channel';
+
 dotenv.config();
 
 const prisma = new PrismaClient();
@@ -317,7 +317,7 @@ async function ensureUploadDir() {
 const server = https.createServer(options, app);
 
 // Store connected users
-const connectedUsers = {}; 
+const connectedUsers = {};
 
 // Initialize Socket.IO with the server instance
 const io = new SocketIOServer(server, {
@@ -333,34 +333,39 @@ io.on('connection', (socket) => {
 
   socket.on('join-note', ({ noteId, userId }) => {
     socket.join(noteId);
-
-    // If the noteId doesn't exist in connectedUsers, initialize it
+  
+    // Initialize the array for the noteId if it does not exist
     if (!connectedUsers[noteId]) {
       connectedUsers[noteId] = [];
     }
-
-    // Add the userId to the list for this noteId
+  
     if (!connectedUsers[noteId].includes(userId)) {
       connectedUsers[noteId].push(userId);
+      console.log(`User ${userId} joined note ${noteId}`);
+      console.log('User IDs connected to note', noteId, ':', connectedUsers[noteId]);
+      io.to(noteId).emit('user-connected', connectedUsers[noteId]);
     }
-
-    // Emit the updated list of connected users to the room
-    io.to(noteId).emit('user-connected', connectedUsers[noteId]);
-    console.log('User IDs connected to note', noteId, ':', connectedUsers[noteId]);
   });
 
   socket.on('update-note', (data) => {
     socket.to(data.noteId).emit('note-updated', data.content);
   });
 
-  socket.on('disconnect', () => {
-    Object.keys(connectedUsers).forEach(noteId => {
-      const index = connectedUsers[noteId].indexOf(socket.userId);
+  socket.on('leave-note', ({ noteId, userId }) => {
+    if (connectedUsers[noteId]) {
+      const index = connectedUsers[noteId].indexOf(userId);
       if (index !== -1) {
         connectedUsers[noteId].splice(index, 1);
+        console.log(`User ${userId} left note ${noteId}`);
         io.to(noteId).emit('user-disconnected', connectedUsers[noteId]);
         console.log('User IDs still connected to note', noteId, ':', connectedUsers[noteId]);
       }
+    }
+  });
+
+  socket.on('disconnect', () => {
+    socket.on('user-disconnected', (userId) => {
+      setConnectedUsers((prev) => prev.filter((id) => id !== userId)); // Remove user on disconnect
     });
   });
 });
@@ -369,7 +374,6 @@ io.on('connection', (socket) => {
 // Start the server
 async function startServer() {
   await ensureUploadDir();
-
   server.listen(PORT, () => {
     console.log(`Server is running on https://localhost:${PORT}`);
   });

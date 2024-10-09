@@ -29,7 +29,6 @@ export default function Notes() {
   const router = useRouter();
   const [socket, setSocket] = useState<Socket | null>(null);
   const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
-  const [userName, setUsername] = useState("");
   const [userId, setUserId] = useState("");
 
 
@@ -38,14 +37,11 @@ export default function Notes() {
   
     const newSocket = io(URL);
     setSocket(newSocket);
-  
+    
     return () => {
-      if (userId && noteId) {
-        newSocket.emit('disconnected'); // Emit a leave event if necessary
-      }
       newSocket.close();
     };
-  }, []);
+  }, [session?.user?.id, noteId]);
 
   useEffect(() => {
     if (socket && noteId) {
@@ -62,7 +58,7 @@ export default function Notes() {
         socket.off('note-updated');
       };
     }
-  }, [socket, noteId]);
+  }, [socket, noteId, session?.user?.id]);
 
   useEffect(() => {
     const parseMarkdown = async () => {
@@ -120,7 +116,6 @@ export default function Notes() {
           return;
         }
         console.log("Logged in username:", data.username);
-        setUsername(data.username);
         setUserId(data.id);
       }
   

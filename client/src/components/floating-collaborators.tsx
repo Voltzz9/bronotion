@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronUp, ChevronDown } from 'lucide-react'
 import useNoteId from '@/app/hooks/useNoteId'
 import Image from 'next/image'
-import { io, Socket } from 'socket.io-client';
+import io, { Socket } from 'socket.io-client'
 
 const URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -26,7 +26,7 @@ export const FloatingCollaborators: React.FC<FloatingCollaboratorsProps> = ({ cu
   const [isExpanded, setIsExpanded] = useState(false)
   const [collaborators, setCollaborators] = useState<Collaborator[]>([])
   const noteId = useNoteId()
-  const [socket, setSocket] = useState<Socket | null>(null);
+  const [socket, setSocket] = useState<Socket | null>(null)
   const [connectedUsers, setConnectedUsers] = useState<string[]>([]);
 
   // Fetch collaborators for the note
@@ -59,44 +59,39 @@ export const FloatingCollaborators: React.FC<FloatingCollaboratorsProps> = ({ cu
 
   // Handle socket connection
   useEffect(() => {
-    console.log("Connecting to:", URL);
-  
-    const newSocket = io(URL);
-    setSocket(newSocket);
+    console.log("Connecting to:", URL)
 
-    if (noteId && current_userId !== '' && current_userId !== undefined && current_userId !== null) {
-      newSocket.emit('join-note', { noteId, userId: current_userId });
-    }
-  
+    const newSocket = io(URL)
+    setSocket(newSocket)
+
     return () => {
-      newSocket.close();
-    };
-  }, [noteId, current_userId]);
+      if (noteId) {
+        newSocket.emit('leave-note', { noteId, userId: current_userId }) // Emit leave event
+      }
+      newSocket.close()
+    }
+  }
+  , [noteId, current_userId])
 
-  // Listen to events
+
   useEffect(() => {
     if (noteId && socket) {
-      const handleUserConnected = (usersInNote: { userId: string }[]) => {
-        const connectedUserIds = usersInNote.map((user) => user.userId);
-        setConnectedUsers(connectedUserIds);
-      };
-
-      // Listen for disconnected users
-      const handleUserDisconnected = (usersInNote: { userId: string }[]) => {
-        const connectedUserIds = usersInNote.map((user) => user.userId);
-        setConnectedUsers(connectedUserIds);
-      };
-
-      socket.on('user-connected', handleUserConnected);
-      socket.on('user-disconnected', handleUserDisconnected);
-
-      // Cleanup when component unmounts or noteId changes
+      socket.on('user-connected', (usersInNote) => {
+        console.log("User connected event received:", usersInNote);
+        setConnectedUsers(usersInNote);  // Ensure this list is accurate
+      });
+      
+      socket.on('user-disconnected', (usersInNote) => {
+        console.log("User disconnected event received:", usersInNote);
+        setConnectedUsers(usersInNote);
+      });
+  
       return () => {
-        socket.off('user-connected', handleUserConnected);
-        socket.off('user-disconnected', handleUserDisconnected);
+        socket.off('user-connected');
+        socket.off('user-disconnected');
       };
     }
-  }, [socket, noteId, current_userId]);
+  }, [socket, noteId, current_userId, connectedUsers]);
 
 
   return (
@@ -143,7 +138,9 @@ export const FloatingCollaborators: React.FC<FloatingCollaboratorsProps> = ({ cu
                     <span className="text-sm rounded-lg">{collaborator.username}</span>
                   </li>
                 ))}
-                <p className="text-center text-xs"> Current users online: {connectedUsers.length} </p>
+                <p className="text-center text-xs">
+                  Current collaborators online: {connectedUsers.length}
+                </p>
               </ul>
           </motion.div>
         )}
