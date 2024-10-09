@@ -326,18 +326,38 @@ const io = new SocketIOServer(server, {
 
 // Socket.IO connection handling
 io.on('connection', (socket) => {
-  console.log('A user connected');
+  console.log('A user connected:', socket.id);
 
+  connectedUsers.push({ id: socket.id });
+  io.emit('user-connected', connectedUsers);
+  const userId = socket.handshake.query.userId;
+    
+  // Handle user join note
   socket.on('join-note', (noteId) => {
     socket.join(noteId);
+
+    // Add user and note to ActiveEditors
+    const userIndex = activeEditors.findIndex(user => user.userId === userId);
+    if (userIndex === -1) {
+      activeEditors.push({ userId, noteId });
+    } else {
+      activeEditors[userIndex].is_active = true;
+    }
   });
 
   socket.on('update-note', (data) => {
     socket.to(data.noteId).emit('note-updated', data.content);
   });
 
+  // Handle user disconnect
   socket.on('disconnect', () => {
-    console.log('User disconnected');
+    console.log('User disconnected:', socket.id);
+
+    // Remove the disconnected user by socket.id
+    connectedUsers = connectedUsers.filter(user => user.id !== socket.id);
+
+    // Notify all clients of the updated user list
+    io.emit('user-disconnected', connectedUsers);
   });
 });
 
@@ -1343,7 +1363,7 @@ app.post('/notes/:noteId/active-editors', async (req, res) => {
       create: {
         note_id: noteId,
         user_id: userId,
-        last_active: new Date(),
+        is_active: false,
       },
       select: {
         active_editor_id: true,
@@ -1353,6 +1373,31 @@ app.post('/notes/:noteId/active-editors', async (req, res) => {
     res.status(201).json({ message: 'Active editor added successfully', activeEditorId: result.active_editor_id });
   } catch (error) {
     console.error('Error adding active editor:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// Update active editor last active time
+app.put('/notes/:noteId/active-editors', async (req, res) => {
+  try {
+    const noteId = parseInt(req.params.noteId);
+    const { userId, active } = req.body;
+    
+    const result = await prisma.activeEditor.updateMany({
+      where: {
+        note_id: noteId,
+        user_id: userId,
+      },
+      data: { is_active: active},
+    });
+
+    if (result.count === 0) {
+      res.status(404).json({ error: 'Active editor not found' });
+    }
+
+    res.json({ message: 'Active editor updated successfully' });
+  } catch (error) {
+    console.error('Error updating active editor:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });

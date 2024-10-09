@@ -50,6 +50,7 @@ export default function Notes() {
         setNote(updatedContent);
       });
 
+      // Clean up the event listeners when component unmounts or noteId changes
       return () => {
         socket.off('note-updated');
       };

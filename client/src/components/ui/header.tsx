@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useSession } from 'next-auth/react';
-import { LayoutComponent } from '@/components/layout-component';
+import { LayoutComponent } from '@/components/sidepanel';
 import AuthButtons from './auth-buttons';
 import { usePathname } from 'next/navigation';
 
