@@ -316,6 +316,9 @@ async function ensureUploadDir() {
 // Create HTTPS server
 const server = https.createServer(options, app);
 
+// Store connected users
+const connectedUsers = {}; 
+
 // Initialize Socket.IO with the server instance
 const io = new SocketIOServer(server, {
   cors: {
@@ -326,40 +329,42 @@ const io = new SocketIOServer(server, {
 
 // Socket.IO connection handling
 io.on('connection', (socket) => {
-  console.log('A user connected:', socket.id);
+  console.log('A user connected');
 
-  connectedUsers.push({ id: socket.id });
-  io.emit('user-connected', connectedUsers);
-  const userId = socket.handshake.query.userId;
-    
-  // Handle user join note
-  socket.on('join-note', (noteId) => {
+  socket.on('join-note', ({ noteId, userId }) => {
     socket.join(noteId);
 
-    // Add user and note to ActiveEditors
-    const userIndex = activeEditors.findIndex(user => user.userId === userId);
-    if (userIndex === -1) {
-      activeEditors.push({ userId, noteId });
-    } else {
-      activeEditors[userIndex].is_active = true;
+    // If the noteId doesn't exist in connectedUsers, initialize it
+    if (!connectedUsers[noteId]) {
+      connectedUsers[noteId] = [];
     }
+
+    // Add the userId to the list for this noteId
+    if (!connectedUsers[noteId].includes(userId)) {
+      connectedUsers[noteId].push(userId);
+    }
+
+    // Emit the updated list of connected users to the room
+    io.to(noteId).emit('user-connected', connectedUsers[noteId]);
+    console.log('User IDs connected to note', noteId, ':', connectedUsers[noteId]);
   });
 
   socket.on('update-note', (data) => {
     socket.to(data.noteId).emit('note-updated', data.content);
   });
 
-  // Handle user disconnect
   socket.on('disconnect', () => {
-    console.log('User disconnected:', socket.id);
-
-    // Remove the disconnected user by socket.id
-    connectedUsers = connectedUsers.filter(user => user.id !== socket.id);
-
-    // Notify all clients of the updated user list
-    io.emit('user-disconnected', connectedUsers);
+    Object.keys(connectedUsers).forEach(noteId => {
+      const index = connectedUsers[noteId].indexOf(socket.userId);
+      if (index !== -1) {
+        connectedUsers[noteId].splice(index, 1);
+        io.to(noteId).emit('user-disconnected', connectedUsers[noteId]);
+        console.log('User IDs still connected to note', noteId, ':', connectedUsers[noteId]);
+      }
+    });
   });
 });
+
 
 // Start the server
 async function startServer() {

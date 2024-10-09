@@ -30,6 +30,8 @@ export default function Notes() {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
   const [userName, setUsername] = useState("");
+  const [userId, setUserId] = useState("");
+
 
   useEffect(() => {
     console.log("Connecting to:", URL);
@@ -38,13 +40,18 @@ export default function Notes() {
     setSocket(newSocket);
   
     return () => {
+      if (userId && noteId) {
+        newSocket.emit('disconnected'); // Emit a leave event if necessary
+      }
       newSocket.close();
     };
   }, []);
 
   useEffect(() => {
     if (socket && noteId) {
-      socket.emit('join-note', noteId);
+      if (session?.user?.id) {
+        socket.emit('join-note', { noteId, userId: session.user.id });
+      }
 
       socket.on('note-updated', (updatedContent) => {
         setNote(updatedContent);
@@ -114,6 +121,7 @@ export default function Notes() {
         }
         console.log("Logged in username:", data.username);
         setUsername(data.username);
+        setUserId(data.id);
       }
   
       if (noteId) {
@@ -166,7 +174,7 @@ export default function Notes() {
           > Save </Button>
         </div>
       </main>
-      <FloatingCollaborators current_user={userName}/>
+      <FloatingCollaborators current_userId={userId}/>
       <footer className="bg-gray-800 text-white py-4">
 
         <div className="container mx-auto px-4 text-center">
