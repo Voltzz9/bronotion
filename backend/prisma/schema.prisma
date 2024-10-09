@@ -150,7 +150,7 @@ model ActiveEditor {
   active_editor_id Int      @id @default(autoincrement())
   note_id          Int
   user_id          String
-  last_active      DateTime @default(now())
+  is_active        Boolean  @default(false)
 
   // Relations
   note Note @relation(fields: [note_id], references: [note_id], onDelete: Cascade)
