@@ -14,6 +14,7 @@ import { NoteSelector } from "@/components/note-selector"
 import { TagCombobox } from '@/components/tag-combobox'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion' // Add this import
+import { OrderDropdown } from '@/components/order-dropdown'
 
 const URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -64,6 +65,17 @@ export function NoteDashboardV2() {
   const [editingTitle, setEditingTitle] = useState<string>('');
   const [newNoteId, setNewNoteId] = useState<number | null>(null);
   const [isAddingNote, setIsAddingNote] = useState(false);
+
+  const sortNotesByUpdatedAt = (order: 'asc' | 'desc') => {
+    const sortedNotes = [...notes].sort((a, b) => {
+      const dateA = new Date(a.updated_at).getTime();
+      const dateB = new Date(b.updated_at).getTime();
+
+      return order === 'asc' ? dateA - dateB : dateB - dateA;
+    });
+
+    setNotes(sortedNotes);
+  };
 
 
   const filteredNotes = notes.filter(note =>
@@ -192,17 +204,17 @@ export function NoteDashboardV2() {
 
   const addNewNote = async () => {
     if (!session?.user?.id) return;
-  
+
     setIsAddingNote(true);
-  
+
     console.log('Adding new note for user:', session.user.id);
-  
+
     const newNote = {
       title: 'New Note',
       content: "# This is a sample note \n\nYou can edit this note using Markdown syntax.",
       userId: session.user.id,
     };
-  
+
     try {
       const response = await fetch(`${URL}notes`, {
         method: 'POST',
@@ -212,11 +224,11 @@ export function NoteDashboardV2() {
         body: JSON.stringify(newNote),
         credentials: 'include'
       });
-  
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-  
+
       const createdNote = await response.json();
       const formattedNote: Note = {
         note_id: createdNote.noteId,
@@ -407,7 +419,7 @@ export function NoteDashboardV2() {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      setNotes(prevNotes => prevNotes.map(note => 
+      setNotes(prevNotes => prevNotes.map(note =>
         note.note_id === noteId ? { ...note, isDeleting: true } : note
       ));
 
@@ -462,148 +474,151 @@ export function NoteDashboardV2() {
             </ScrollArea>
             <div className="ml-4 h-14">
               <NoteSelector value={noteView} onChange={setNoteView} />
+              <div className="p-1 flex justify-end items-center">
+                <OrderDropdown onValueChange={(value: 'asc' | 'desc') => sortNotesByUpdatedAt(value)} />
+              </div>
             </div>
           </div>
-          </CardHeader>
+        </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-          <AnimatePresence>
-            {filteredNotes.map((note) => (
-              <motion.div
-                key={note.note_id}
-                layout
-                initial="hidden"
-                animate={note.note_id === newNoteId ? "visible" : "visible"}
-                exit="exit"
-                variants={noteVariants}
-                transition={{ duration: 0.2 }}
-              >
-                
+            <AnimatePresence>
+              {filteredNotes.map((note) => (
+                <motion.div
+                  key={note.note_id}
+                  layout
+                  initial="hidden"
+                  animate={note.note_id === newNoteId ? "visible" : "visible"}
+                  exit="exit"
+                  variants={noteVariants}
+                  transition={{ duration: 0.2 }}
+                >
+
                   <Card className={`flex flex-col cursor-pointer h-52 relative`}>
-                  
-                <CardHeader className="flex-grow pb-2">
-                  <div className="flex justify-between items-start">
-                    <div className="flex">
-                      <CardTitle className="mt-1 text-lg text-secondary">
-                      {editingNoteId !== note.note_id ? (
-                          <Link href={`/notes/${note.note_id}`} passHref className="cursor-pointer">
-                            {note.title}
-                          </Link>
-                          
-                        ) : (
-                          <Input
-                          value={editingTitle}
-                          onChange={(e) => setEditingTitle(e.target.value)}
-                          onBlur={() => updateNoteTitle(note.note_id)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                            updateNoteTitle(note.note_id);
-                            }
-                          }}
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                          }}
-                          autoFocus
-                          />
-                        )}
-                      </CardTitle>
-                        {editingNoteId !== note.note_id && (
-                        <Button 
+
+                    <CardHeader className="flex-grow pb-2">
+                      <div className="flex justify-between items-start">
+                        <div className="flex">
+                          <CardTitle className="mt-1 text-lg text-secondary">
+                            {editingNoteId !== note.note_id ? (
+                              <Link href={`/notes/${note.note_id}`} passHref className="cursor-pointer">
+                                {note.title}
+                              </Link>
+
+                            ) : (
+                              <Input
+                                value={editingTitle}
+                                onChange={(e) => setEditingTitle(e.target.value)}
+                                onBlur={() => updateNoteTitle(note.note_id)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    updateNoteTitle(note.note_id);
+                                  }
+                                }}
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                }}
+                                autoFocus
+                              />
+                            )}
+                          </CardTitle>
+                          {editingNoteId !== note.note_id && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="ml-2 text-muted-foreground hover:bg-muted-foreground/20"
+                              onClick={(e) => {
+                                e.preventDefault(); // Prevent default button behavior
+                                e.stopPropagation(); // Prevent link navigation
+                                handleEditClick(note);
+                              }}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                          )}
+
+                        </div>
+
+                        <Button
                           variant="ghost"
                           size="icon"
-                          className="ml-2 text-muted-foreground hover:bg-muted-foreground/20" 
+                          className="absolute top-6 right-2 text-gray-400 hover:text-red-500 hover:bg-muted-foreground/20 transition-colors"
                           onClick={(e) => {
-                          e.preventDefault(); // Prevent default button behavior
-                          e.stopPropagation(); // Prevent link navigation
-                          handleEditClick(note);
+                            e.preventDefault(); // Prevent default button behavior
+                            e.stopPropagation(); // Prevent link navigation
+                            deleteNote(note.note_id);
                           }}
                         >
-                          <Pencil className="h-4 w-4"/>
+                          <Trash2 className="h-4 w-4" />
                         </Button>
-                        )}
-                    
-                    </div>
-            
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="absolute top-6 right-2 text-gray-400 hover:text-red-500 hover:bg-muted-foreground/20 transition-colors"
-                      onClick={(e) => {
-                        e.preventDefault(); // Prevent default button behavior
-                        e.stopPropagation(); // Prevent link navigation
-                        deleteNote(note.note_id);
-                      }}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  <ScrollArea className="h-12 w-full overflow-x-auto rounded-md">
-                      <div className="flex flex-nowrap gap-2 mt-2">
-                        {note.tags.map((tag) => (
-                          <Badge
-                            key={tag}
-                            variant="destructive"
-                            className="cursor-pointer"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              removeTag(tag, note.note_id.toString());
-                            }}
-                          >
-                            {tag}
-                          </Badge>
-                        ))}
-                        <TagCombobox
-                          initTags={allTags}
-                          selectedTags={note.tags}
-                          noteId={note.note_id.toString()}
-                          onTagToggle={(tagName, tagId) => {
-                            addTagToNote(note.note_id.toString(), tagName, tagId);
-                          }}
-                          handleCreateTag={(tagName) => {
-                            addNewTag(tagName, note.note_id.toString());
-                          }}
-                        />
                       </div>
-                      <ScrollBar orientation="horizontal" />
-                      </ScrollArea>
-                </CardHeader>
-                <Link href={`/notes/${note.note_id}`} passHref>
-                <CardFooter className="mt-auto pt-2">
-                  <div className="flex justify-between items-center w-full text-sm text-muted-foreground">
-                    <div className="flex items-center">
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {format(note.updated_at, 'MMM d, yyyy')}
-                    </div>
-                    <div className="flex items-center">
-                      {note.user.image ? (
-                        <>
-                          <Image
-                            src={note.user.image}
-                            alt={note.user.username}
-                            className="mr-2 h-4 w-4 rounded-full"
-                            width={64}
-                            height={64}
+                      <ScrollArea className="h-12 w-full overflow-x-auto rounded-md">
+                        <div className="flex flex-nowrap gap-2 mt-2">
+                          {note.tags.map((tag) => (
+                            <Badge
+                              key={tag}
+                              variant="destructive"
+                              className="cursor-pointer"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                removeTag(tag, note.note_id.toString());
+                              }}
+                            >
+                              {tag}
+                            </Badge>
+                          ))}
+                          <TagCombobox
+                            initTags={allTags}
+                            selectedTags={note.tags}
+                            noteId={note.note_id.toString()}
+                            onTagToggle={(tagName, tagId) => {
+                              addTagToNote(note.note_id.toString(), tagName, tagId);
+                            }}
+                            handleCreateTag={(tagName) => {
+                              addNewTag(tagName, note.note_id.toString());
+                            }}
                           />
-                          <span className="mr-2">{note.user.username}</span>
-                        </>
-                      ) : (
-                        <>
-                          <UserIcon className="mr-2 h-4 w-4" />
-                          <span className="mr-2">{note.user.username}</span>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                </CardFooter>
-                </Link>
-                </Card>
-              </motion.div>
-            ))}
-          </AnimatePresence>
-        </div>
-      </CardContent>
+                        </div>
+                        <ScrollBar orientation="horizontal" />
+                      </ScrollArea>
+                    </CardHeader>
+                    <Link href={`/notes/${note.note_id}`} passHref>
+                      <CardFooter className="mt-auto pt-2">
+                        <div className="flex justify-between items-center w-full text-sm text-muted-foreground">
+                          <div className="flex items-center">
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {format(note.updated_at, 'MMM d, yyyy')}
+                          </div>
+                          <div className="flex items-center">
+                            {note.user.image ? (
+                              <>
+                                <Image
+                                  src={note.user.image}
+                                  alt={note.user.username}
+                                  className="mr-2 h-4 w-4 rounded-full"
+                                  width={64}
+                                  height={64}
+                                />
+                                <span className="mr-2">{note.user.username}</span>
+                              </>
+                            ) : (
+                              <>
+                                <UserIcon className="mr-2 h-4 w-4" />
+                                <span className="mr-2">{note.user.username}</span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      </CardFooter>
+                    </Link>
+                  </Card>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </div>
+        </CardContent>
       </Card>
     </div>
   );
