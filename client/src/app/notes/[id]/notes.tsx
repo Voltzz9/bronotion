@@ -149,22 +149,22 @@ export default function Notes() {
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       <Header />
-      <main className="flex flex-grow pt-24 px-8 h-[calc(100vh-8rem)] mx-auto">
-        <div className="w-2/4 pb-4 pr-4 flex flex-col h-full">
+      <main className="flex flex-grow pt-24">
+        <div className="w-2/4 pb-4 pr-4 flex flex-col">
           <div className="bg-white shadow-lg rounded-lg overflow-hidden flex-grow flex flex-col h-full">
             <textarea
               value={note}
               onChange={(e) => setNoteContent(e.target.value)}
               placeholder="Start typing your note here..."
-              className="w-full h-full resize-none border-none outline-none p-4 flex-grow overflow-auto"
+              className="w-full h-full resize-none border-none outline-none p-4 flex-grow"
               ref={textAreaRef}
             />
           </div>
         </div>
-        <div className="w-2/4 pb-4 pl-4 flex flex-col h-full">
-          <div className="bg-white shadow-lg rounded-lg overflow-hidden flex-grow flex flex-col h-full">
+        <div className="w-2/4 pb-4 pl-4 flex flex-col">
+          <div className="bg-white shadow-lg rounded-lg overflow-hidden flex-grow flex flex-col">
             <div
-              className="w-full h-full border-none outline-none p-4 flex-grow overflow-auto markdown-style"
+              className="w-full h-full resize-none border-none outline-none p-4 flex-grow overflow-auto markdown-style"
               dangerouslySetInnerHTML={{ __html: parsedNote }}
             />
           </div>
