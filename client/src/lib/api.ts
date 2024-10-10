@@ -1,4 +1,6 @@
-const API_BASE_URL = 'https://localhost:8080';
+import { env } from "process";
+
+const API_BASE_URL = env.NEXT_PUBLIC_API_URL;
 
 interface User {
     id?: string;
@@ -16,7 +18,7 @@ interface User {
 
 export async function getUserById(userId: string): Promise<User | null> {
   try {
-    const response = await fetch(`${API_BASE_URL}/users/${userId}`);
+    const response = await fetch(`${API_BASE_URL}users/${userId}`);
     if (response.status === 404) {
       return null;
     }
@@ -34,7 +36,7 @@ export async function getUserById(userId: string): Promise<User | null> {
 
 export async function enableOAuth(userId: string): Promise<User> {
   try {
-    const response = await fetch(`${API_BASE_URL}/users/${userId}/oauth`, {
+    const response = await fetch(`${API_BASE_URL}users/${userId}/oauth`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -54,7 +56,7 @@ export async function enableOAuth(userId: string): Promise<User> {
 
 export async function getUserByEmail(email: string): Promise<User | null> {
   try {
-    const response = await fetch(`${API_BASE_URL}/users/email/${email}`);
+    const response = await fetch(`${API_BASE_URL}users/email/${email}`);
     if (response.status === 404) {
       return null;
     }
@@ -77,7 +79,7 @@ export async function createUser(user: User): Promise<User> {
       username: user.username || user.email.split('@')[0],
     };
     console.log('Creating user:', userData);
-    const response = await fetch(`${API_BASE_URL}/create_user`, {
+    const response = await fetch(`${API_BASE_URL}create_user`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -100,7 +102,7 @@ export async function createUser(user: User): Promise<User> {
 export async function loginUser(email: string, password: string): Promise<User> {
   try {
       console.log('Logging in user:'+email+' password:'+password); // TODO remove
-      const response = await fetch(`${API_BASE_URL}/login`, {
+      const response = await fetch(`${API_BASE_URL}login`, {
       method: 'POST',
       headers: {
           'Content-Type': 'application/json',
