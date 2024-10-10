@@ -12,20 +12,19 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       name: "Credentials",
       credentials: {
         email: { label: "Email", type: "text", placeholder: "admin@example.com" },
-        password: { label: "Password", type: "password" }
+        password: { label: "Password", type: "password" }, 
+        remember: { label: "Remember Me", type: "checkbox" },
       },
-      async authorize(credentials: Partial<Record<"email" | "password", unknown>>) {
-        console.log('Credentials:', credentials);  // Debugging
+      async authorize(credentials: Partial<Record<"email" | "password" | "remember", unknown>>) {
         if (!credentials?.email || !credentials?.password) {
           console.error('Missing credentials');
           return null;
         }
-
         try {
           // User login logic
           const user = await loginUser(credentials.email as string, credentials.password as string);
           if (user) {
-            return user; // Make sure the user object returned contains the ID
+            return {...user, remember: credentials.remember} ; // Make sure the user object returned contains the ID
           }
           console.error('User not found');
           return null;
@@ -39,40 +38,40 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   callbacks: {
     async session({ session, token }: { session: any, token: any }) {
       if (token.id && session.user) {
-        session.user.id = token.id; // Ensure session.user.id is set from token.id
-        
-        // Load user from the database to get the image
+        session.user.id = token.id;
         const existingUser = await getUserByEmail(session.user.email);
         session.user.name = existingUser?.username;
-        
-        // If user exists, set the image from the database, otherwise use the image from the provider
         session.user.image = existingUser?.image || session.user.image;
+        session.expires = token.expires;
       }
       return session;
     },
-
     async jwt({ token, user, account }: { token: any, user?: any, account?: any }) {
-      // If this is the first time the user logs in, "user" will be set
       if (user) {
         let existingUser = await getUserByEmail(user.email as string);
-
         if (!existingUser) {
-          // Create the user if they do not exist
-          console.log('Account:', account.providerAccountId);
-            const newUser = await createUser({
+          const newUser = await createUser({
             username: user.name as string || '',
             email: user.email as string || '',
             image: user.image as string || '',
             auth_method: account.provider as string || '',
             provider_account_id: account.providerAccountId as string || '',
-            });
-          token.id = newUser.user?.id; // Store the newly created user's ID in token.id
+          });
+          token.id = newUser.user?.id;
         } else {
-          token.id = existingUser.id; // Store existing user's ID in token.id
+          token.id = existingUser.id;
         }
       }
+      
+      token.expires = Date.now() + 60 * 1000; // 30 minutes in milliseconds
       return token;
     }
   },
-  session: { strategy: "jwt" }, // Ensure JWT is used as session strategy
+  session: {
+    strategy: "jwt",
+    maxAge: 30 * 60, // 30 minutes in seconds
+  },
+  jwt: {
+   
+  },
 });

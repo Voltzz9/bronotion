@@ -19,6 +19,7 @@ export default function Component() {
   const [password, setPassword] = useState('')
   const [username, setUsername] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [remember, setRememberMe] = useState(false)
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [showForgotPassword, setShowForgotPassword] = useState(false)
@@ -53,6 +54,7 @@ export default function Component() {
         redirect: false,
         email,
         password,
+        remember,
       })
 
       if (result?.error) {
@@ -194,6 +196,21 @@ export default function Component() {
               />
             </div>
           )}
+
+            {isLogin && (
+              <div className="flex justify-center items-center space-x-2">
+              <Input
+                id="remember"
+                name="remember"
+                type="checkbox"
+                className="h-4 w-4"
+                onChange={(e) => setRememberMe(e.target.checked)}
+              />
+              <Label htmlFor="remember" className="text-sm">
+                Remember me
+              </Label>
+              </div>
+            )}
           <Button
             type="submit"
             className="w-full"
