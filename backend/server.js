@@ -1,4 +1,4 @@
-const client = createClient(process.env.API_KEY_USERNAME, process.env.API_KEY_PASSWORD);
+const client = createClient(process.env.WAYPOINT_API_KEY_USERNAME, process.env.WAYPOINT_API_KEY_PASSWORD);
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
@@ -1131,8 +1131,17 @@ app.post('/notes/:noteId/share', async (req, res) => {
         shared_note_id: true,
       },
     });
+    try {
+      sendEmailToSharie(emailAddr)
+    } catch (error) {
+      console.log("Error sending email notification")
+    }
 
-    //   sendEmailToSharie(emailAddr)
+    try {
+      sendPushNotif(userId, "Title of note")
+    } catch (error) {
+      console.log("Error sending web push notification")
+    }
 
     res.status(201).json({
       message: 'Note shared successfully',
