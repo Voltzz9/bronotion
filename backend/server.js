@@ -317,7 +317,7 @@ async function ensureUploadDir() {
 const server = https.createServer(options, app);
 
 // Store connected users
-const connectedUsers = {};
+const connectedUsers = new Map();
 
 // Initialize Socket.IO with the server instance
 const io = new SocketIOServer(server, {
@@ -331,20 +331,22 @@ const io = new SocketIOServer(server, {
 io.on('connection', (socket) => {
   console.log('A user connected');
 
+  let currentNoteId = null;
+  let currentUserId = null;
+
   socket.on('join-note', ({ noteId, userId }) => {
+    currentNoteId = noteId;
+    currentUserId = userId;
     socket.join(noteId);
   
-    // Initialize the array for the noteId if it does not exist
-    if (!connectedUsers[noteId]) {
-      connectedUsers[noteId] = [];
+    if (!connectedUsers.has(noteId)) {
+      connectedUsers.set(noteId, new Set());
     }
   
-    if (!connectedUsers[noteId].includes(userId)) {
-      connectedUsers[noteId].push(userId);
-      console.log(`User ${userId} joined note ${noteId}`);
-      console.log('User IDs connected to note', noteId, ':', connectedUsers[noteId]);
-      io.to(noteId).emit('user-connected', connectedUsers[noteId]);
-    }
+    connectedUsers.get(noteId).add(userId);
+    console.log(`User ${userId} joined note ${noteId}`);
+    console.log('User IDs connected to note', noteId, ':', Array.from(connectedUsers.get(noteId)));
+    io.to(noteId).emit('user-connected', Array.from(connectedUsers.get(noteId)));
   });
 
   socket.on('update-note', (data) => {
@@ -352,22 +354,32 @@ io.on('connection', (socket) => {
   });
 
   socket.on('leave-note', ({ noteId, userId }) => {
-    if (connectedUsers[noteId]) {
-      const index = connectedUsers[noteId].indexOf(userId);
-      if (index !== -1) {
-        connectedUsers[noteId].splice(index, 1);
-        console.log(`User ${userId} left note ${noteId}`);
-        io.to(noteId).emit('user-disconnected', connectedUsers[noteId]);
-        console.log('User IDs still connected to note', noteId, ':', connectedUsers[noteId]);
-      }
-    }
+    handleUserLeave(noteId, userId);
   });
 
   socket.on('disconnect', () => {
-    socket.on('user-disconnected', (userId) => {
-      setConnectedUsers((prev) => prev.filter((id) => id !== userId)); // Remove user on disconnect
-    });
+    if (currentNoteId && currentUserId) {
+      handleUserLeave(currentNoteId, currentUserId);
+    }
   });
+
+  function handleUserLeave(noteId, userId) {
+    if (connectedUsers.has(noteId)) {
+      connectedUsers.get(noteId).delete(userId);
+      console.log(`User ${userId} left note ${noteId}`);
+      if (connectedUsers.get(noteId).size === 0) {
+        connectedUsers.delete(noteId);
+      } else {
+        io.to(noteId).emit('user-disconnected', Array.from(connectedUsers.get(noteId)));
+      }
+      console.log('User IDs still connected to note', noteId, ':', 
+        connectedUsers.has(noteId) ? Array.from(connectedUsers.get(noteId)) : 'None');
+    }
+    if (noteId === currentNoteId) {
+      currentNoteId = null;
+      currentUserId = null;
+    }
+  }
 });
 
 

@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronUp, ChevronDown } from 'lucide-react'
 import useNoteId from '@/app/hooks/useNoteId'
 import Image from 'next/image'
-import io, { Socket } from 'socket.io-client'
+import { useSocket } from '@/hooks/useSocket'
 
 const URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -19,36 +19,27 @@ interface Collaborator {
 }
 
 interface FloatingCollaboratorsProps {
-  current_userId: string;
+  current_userId: string
 }
 
 export const FloatingCollaborators: React.FC<FloatingCollaboratorsProps> = ({ current_userId }) => {
   const [isExpanded, setIsExpanded] = useState(false)
   const [collaborators, setCollaborators] = useState<Collaborator[]>([])
   const noteId = useNoteId()
-  const [socket, setSocket] = useState<Socket | null>(null)
-  const [connectedUsers, setConnectedUsers] = useState<string[]>([]);
+  const [connectedUsers, setConnectedUsers] = useState<string[]>([])
+  const { socket, isConnected, joinNote, leaveNote } = useSocket()
 
-  // Fetch collaborators for the note
   useEffect(() => {
     if (noteId !== null && noteId !== undefined) {
       const fetchCollaborators = async () => {
         try {
-          const response = await fetch(URL+`notes/${noteId}/shared-users`)
+          const response = await fetch(`${URL}notes/${noteId}/shared-users`)
           if (!response.ok) {
             throw new Error('Failed to fetch Users')
           }
           const data: Collaborator[] = await response.json()
-
-          // Remove the current user from the list of collaborators
-          console.log("Before:"+data)
-          const currentUser = data.findIndex((collaborator) => collaborator.id === current_userId)
-          if (currentUser > -1) {
-            data.splice(currentUser, 1)
-          }
-          console.log(data)
-          setCollaborators(data)
-          console.log(data)
+          const filteredCollaborators = data.filter((collaborator) => collaborator.id !== current_userId)
+          setCollaborators(filteredCollaborators)
         } catch (error) {
           console.error('Error fetching users:', error)
         }
@@ -57,49 +48,40 @@ export const FloatingCollaborators: React.FC<FloatingCollaboratorsProps> = ({ cu
     }
   }, [noteId, current_userId])
 
-  // Handle socket connection
   useEffect(() => {
-    console.log("Connecting to:", URL)
+    if (isConnected && noteId && current_userId) {
+      joinNote(noteId, current_userId)
 
-    const newSocket = io(URL)
-    setSocket(newSocket)
-
-    return () => {
-      if (noteId) {
-        newSocket.emit('leave-note', { noteId, userId: current_userId }) // Emit leave event
+      const handleUserConnected = (usersInNote: string[]) => {
+        console.log("User connected event received:", usersInNote)
+        setConnectedUsers(usersInNote)
       }
-      newSocket.close()
-    }
-  }
-  , [noteId, current_userId])
 
+      const handleUserDisconnected = (usersInNote: string[]) => {
+        console.log("User disconnected event received:", usersInNote)
+        setConnectedUsers(usersInNote)
+      }
 
-  useEffect(() => {
-    if (noteId && socket) {
-      socket.on('user-connected', (usersInNote) => {
-        console.log("User connected event received:", usersInNote);
-        setConnectedUsers(usersInNote);  // Ensure this list is accurate
-      });
-      
-      socket.on('user-disconnected', (usersInNote) => {
-        console.log("User disconnected event received:", usersInNote);
-        setConnectedUsers(usersInNote);
-      });
-  
+      if (socket) {
+        socket.on('user-connected', handleUserConnected)
+        socket.on('user-disconnected', handleUserDisconnected)
+      }
       return () => {
-        socket.off('user-connected');
-        socket.off('user-disconnected');
-      };
+        leaveNote(noteId, current_userId)
+        if (socket) {
+          socket.off('user-connected', handleUserConnected)
+          socket.off('user-disconnected', handleUserDisconnected)
+        }
+      }
     }
-  }, [socket, noteId, current_userId, connectedUsers]);
-
+  }, [isConnected, socket, noteId, current_userId, joinNote, leaveNote])
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="fixed left-8 bottom-28 w-32 bg-background shadow-lg overflow-hidden rounded-lg"
+      className="fixed left-8 bottom-20 w-32 bg-background shadow-lg overflow-hidden rounded-lg"
     >
       <div
         className="text-center w-full bg-primary px-0 py-0 rounded-lg text-primary-foreground flex justify-between items-center cursor-pointer"
@@ -122,26 +104,25 @@ export const FloatingCollaborators: React.FC<FloatingCollaboratorsProps> = ({ cu
                   <li
                   key={collaborator.id}
                   className={`flex items-center space-x-2 rounded-lg ${
-                    // print the collaborators that are connected
-                    !connectedUsers.includes(collaborator.id) ? 'bg-gray-200' : 'bg-green-200'
-                  }`}
-                  >
-                    {collaborator.image && (
-                      <Image
-                        src={collaborator.image}
-                        alt={`${collaborator.username}'s avatar`}
-                        width={16}
-                        height={16}
-                        className="rounded-full"
-                      />
-                    )}
-                    <span className="text-sm rounded-lg">{collaborator.username}</span>
-                  </li>
-                ))}
-                <p className="text-center text-xs">
-                  Current collaborators online: {connectedUsers.length}
-                </p>
-              </ul>
+                  !connectedUsers.includes(collaborator.id) ? 'text-gray-800' : 'text-green-500'
+                }`}
+                >
+                  {collaborator.image && (
+                    <Image
+                      src={collaborator.image}
+                      alt={`${collaborator.username}'s avatar`}
+                      width={16}
+                      height={16}
+                      className="rounded-full"
+                    />
+                  )}
+                  <span className="text-sm rounded-lg">{collaborator.username}</span>
+                </li>
+              ))}
+              <p className="text-center text-xs">
+                Current collaborators online: {connectedUsers.length - 1}
+              </p>
+            </ul>
           </motion.div>
         )}
       </AnimatePresence>
