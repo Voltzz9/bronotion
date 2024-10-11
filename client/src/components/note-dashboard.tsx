@@ -15,6 +15,7 @@ import { TagCombobox } from '@/components/tag-combobox'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion' // Add this import
 import { OrderDropdown } from '@/components/order-dropdown'
+import { DownloadButton } from '@/components/download-button'
 
 const URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -539,7 +540,11 @@ export function NoteDashboardV2() {
                           )}
 
                         </div>
-
+                        <DownloadButton
+                          noteId={note.note_id}
+                          noteTitle={note.title}
+                          noteContent={note.content || ''}
+                        />
                         <Button
                           variant="ghost"
                           size="icon"
