@@ -59,9 +59,7 @@ export default function Header({ onCollaboratorAdded }: HeaderComponentProps) {
     damping: 15,
   });
 
-  // Check if the current page is a note page by checking the pathname this allows for conditional rendering of 
-  // the layout component (sidepanel)
-  const isNotePage = /^\/notes\/\d+$/.test(pathname)
+  const isNotePage = /^\/notes\/\d+$/.test(pathname);
 
   return (
     <>
@@ -72,21 +70,23 @@ export default function Header({ onCollaboratorAdded }: HeaderComponentProps) {
             : 'bg-accent'
           }`}
       >
-        <nav className="container mx-auto py-2 flex justify-between items-center">
-          <Link href={isAuthenticated ? "/home" : "/"} className="flex items-center">
-            <motion.div
-              style={{ width: logoWidth, x: logoX }}
-              className="flex items-center"
-            >
-              <span className="text-4xl font-bold text-secondary">B</span>
-              <motion.span
-                style={{ opacity }}
-                className="text-4xl font-bold text-secondary"
+        <nav className="container mx-auto py-2 px-10 flex justify-between items-center">
+          <div className="flex-1 flex justify-center sm:justify-start">
+            <Link href={isAuthenticated ? "/home" : "/"} className="flex items-center">
+              <motion.div
+                style={{ width: logoWidth, x: logoX }}
+                className="flex items-center"
               >
-                ronotion
-              </motion.span>
-            </motion.div>
-          </Link>
+                <span className="text-4xl font-bold text-secondary">B</span>
+                <motion.span
+                  style={{ opacity }}
+                  className="text-4xl font-bold text-secondary"
+                >
+                  ronotion
+                </motion.span>
+              </motion.div>
+            </Link>
+          </div>
           <div className="flex items-center space-x-4">
             {isAuthenticated ? (
               <DropdownMenu>

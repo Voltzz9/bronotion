@@ -196,11 +196,6 @@ const TextAnimate: FC<Props> = ({
   type = "whipInUp",
   ...props
 }: Props) => {
-  //   const { ref, inView } = useInView({
-  //     threshold: 0.5,
-  //     triggerOnce: true,
-  //   });
-
   const ref = useRef(null)
 
   const letters = Array.from(text)
@@ -208,7 +203,7 @@ const TextAnimate: FC<Props> = ({
 
   if (type === "rollIn" || type === "whipIn") {
     return (
-      <h2 className="mt-10 text-8xl font-bold text-secondary py-5 pb-8 px-8 md:text-8xl">
+      <h2 className="mt-5 text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-8xl font-bold text-secondary py-3 sm:py-4 md:py-5 px-4 sm:px-6 md:px-8">
         {text.split(" ").map((word, index) => {
           return (
             <motion.span
@@ -221,9 +216,7 @@ const TextAnimate: FC<Props> = ({
               variants={container}
               transition={{
                 delayChildren: index * 0.13,
-                // delayChildren: index * 0.35,
                 staggerChildren: 0.025,
-                // staggerChildren: 0.05,
               }}
             >
               {word.split("").map((character, index) => {
@@ -252,7 +245,7 @@ const TextAnimate: FC<Props> = ({
       variants={container}
       initial="hidden"
       animate="visible"
-      className="text-8xl font-bold mb-4 text-secondary"
+      className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-8xl font-bold mb-2 sm:mb-3 md:mb-4 text-secondary"
       {...props}
     >
       {letters.map((letter, index) => (
