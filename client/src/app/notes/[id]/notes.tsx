@@ -1,5 +1,6 @@
+//Notes.tsx
 'use client'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import Header from '@/components/ui/header'
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
@@ -30,6 +31,9 @@ export default function Notes() {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
   const [userName, setUsername] = useState("");
+  const floatingCollaboratorsRef = useRef<{ fetchCollaborators: () => void } | null>(null);
+
+
 
   useEffect(() => {
     console.log("Connecting to:", URL);
@@ -51,7 +55,10 @@ export default function Notes() {
       });
 
       socket.on('update-collaborators-rec', () => {
-        console.log("TODO call function");
+        if (floatingCollaboratorsRef.current) {
+          floatingCollaboratorsRef.current.fetchCollaborators();
+        }
+        console.log("TODO")
       })
 
       return () => {
@@ -176,7 +183,7 @@ export default function Notes() {
           > Save </Button>
         </div>
       </main>
-      <FloatingCollaborators current_user={userName} />
+      <FloatingCollaborators current_user={userName} ref={floatingCollaboratorsRef} />
       <footer className="bg-gray-800 text-white py-4">
 
         <div className="container mx-auto px-4 text-center">

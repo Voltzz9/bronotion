@@ -335,7 +335,7 @@ io.on('connection', (socket) => {
   socket.on('update-collaborators-send', (noteId) => {
     console.log("recieved collab update socket")
     console.log(noteId)
-    socket.to(noteId).emit('update-collaborators-rec');
+    io.in(noteId).emit('update-collaborators-rec');
   })
 
   socket.on('update-note', (data) => {

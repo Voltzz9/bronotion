@@ -1,6 +1,7 @@
+//floating-collaborators
 "use client"
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, forwardRef, useImperativeHandle } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronUp, ChevronDown } from 'lucide-react'
 import useNoteId from '@/app/hooks/useNoteId'
@@ -21,37 +22,43 @@ interface FloatingCollaboratorsProps {
   current_user: string;
 }
 
-export const FloatingCollaborators: React.FC<FloatingCollaboratorsProps> = ({ current_user }) => {
+export const FloatingCollaborators = forwardRef<{ fetchCollaborators: () => void }, FloatingCollaboratorsProps>(({ current_user }, ref) => {
   const [isExpanded, setIsExpanded] = useState(false)
   const [collaborators, setCollaborators] = useState<Collaborator[]>([])
   const noteId = useNoteId()
 
-  useEffect(() => {
-    if (noteId !== null && noteId !== undefined) {
-      const fetchCollaborators = async () => {
-        try {
-          const response = await fetch(URL + `notes/${noteId}/shared-users`)
-          if (!response.ok) {
-            throw new Error('Failed to fetch Users')
-          }
-          const data: Collaborator[] = await response.json()
-          // Remove the current user from the list of collaborators
-          console.log("Before:" + data)
-          const currentUser = data.findIndex((collaborator) => collaborator.username === current_user)
-          if (currentUser > -1) {
-            data.splice(currentUser, 1)
-          }
-          console.log(data)
-          setCollaborators(data)
-          console.log(data)
-        } catch (error) {
-          console.error('Error fetching users:', error)
-        }
-      }
-      fetchCollaborators()
-    }
-  }, [noteId, current_user])
+  const fetchCollaborators = async () => {
+    if (noteId === null || noteId === undefined) return;
 
+    try {
+      const response = await fetch(URL + `notes/${noteId}/shared-users`)
+      if (!response.ok) {
+        throw new Error('Failed to fetch Users')
+      }
+      const data: Collaborator[] = await response.json()
+      // Remove the current user from the list of collaborators
+      console.log("Before:" + data)
+      const currentUser = data.findIndex((collaborator) => collaborator.username === current_user)
+      if (currentUser > -1) {
+        data.splice(currentUser, 1)
+      }
+      console.log(data)
+      setCollaborators(data)
+      console.log(data)
+    } catch (error) {
+      console.error('Error fetching users:', error)
+    }
+  }
+
+  useImperativeHandle(ref, () => ({
+    fetchCollaborators
+  }));
+
+  useEffect(() => {
+    fetchCollaborators();
+
+    console.log("updated collab");
+  }, [noteId, current_user])
 
   return (
     <motion.div
@@ -97,4 +104,4 @@ export const FloatingCollaborators: React.FC<FloatingCollaboratorsProps> = ({ cu
       </AnimatePresence>
     </motion.div>
   )
-}
+})
