@@ -49,6 +49,7 @@ export const FloatingCollaborators: React.FC<FloatingCollaboratorsProps> = ({ cu
   }, [noteId, current_userId])
 
   useEffect(() => {
+
     if (isConnected && noteId && current_userId) {
       joinNote(noteId, current_userId)
 
