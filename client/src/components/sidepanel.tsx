@@ -23,9 +23,13 @@ interface TagWithNotes {
   noteTitles: string[];
 }
 
+interface LayoutComponentProps {
+  onCollaboratorAdded?: () => void;
+}
+
 const URL = process.env.NEXT_PUBLIC_API_URL;
 
-export function LayoutComponent() {
+export function LayoutComponent({ onCollaboratorAdded }: LayoutComponentProps) {
   const [isSidepanelOpen, setIsSidepanelOpen] = useState(false);
   const [openTag, setOpenTag] = useState<number | null>(null);
   const [tagsWithNotes, setTagsWithNotes] = useState<TagWithNotes[]>([]);
@@ -101,17 +105,17 @@ export function LayoutComponent() {
 
   // Debounced search functionality
   useEffect(() => {
-      const debounceTimer = setTimeout(() => {
-        if (searchQuery) {
-          setIsSearching(true)
-          if (session?.user?.id) {
-            fetchSearchResults(session.user.id, searchQuery).then(() => {
-              setIsSearching(false)
-            })
-          }
+    const debounceTimer = setTimeout(() => {
+      if (searchQuery) {
+        setIsSearching(true)
+        if (session?.user?.id) {
+          fetchSearchResults(session.user.id, searchQuery).then(() => {
+            setIsSearching(false)
+          })
         }
-      }, 300); // 300ms delay
-      return () => clearTimeout(debounceTimer); // Clean up debounce
+      }
+    }, 300); // 300ms delay
+    return () => clearTimeout(debounceTimer); // Clean up debounce
   }, [session, searchQuery]);
 
   const handleNoteSelect = (noteId: number) => {
@@ -135,9 +139,8 @@ export function LayoutComponent() {
       </button>
       {isSidepanelOpen && (
         <aside
-          className={`fixed inset-y-0 right-0 z-50 w-64 bg-background transform transition-transform duration-300 ease-in-out ${
-            isSidepanelOpen ? "translate-x-0" : "-translate-x-full"
-          } lg:translate-x-0 mt-[80px] lg:mt-[80px]`}
+          className={`fixed inset-y-0 right-0 z-50 w-64 bg-background transform transition-transform duration-300 ease-in-out ${isSidepanelOpen ? "translate-x-0" : "-translate-x-full"
+            } lg:translate-x-0 mt-[80px] lg:mt-[80px]`}
         >
           <div className="flex flex-col h-[calc(100vh-45px)] p-4 overflow-y-auto">
             <div className="mb-4">
@@ -170,9 +173,8 @@ export function LayoutComponent() {
                       {searchResults.map((result, index) => (
                         <Link href={`/notes/${result.note_id}`} key={index} passHref>
                           <div
-                            className={`cursor-pointer p-2 rounded-md ${
-                              currentNoteID && currentNoteID === result.note_id ? 'bg-purple-200' : ''
-                            } hover:bg-accent`} // Conditional class for highlighting
+                            className={`cursor-pointer p-2 rounded-md ${currentNoteID && currentNoteID === result.note_id ? 'bg-purple-200' : ''
+                              } hover:bg-accent`} // Conditional class for highlighting
                             onMouseDown={(e) => e.preventDefault()} // Prevent default mouse down behavior
                             onClick={() => handleNoteSelect(result.note_id)} // Hide the side panel on click
                           >
@@ -186,7 +188,7 @@ export function LayoutComponent() {
                 </ScrollArea>
               )}
             </div>
-            <CollaboratorPopup />
+            <CollaboratorPopup onCollaboratorAdded={onCollaboratorAdded} />
             <nav className="space-y-2">
               {tagsWithNotes.map((tag) => (
                 <div key={tag.tagId} className="border-b border-border last:border-b-0">
@@ -210,16 +212,15 @@ export function LayoutComponent() {
                       {Array.isArray(tag.noteTitles) && tag.noteTitles.length > 0 ? (
                         tag.noteTitles.map((noteTitle: string, index: number) => (
                           <Link href={`/notes/${tag.noteIds[index]}`} key={index} passHref>
-                          <div
-                            className={`cursor-pointer p-2 rounded-md ${
-                            currentNoteID && currentNoteID === tag.noteIds[index] ? 'bg-purple-200' : ''
-                            } hover:bg-accent`} // Conditional class for highlighting
-                            onMouseDown={(e) => e.preventDefault()} // Prevent default mouse down behavior
-                            onClick={() => handleNoteSelect(tag.noteIds[index])} // Hide the side panel on click
-                          >
-                            <FileText className="inline-block mr-2 h-4 w-4" />
-                            {noteTitle}
-                          </div>
+                            <div
+                              className={`cursor-pointer p-2 rounded-md ${currentNoteID && currentNoteID === tag.noteIds[index] ? 'bg-purple-200' : ''
+                                } hover:bg-accent`} // Conditional class for highlighting
+                              onMouseDown={(e) => e.preventDefault()} // Prevent default mouse down behavior
+                              onClick={() => handleNoteSelect(tag.noteIds[index])} // Hide the side panel on click
+                            >
+                              <FileText className="inline-block mr-2 h-4 w-4" />
+                              {noteTitle}
+                            </div>
                           </Link>
                         ))
                       ) : (

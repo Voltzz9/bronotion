@@ -349,7 +349,14 @@ io.on('connection', (socket) => {
     io.to(noteId).emit('user-connected', Array.from(connectedUsers.get(noteId)));
   });
 
+  socket.on('update-collaborators-send', (noteId) => {
+    console.log("recieved collab update socket")
+    console.log(noteId)
+    io.in(noteId).emit('update-collaborators-rec');
+  })
+
   socket.on('update-note', (data) => {
+    console.log(data.noteId)
     socket.to(data.noteId).emit('note-updated', data.content);
   });
 

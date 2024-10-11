@@ -1,3 +1,4 @@
+//Notes.tsx
 'use client'
 
 import React, { useEffect, useState, useRef } from 'react'
@@ -32,6 +33,17 @@ export default function Notes() {
   const [userId, setUserId] = useState("")
   const { socket, joinNote, leaveNote, updateNote } = useSocket()
   const textAreaRef = useRef<HTMLTextAreaElement>(null)
+  const { data: session } = useSession();
+  const [note, setNote] = useState('');
+  const [parsedNote, setParsedNote] = useState(`# Rendered Markdown`);
+  const noteId = useNoteId();
+  const router = useRouter();
+  const [socket, setSocket] = useState<Socket | null>(null);
+  const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
+  const [userName, setUsername] = useState("");
+  const floatingCollaboratorsRef = useRef<{ fetchCollaborators: () => void } | null>(null);
+
+
 
   useEffect(() => {
     if (socket && noteId && session?.user?.id) {
@@ -53,11 +65,25 @@ export default function Notes() {
 
       socket.on('note-updated', handleNoteUpdated)
 
+      socket.on('update-collaborators-rec', () => {
+        if (floatingCollaboratorsRef.current) {
+          floatingCollaboratorsRef.current.fetchCollaborators();
+        }
+        console.log("TODO")
+      })
+
       return () => {
         socket.off('note-updated', handleNoteUpdated)
       }
     }
   }, [socket])
+
+  const sendAddCollabUpdate = () => {
+    if (socket) {
+      console.log("test")
+      socket.emit('update-collaborators-send', (noteId));
+    }
+  }
 
   useEffect(() => {
     const parseMarkdown = async () => {
@@ -148,7 +174,7 @@ export default function Notes() {
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
-      <Header />
+      <Header onCollaboratorAdded={sendAddCollabUpdate} />
       <main className="flex flex-grow pt-24">
         <div className="w-2/4 pb-4 pr-4 flex flex-col">
           <div className="bg-white shadow-lg rounded-lg overflow-hidden flex-grow flex flex-col h-full">
@@ -178,7 +204,7 @@ export default function Notes() {
           </Button>
         </div>
       </main>
-      <FloatingCollaborators current_userId={userId} />
+      <FloatingCollaborators current_user={userName} ref={floatingCollaboratorsRef} />
       <footer className="bg-gray-800 text-white py-4">
         <div className="container mx-auto px-4 text-center">
           <p>&copy; 2024 Bronotion. All rights reserved.</p>

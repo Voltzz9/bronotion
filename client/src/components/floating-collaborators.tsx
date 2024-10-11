@@ -1,6 +1,7 @@
+//floating-collaborators
 "use client"
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, forwardRef, useImperativeHandle } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronUp, ChevronDown } from 'lucide-react'
 import useNoteId from '@/app/hooks/useNoteId'
@@ -22,7 +23,7 @@ interface FloatingCollaboratorsProps {
   current_userId: string
 }
 
-export const FloatingCollaborators: React.FC<FloatingCollaboratorsProps> = ({ current_userId }) => {
+export const FloatingCollaborators = forwardRef<{ fetchCollaborators: () => void }, FloatingCollaboratorsProps>(({ current_userId }, ref) => {
   const [isExpanded, setIsExpanded] = useState(false)
   const [collaborators, setCollaborators] = useState<Collaborator[]>([])
   const noteId = useNoteId()
@@ -33,13 +34,20 @@ export const FloatingCollaborators: React.FC<FloatingCollaboratorsProps> = ({ cu
     if (noteId !== null && noteId !== undefined) {
       const fetchCollaborators = async () => {
         try {
-          const response = await fetch(`${URL}notes/${noteId}/shared-users`)
+          const response = await fetch(URL + `notes/${noteId}/shared-users`)
           if (!response.ok) {
             throw new Error('Failed to fetch Users')
           }
           const data: Collaborator[] = await response.json()
-          const filteredCollaborators = data.filter((collaborator) => collaborator.id !== current_userId)
-          setCollaborators(filteredCollaborators)
+          // Remove the current user from the list of collaborators
+          console.log("Before:" + data)
+          const currentUser = data.findIndex((collaborator) => collaborator.id === current_userId)
+          if (currentUser > -1) {
+            data.splice(currentUser, 1)
+          }
+          console.log(data)
+          setCollaborators(data)
+          console.log(data)
         } catch (error) {
           console.error('Error fetching users:', error)
         }
@@ -48,34 +56,34 @@ export const FloatingCollaborators: React.FC<FloatingCollaboratorsProps> = ({ cu
     }
   }, [noteId, current_userId])
 
-  useEffect(() => {
 
-    if (isConnected && noteId && current_userId) {
-      joinNote(noteId, current_userId)
+  useImperativeHandle(ref, () => ({
+    fetchCollaborators
+  }));
 
-      const handleUserConnected = (usersInNote: string[]) => {
-        console.log("User connected event received:", usersInNote)
-        setConnectedUsers(usersInNote)
-      }
+  const fetchCollaborators = async () => {
+    if (noteId === null || noteId === undefined) return;
 
-      const handleUserDisconnected = (usersInNote: string[]) => {
-        console.log("User disconnected event received:", usersInNote)
-        setConnectedUsers(usersInNote)
+    try {
+      const response = await fetch(URL + `notes/${noteId}/shared-users`)
+      if (!response.ok) {
+        throw new Error('Failed to fetch Users')
       }
-
-      if (socket) {
-        socket.on('user-connected', handleUserConnected)
-        socket.on('user-disconnected', handleUserDisconnected)
+      const data: Collaborator[] = await response.json()
+      // Remove the current user from the list of collaborators
+      console.log("Before:" + data)
+      const currentUser = data.findIndex((collaborator) => collaborator.username === current_user)
+      if (currentUser > -1) {
+        data.splice(currentUser, 1)
       }
-      return () => {
-        leaveNote(noteId, current_userId)
-        if (socket) {
-          socket.off('user-connected', handleUserConnected)
-          socket.off('user-disconnected', handleUserDisconnected)
-        }
-      }
+      console.log(data)
+      setCollaborators(data)
+      console.log(data)
+    } catch (error) {
+      console.error('Error fetching users:', error)
     }
-  }, [isConnected, socket, noteId, current_userId, joinNote, leaveNote])
+  }
+
 
   return (
     <motion.div
@@ -101,13 +109,8 @@ export const FloatingCollaborators: React.FC<FloatingCollaboratorsProps> = ({ cu
             className="overflow-hidden w-32"
           >
             <ul className="p-1 space-y-1 rounded-lg">
-                {collaborators.map((collaborator) => (
-                  <li
-                  key={collaborator.id}
-                  className={`flex items-center space-x-2 rounded-lg ${
-                  !connectedUsers.includes(collaborator.id) ? 'text-gray-800' : 'text-green-500'
-                }`}
-                >
+              {collaborators.map((collaborator) => (
+                <li key={collaborator.username} className="flex items-center space-x-2 rounded-lg">
                   {collaborator.image && (
                     <Image
                       src={collaborator.image}
@@ -120,13 +123,10 @@ export const FloatingCollaborators: React.FC<FloatingCollaboratorsProps> = ({ cu
                   <span className="text-sm rounded-lg">{collaborator.username}</span>
                 </li>
               ))}
-              <p className="text-center text-xs">
-                Current collaborators online: {connectedUsers.length - 1}
-              </p>
             </ul>
           </motion.div>
         )}
       </AnimatePresence>
     </motion.div>
   )
-}
+})

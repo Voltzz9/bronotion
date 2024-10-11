@@ -5,12 +5,12 @@ import { useState, useEffect } from 'react';
 
 const useNoteId = () => {
   const params = useParams();
-  const [noteId, setNoteId] = useState<number | null>(null);
+  const [noteId, setNoteId] = useState<string | null>(null);
 
   useEffect(() => {
     const id = params?.id;
     if (id && typeof id === 'string') {
-      setNoteId(Number(id));
+      setNoteId(id);
     }
   }, [params]);
 

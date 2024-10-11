@@ -19,7 +19,11 @@ interface User {
   is_manual: string
 }
 
-export function CollaboratorPopup() {
+interface CollaboratorPopupProps {
+  onCollaboratorAdded?: (collaborator: User) => void;
+}
+
+export function CollaboratorPopup({ onCollaboratorAdded }: CollaboratorPopupProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCollaborator, setSelectedCollaborator] = useState<User | null>(null)
@@ -30,7 +34,7 @@ export function CollaboratorPopup() {
   const fetchSearchResults = useCallback(async (query: string) => {
     setIsLoading(true);
     try {
-      const response = await fetch(URL+`users/search?query=${encodeURIComponent(query)}&prefix=true`);
+      const response = await fetch(URL + `users/search?query=${encodeURIComponent(query)}&prefix=true`);
       if (!response.ok) {
         throw new Error('Failed to fetch Users');
       }
@@ -65,7 +69,7 @@ export function CollaboratorPopup() {
 
   const handleConfirmAdd = async () => {
     // Fetch User Id
-    const resp = await fetch(URL+`users/email/`+selectedCollaborator?.email)
+    const resp = await fetch(URL + `users/email/` + selectedCollaborator?.email)
     const data = await resp.json()
     if (!resp.ok) {
       console.error('Failed to fetch User Id')
@@ -83,7 +87,7 @@ export function CollaboratorPopup() {
       sharedWithUserId: `${selectedCollaborator?.user_id}`, canEdit: true
     }
     try {
-      const response = await fetch(URL+`notes/${noteId}/share`, {
+      const response = await fetch(URL + `notes/${noteId}/share`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -91,20 +95,23 @@ export function CollaboratorPopup() {
         body: JSON.stringify(selectedCollaboratorPostInfo),
       });
       const result = await response.json();
+      if (onCollaboratorAdded) {
+        onCollaboratorAdded(selectedCollaborator);
+      }
       console.log(result); // Handle the response
     } catch (error) {
       console.error('Error sending POST request:', error);
     }
     setSelectedCollaborator(null)
-    setIsOpen(false)  
+    setIsOpen(false)
   }
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button className="mb-4 flex items-center justify-center" variant="outline">
-        <UserPlus className="mr-2 h-4 w-4" />
-        Add Collaborator
+          <UserPlus className="mr-2 h-4 w-4" />
+          Add Collaborator
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
