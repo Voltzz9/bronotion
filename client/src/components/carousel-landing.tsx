@@ -14,27 +14,22 @@ const items = [
   {
     title: "Fast and Focused",
     description: "Capture ideas at the speed of thought with ease.",
-    image: "/resources/placeholder.jpg",
+    image: "/resources/idea.jpg",
   },
   {
     title: "Collaborate Seamlessly",
     description: "Work together like you're in the same room, no matter the distance.",
-    image: "/resources/placeholder.jpg",
+    image: "/resources/collab-unsplash.jpg",
   },
   {
     title: "Search Instantly",
     description: "Find exactly what you need with lightning-fast search capabilities.",
-    image: "/resources/placeholder.jpg",
-  },
-  {
-    title: "Integrate Effortlessly",
-    description: "Connect with your favorite apps for endless possibilities.",
-    image: "/resources/placeholder.jpg",
+    image: "/resources/search.jpg",
   },
   {
     title: "Loved by Professionals",
     description: "Join thousands of professionals using our tools to achieve more.",
-    image: "/resources/placeholder.jpg",
+    image: "/resources/team-unsplash.jpg",
   },
 ]
 
