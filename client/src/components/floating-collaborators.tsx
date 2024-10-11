@@ -30,13 +30,13 @@ export const FloatingCollaborators: React.FC<FloatingCollaboratorsProps> = ({ cu
     if (noteId !== null && noteId !== undefined) {
       const fetchCollaborators = async () => {
         try {
-          const response = await fetch(URL+`notes/${noteId}/shared-users`)
+          const response = await fetch(URL + `notes/${noteId}/shared-users`)
           if (!response.ok) {
             throw new Error('Failed to fetch Users')
           }
           const data: Collaborator[] = await response.json()
           // Remove the current user from the list of collaborators
-          console.log("Before:"+data)
+          console.log("Before:" + data)
           const currentUser = data.findIndex((collaborator) => collaborator.username === current_user)
           if (currentUser > -1) {
             data.splice(currentUser, 1)
@@ -77,21 +77,21 @@ export const FloatingCollaborators: React.FC<FloatingCollaboratorsProps> = ({ cu
             className="overflow-hidden w-32"
           >
             <ul className="p-1 space-y-1 rounded-lg">
-                {collaborators.map((collaborator) => (
-                  <li key={collaborator.username} className="flex items-center space-x-2 rounded-lg">
-                    {collaborator.image && (
-                      <Image
+              {collaborators.map((collaborator) => (
+                <li key={collaborator.username} className="flex items-center space-x-2 rounded-lg">
+                  {collaborator.image && (
+                    <Image
                       src={collaborator.image}
                       alt={`${collaborator.username}'s avatar`}
                       width={16} // Set width
                       height={16} // Set height
                       className="rounded-full"
                     />
-                    )}
-                    <span className="text-sm rounded-lg">{collaborator.username}</span>
-                  </li>
-                ))}
-              </ul>
+                  )}
+                  <span className="text-sm rounded-lg">{collaborator.username}</span>
+                </li>
+              ))}
+            </ul>
           </motion.div>
         )}
       </AnimatePresence>
