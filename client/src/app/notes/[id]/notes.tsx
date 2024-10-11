@@ -24,12 +24,6 @@ interface Note {
 }
 
 export default function Notes() {
-  const { data: session } = useSession()
-  const [note, setNote] = useState('')
-  const [parsedNote, setParsedNote] = useState(`# Rendered Markdown`)
-  const noteId = useNoteId()
-  const router = useRouter()
-  const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null)
   const [userId, setUserId] = useState("")
   const { socket, joinNote, leaveNote, updateNote } = useSocket()
   const textAreaRef = useRef<HTMLTextAreaElement>(null)
@@ -38,11 +32,9 @@ export default function Notes() {
   const [parsedNote, setParsedNote] = useState(`# Rendered Markdown`);
   const noteId = useNoteId();
   const router = useRouter();
-  const [socket, setSocket] = useState<Socket | null>(null);
   const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
   const [userName, setUsername] = useState("");
   const floatingCollaboratorsRef = useRef<{ fetchCollaborators: () => void } | null>(null);
-
 
 
   useEffect(() => {
@@ -204,7 +196,7 @@ export default function Notes() {
           </Button>
         </div>
       </main>
-      <FloatingCollaborators current_user={userName} ref={floatingCollaboratorsRef} />
+      <FloatingCollaborators current_userId={userId} ref={floatingCollaboratorsRef} />
       <footer className="bg-gray-800 text-white py-4">
         <div className="container mx-auto px-4 text-center">
           <p>&copy; 2024 Bronotion. All rights reserved.</p>

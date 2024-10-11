@@ -109,7 +109,7 @@ export default function Header({ onCollaboratorAdded }: HeaderComponentProps) {
                 <Button>Login</Button>
               </Link>
             )}
-              {isNotePage && <LayoutComponent onCollaboratorAdded={onCollaboratorAdded} />}
+            {isNotePage && <LayoutComponent onCollaboratorAdded={onCollaboratorAdded} />}
           </div>
         </nav>
       </header>

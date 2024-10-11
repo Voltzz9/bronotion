@@ -45,7 +45,7 @@ export function useSocket() {
     }
   }, [])
 
-  const joinNote = useCallback((noteId: number, userId: string) => {
+  const joinNote = useCallback((noteId: string, userId: string) => {
     if (socket && isConnected) {
       console.log(`Joining note: ${noteId} for user: ${userId}`)
       socket.emit('join-note', { noteId, userId })
@@ -54,7 +54,7 @@ export function useSocket() {
     }
   }, [socket, isConnected])
 
-  const leaveNote = useCallback((noteId: number, userId: string) => {
+  const leaveNote = useCallback((noteId: string, userId: string) => {
     if (socket && isConnected) {
       console.log(`Leaving note: ${noteId} for user: ${userId}`)
       socket.emit('leave-note', { noteId, userId })
@@ -63,7 +63,7 @@ export function useSocket() {
     }
   }, [socket, isConnected])
 
-  const updateNote = useCallback((noteId: number, content: string) => {
+  const updateNote = useCallback((noteId: string, content: string) => {
     if (socket && isConnected) {
       console.log(`Updating note: ${noteId}`)
       socket.emit('update-note', { noteId, content })

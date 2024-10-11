@@ -72,7 +72,7 @@ export const FloatingCollaborators = forwardRef<{ fetchCollaborators: () => void
       const data: Collaborator[] = await response.json()
       // Remove the current user from the list of collaborators
       console.log("Before:" + data)
-      const currentUser = data.findIndex((collaborator) => collaborator.username === current_user)
+      const currentUser = data.findIndex((collaborator) => collaborator.id === current_userId)
       if (currentUser > -1) {
         data.splice(currentUser, 1)
       }
@@ -83,6 +83,35 @@ export const FloatingCollaborators = forwardRef<{ fetchCollaborators: () => void
       console.error('Error fetching users:', error)
     }
   }
+
+  useEffect(() => {
+
+    if (isConnected && noteId && current_userId) {
+      joinNote(noteId, current_userId)
+
+      const handleUserConnected = (usersInNote: string[]) => {
+        console.log("User connected event received:", usersInNote)
+        setConnectedUsers(usersInNote)
+      }
+
+      const handleUserDisconnected = (usersInNote: string[]) => {
+        console.log("User disconnected event received:", usersInNote)
+        setConnectedUsers(usersInNote)
+      }
+
+      if (socket) {
+        socket.on('user-connected', handleUserConnected)
+        socket.on('user-disconnected', handleUserDisconnected)
+      }
+      return () => {
+        leaveNote(noteId, current_userId)
+        if (socket) {
+          socket.off('user-connected', handleUserConnected)
+          socket.off('user-disconnected', handleUserDisconnected)
+        }
+      }
+    }
+  }, [isConnected, socket, noteId, current_userId, joinNote, leaveNote])
 
 
   return (
@@ -110,7 +139,11 @@ export const FloatingCollaborators = forwardRef<{ fetchCollaborators: () => void
           >
             <ul className="p-1 space-y-1 rounded-lg">
               {collaborators.map((collaborator) => (
-                <li key={collaborator.username} className="flex items-center space-x-2 rounded-lg">
+                <li
+                  key={collaborator.id}
+                  className={`flex items-center space-x-2 rounded-lg ${!connectedUsers.includes(collaborator.id) ? 'text-gray-800' : 'text-green-500'
+                    }`}
+                >
                   {collaborator.image && (
                     <Image
                       src={collaborator.image}
@@ -123,6 +156,7 @@ export const FloatingCollaborators = forwardRef<{ fetchCollaborators: () => void
                   <span className="text-sm rounded-lg">{collaborator.username}</span>
                 </li>
               ))}
+
             </ul>
           </motion.div>
         )}
