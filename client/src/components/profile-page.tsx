@@ -260,7 +260,6 @@ function ProfilePage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
       <Toaster />
     </div>
   )

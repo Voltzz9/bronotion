@@ -15,6 +15,7 @@ import { TagCombobox } from '@/components/tag-combobox'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion' // Add this import
 import { OrderDropdown } from '@/components/order-dropdown'
+import { DownloadButton } from '@/components/download-button'
 
 const URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -539,19 +540,23 @@ export function NoteDashboardV2() {
                           )}
 
                         </div>
-
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="absolute top-6 right-2 text-gray-400 hover:text-red-500 hover:bg-muted-foreground/20 transition-colors"
-                          onClick={(e) => {
-                            e.preventDefault(); // Prevent default button behavior
-                            e.stopPropagation(); // Prevent link navigation
-                            deleteNote(note.note_id);
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        <DownloadButton
+                        noteId={note.note_id}
+                        noteTitle={note.title}
+                        noteContent={note.content || ''}
+                      />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="absolute top-6 right-2 text-gray-400 hover:text-red-500 hover:bg-muted-foreground/20 transition-colors"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          deleteNote(note.note_id);
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                       </div>
                       <ScrollArea className="h-12 w-full overflow-x-auto rounded-md">
                         <div className="flex flex-nowrap gap-2 mt-2">
