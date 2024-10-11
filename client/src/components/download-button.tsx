@@ -13,23 +13,64 @@ interface DownloadButtonProps {
 export function DownloadButton({ noteId, noteTitle, noteContent }: DownloadButtonProps) {
   const handleDownload = async () => {
     try {
-      // Convert markdown to HTML
-      const html = await marked(noteContent);
+      // Parse the markdown
+      const tokens = marked.lexer(noteContent);
 
       // Create a new jsPDF instance
       const pdf = new jsPDF();
 
-      // Add the HTML content to the PDF
-      pdf.html(html, {
-        callback: function (pdf) {
-          // Save the PDF
-          pdf.save(`${noteTitle}.pdf`);
-        },
-        x: 10,
-        y: 10,
-        width: 190,
-        windowWidth: 650
+      let yOffset = 10;
+      const lineHeight = 7;
+      const margin = 10;
+      const pageWidth = pdf.internal.pageSize.width;
+
+      tokens.forEach((token) => {
+        switch (token.type) {
+          case 'heading':
+            pdf.setFontSize(24 - token.depth * 2);
+            pdf.setFont('', 'bold');
+            yOffset += lineHeight;
+            pdf.text(token.text, margin, yOffset);
+            yOffset += lineHeight;
+            break;
+          case 'paragraph':
+            pdf.setFontSize(12);
+            pdf.setFont('', 'normal');
+            const lines = pdf.splitTextToSize(token.text, pageWidth - 2 * margin);
+            lines.forEach((line: string) => {
+              if (yOffset > pdf.internal.pageSize.height - margin) {
+                pdf.addPage();
+                yOffset = margin;
+              }
+              pdf.text(line, margin, yOffset);
+              yOffset += lineHeight;
+            });
+            yOffset += lineHeight / 2;
+            break;
+          case 'list':
+            pdf.setFontSize(12);
+            pdf.setFont('', 'normal');
+            token.items.forEach((item: any, index: number) => {
+              if (yOffset > pdf.internal.pageSize.height - margin) {
+                pdf.addPage();
+                yOffset = margin;
+              }
+              const bullet = token.ordered ? `${index + 1}.` : '•';
+              const itemText = `${bullet} ${item.text}`;
+              const lines = pdf.splitTextToSize(itemText, pageWidth - 3 * margin);
+              lines.forEach((line: string, lineIndex: number) => {
+                pdf.text(line, lineIndex === 0 ? margin : margin * 2, yOffset);
+                yOffset += lineHeight;
+              });
+            });
+            yOffset += lineHeight / 2;
+            break;
+          // Add more cases for other markdown elements as needed
+        }
       });
+
+      // Save the PDF
+      pdf.save(`${noteTitle}.pdf`);
     } catch (error) {
       console.error('Failed to download note:', error);
     }
@@ -39,7 +80,7 @@ export function DownloadButton({ noteId, noteTitle, noteContent }: DownloadButto
     <Button
       variant="ghost"
       size="icon"
-      className="absolute top-6 right-10 text-gray-400 hover:text-blue-500 hover:bg-muted-foreground/20 transition-colors"
+      className="absolute top-6 right-12 text-gray-400 hover:text-blue-500 hover:bg-muted-foreground/20 transition-colors"
       onClick={(e) => {
         e.preventDefault();
         e.stopPropagation();

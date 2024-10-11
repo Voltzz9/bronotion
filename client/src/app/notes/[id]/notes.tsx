@@ -11,6 +11,8 @@ import { Button } from '@/components/ui/button'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { useSocket } from '@/hooks/useSocket'
+import { Toaster } from "@/components/ui/toaster"
+import { useToast } from "@/hooks/use-toast"
 
 const URL = process.env.NEXT_PUBLIC_API_URL
 
@@ -35,6 +37,7 @@ export default function Notes() {
   const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
   const [userName, setUsername] = useState("");
   const floatingCollaboratorsRef = useRef<{ fetchCollaborators: () => void } | null>(null);
+  const { toast } = useToast();
 
 
   useEffect(() => {
@@ -96,14 +99,14 @@ export default function Notes() {
     const newTimeoutId = setTimeout(() => {
       if (noteId) {
         updateNote(noteId, content)
-        saveNote(content)
+        saveNoteContent(content)
       }
     }, 2000)
 
     setTimeoutId(newTimeoutId)
   }
 
-  const saveNote = async (content: string) => {
+  const saveNoteContent = async (content: string) => {
     try {
       const response = await fetch(`${URL}notes/${noteId}`, {
         method: 'PUT',
@@ -118,6 +121,15 @@ export default function Notes() {
     } catch (error) {
       console.error('Error saving note:', error)
     }
+  }
+
+  const saveNote = async () => {
+    await saveNoteContent(note);
+    toast({
+      title: "Success",
+      description: "Your note has been saved successfully.",
+      duration: 3000,
+    });
   }
 
   useEffect(() => {
@@ -189,7 +201,7 @@ export default function Notes() {
           <Button
             className="mt-4"
             onClick={() => {
-              saveNote(note);
+              saveNote();
             }}
           >
             Save
@@ -202,6 +214,7 @@ export default function Notes() {
           <p>&copy; 2024 Bronotion. All rights reserved.</p>
         </div>
       </footer>
+      <Toaster />
     </div>
   );
 }

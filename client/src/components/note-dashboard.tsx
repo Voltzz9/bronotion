@@ -541,22 +541,22 @@ export function NoteDashboardV2() {
 
                         </div>
                         <DownloadButton
-                          noteId={note.note_id}
-                          noteTitle={note.title}
-                          noteContent={note.content || ''}
-                        />
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="absolute top-6 right-2 text-gray-400 hover:text-red-500 hover:bg-muted-foreground/20 transition-colors"
-                          onClick={(e) => {
-                            e.preventDefault(); // Prevent default button behavior
-                            e.stopPropagation(); // Prevent link navigation
-                            deleteNote(note.note_id);
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        noteId={note.note_id}
+                        noteTitle={note.title}
+                        noteContent={note.content || ''}
+                      />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="absolute top-6 right-2 text-gray-400 hover:text-red-500 hover:bg-muted-foreground/20 transition-colors"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          deleteNote(note.note_id);
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                       </div>
                       <ScrollArea className="h-12 w-full overflow-x-auto rounded-md">
                         <div className="flex flex-nowrap gap-2 mt-2">
