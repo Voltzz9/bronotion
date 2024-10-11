@@ -1,4 +1,4 @@
-const client = createClient(process.env.API_KEY_USERNAME, process.env.API_KEY_PASSWORD);
+const client = createClient(process.env.WAYPOINT_API_KEY_USERNAME, process.env.WAYPOINT_API_KEY_PASSWORD);
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
@@ -850,7 +850,7 @@ app.post('/notes', async (req, res) => {
 app.post('/users/:userId/notes', async (req, res) => {
   try {
     const userId = req.params.userId;
-    const { includeShared } = req.body; // Default to false if not provided
+    const { includeShared, sortLastedited, tags } = req.body;// Default to false if not provided
 
     // Fetch the user's own notes
     const userNotes = await prisma.note.findMany({
@@ -905,8 +905,18 @@ app.post('/users/:userId/notes', async (req, res) => {
       tags: note.tags.map(noteTag => noteTag.tag.name),
     }));
 
-    // Combine the user's own notes and the shared notes
-    const allNotes = [...formattedUserNotes, ...sharedNotes];
+    let allNotes = [...formattedUserNotes, ...sharedNotes];
+
+    // Sort the notes if sortLastedited is provided
+    if (sortLastedited && ['asc', 'desc'].includes(sortLastedited.toLowerCase())) {
+      allNotes.sort((a, b) => {
+        const dateA = new Date(a.updated_at);
+        const dateB = new Date(b.updated_at);
+        return sortLastedited.toLowerCase() === 'asc'
+          ? dateA - dateB
+          : dateB - dateA;
+      });
+    }
 
     res.json(allNotes);
   } catch (error) {
@@ -1172,8 +1182,17 @@ app.post('/notes/:noteId/share', async (req, res) => {
         shared_note_id: true,
       },
     });
+    try {
+      sendEmailToSharie(emailAddr)
+    } catch (error) {
+      console.log("Error sending email notification")
+    }
 
-    //   sendEmailToSharie(emailAddr)
+    try {
+      sendPushNotif(userId, "Title of note")
+    } catch (error) {
+      console.log("Error sending web push notification")
+    }
 
     res.status(201).json({
       message: 'Note shared successfully',
