@@ -90,7 +90,9 @@ export default function UserIconUpdate({ currentImageUrl, username, onUpdateImag
         onMouseLeave={() => setIsHovered(false)}
         onClick={handleImageClick}
       >
-        <Avatar className="h-24 w-24">
+        <Avatar tabIndex={0} className="h-24 w-24"
+        onKeyDown={(e) => e.key === 'Enter' && handleImageClick()}
+        >
           <AvatarImage src={currentImageUrl} alt={username} />
           <AvatarFallback>
             <User className="h-12 w-12" />

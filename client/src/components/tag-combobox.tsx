@@ -47,6 +47,7 @@ export const TagCombobox: React.FC<TagComboboxProps> = ({ initTags, selectedTags
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
+          tabIndex={0}
           variant="outline"
           size="icon"
           className="h-8 w-8 rounded-full"
@@ -66,12 +67,18 @@ export const TagCombobox: React.FC<TagComboboxProps> = ({ initTags, selectedTags
             {inputValue.trim() && (
               <CommandEmpty>
                 <Button
+                  tabIndex={0}
                   variant="ghost"
                   className="w-full justify-start"
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
                     createTag(inputValue);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      createTag(inputValue);
+                    }
                   }}
                 >
                   <Plus className="mr-2 h-4 w-4" />
@@ -82,12 +89,14 @@ export const TagCombobox: React.FC<TagComboboxProps> = ({ initTags, selectedTags
             <CommandGroup heading="Existing tags">
               {tags.map((tag) => (
                 <CommandItem
+                  tabIndex={0}
                   key={tag}
                   value={tag}
                   onSelect={() => {
-                    onTagToggle(tag);
-                    setOpen(false);
+                    onTagToggle(tag)
+                    setOpen(false)
                   }}
+                  className="focus:bg-gray-200 focus:text-primary transition-colors duration-200 outline-none"
                 >
                   <Check
                     className={cn(

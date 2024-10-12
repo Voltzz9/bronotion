@@ -78,6 +78,7 @@ export function DownloadButton({ noteTitle, noteContent }: DownloadButtonProps) 
 
   return (
     <Button
+      tabIndex={0}
       variant="ghost"
       size="icon"
       className="absolute right-10 text-gray-400 hover:text-green-500 hover:bg-muted-foreground/20 transition-colors"

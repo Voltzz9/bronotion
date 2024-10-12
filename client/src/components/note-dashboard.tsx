@@ -452,7 +452,7 @@ export function NoteDashboardV2() {
         <CardHeader>
           <div className="flex justify-between items-center">
             <CardTitle className="text-2xl font-bold text-secondary">Notes Dashboard</CardTitle>
-            <Button onClick={addNewNote} disabled={isAddingNote}>
+            <Button onClick={addNewNote} disabled={isAddingNote} tabIndex={0}>
               {isAddingNote ? (
                 <span className="animate-spin mr-2">&#8987;</span>
               ) : (
@@ -479,7 +479,13 @@ export function NoteDashboardV2() {
                     key={tag}
                     variant={selectedTags.includes(tag) ? "selected" : "outline"}
                     className="cursor-pointer"
+                    tabIndex={0}
                     onClick={() => toggleTag(tag)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        toggleTag(tag);
+                      }
+                    }}
                   >
                     {tag}
                   </Badge>
@@ -488,9 +494,10 @@ export function NoteDashboardV2() {
               <ScrollBar orientation="horizontal" />
             </ScrollArea>
             <div className="ml-4 h-14">
-              <NoteSelector value={noteView} onChange={setNoteView} />
+              <NoteSelector value={noteView} onChange={setNoteView}/>
               <div className="p-1 flex justify-end items-center">
-                <OrderDropdown onValueChange={(value: 'asc' | 'desc') => sortNotesByUpdatedAt(value)} />
+                <OrderDropdown 
+                onValueChange={(value: 'asc' | 'desc') => sortNotesByUpdatedAt(value)} />
               </div>
             </div>
           </div>
@@ -508,13 +515,23 @@ export function NoteDashboardV2() {
                   variants={noteVariants}
                   transition={{ duration: 0.2 }}
                 >
-                  <Card className="flex flex-col cursor-pointer h-52 relative">
+                    <Card 
+                    className="flex flex-col cursor-pointer h-52 relative"
+                    >
                     <CardHeader className="flex-grow pb-2">
                       <div className="flex justify-between items-start">
                         <div className="flex flex-grow items-start mr-16"> {/* Added mr-16 for right margin */}
-                          <CardTitle className="mt-1 text-lg text-secondary truncate">
+                          <CardTitle className="mt-1 text-lg text-secondary truncate"
+                          tabIndex={0}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              window.location.href = `/notes/${note.note_id}`;
+                            }
+                          }}
+                          >
                             {editingNoteId !== note.note_id ? (
-                              <Link href={`/notes/${note.note_id}`} passHref className="cursor-pointer inline-block max-w-full">
+                              <Link href={`/notes/${note.note_id}`} passHref className="cursor-pointer inline-block max-w-full"
+                              >
                                 <span className="truncate inline-block max-w-full" title={note.title}>
                                   {truncateText(note.title, 30)}
                                 </span>
@@ -527,6 +544,8 @@ export function NoteDashboardV2() {
                                 onKeyDown={(e) => {
                                   if (e.key === 'Enter') {
                                     updateNoteTitle(note.note_id);
+                                    e.preventDefault();
+                                    e.stopPropagation();
                                   }
                                 }}
                                 onClick={(e) => {
@@ -540,6 +559,7 @@ export function NoteDashboardV2() {
                           {editingNoteId !== note.note_id && (
                             <Button
                               variant="ghost"
+                              tabIndex={0}
                               size="icon"
                               className="ml-2 text-muted-foreground hover:bg-muted-foreground/20"
                               onClick={(e) => {
@@ -559,6 +579,7 @@ export function NoteDashboardV2() {
                             noteContent={note.content || ''}
                           />
                           <Button
+                            tabIndex={0}
                             variant="ghost"
                             size="icon"
                             className="ml-2 text-gray-400 hover:text-red-500 hover:bg-muted-foreground/20 transition-colors"
@@ -576,6 +597,7 @@ export function NoteDashboardV2() {
                         <div className="flex flex-nowrap gap-2 mt-2">
                           {note.tags.map((tag) => (
                             <Badge
+                              tabIndex={0}
                               key={tag}
                               variant="destructive"
                               className="cursor-pointer"
@@ -583,6 +605,11 @@ export function NoteDashboardV2() {
                                 e.preventDefault();
                                 e.stopPropagation();
                                 removeTag(tag, note.note_id.toString());
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                  removeTag(tag, note.note_id.toString());
+                                }
                               }}
                             >
                               {tag}

@@ -1,14 +1,15 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { motion, useScroll, useSpring, useTransform } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { useSession } from 'next-auth/react';
 import { LayoutComponent } from '@/components/sidepanel';
 import AuthButtons from './auth-buttons';
-import { usePathname } from 'next/navigation';
+import { handleSignOut } from "@/app/server/serverActions"
+import { usePathname, useRouter } from 'next/navigation';
 
 interface HeaderComponentProps {
   onCollaboratorAdded?: () => void;
@@ -21,6 +22,7 @@ export default function Header({ onCollaboratorAdded }: HeaderComponentProps) {
   const [isAuthenticated, setIsAuthenticated] = useState(status === 'authenticated');
   const [isScrolled, setIsScrolled] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
 
   useEffect(() => {
     const checkMobile = () => {
@@ -61,6 +63,12 @@ export default function Header({ onCollaboratorAdded }: HeaderComponentProps) {
 
   const isNotePage = /^\/notes\/\d+$/.test(pathname);
 
+  const handleKeyDown = useCallback((event: React.KeyboardEvent, href: string) => {
+    if (event.key === 'Enter') {
+      router.push(href);
+    }
+  }, [router]);
+
   return (
     <>
       <header
@@ -72,15 +80,21 @@ export default function Header({ onCollaboratorAdded }: HeaderComponentProps) {
       >
         <nav className="container mx-auto py-2 px-10 flex justify-between items-center">
           <div className="flex-1 flex justify-center sm:justify-start">
-            <Link href={isAuthenticated ? "/home" : "/"} className="flex items-center">
+            <Link 
+              href={isAuthenticated ? "/home" : "/"} 
+              className="flex items-center"
+              onKeyDown={(e) => handleKeyDown(e, isAuthenticated ? "/home" : "/")}
+            >
               <motion.div
                 style={{ width: logoWidth, x: logoX }}
                 className="flex items-center"
               >
-                <span className="text-4xl sm:text-4xl font-bold text-secondary">B</span>
+                <motion.span className="text-4xl sm:text-4xl font-bold text-secondary  focus:border-black"
+                tabIndex={0}
+                >B</motion.span>
                 <motion.span
                   style={{ opacity }}
-                  className="text-4xl sm:text-4xl font-bold text-secondary"
+                  className="text-4xl sm:text-4xl font-bold text-secondary  focus:border-black"
                 >
                   ronotion
                 </motion.span>
@@ -90,8 +104,10 @@ export default function Header({ onCollaboratorAdded }: HeaderComponentProps) {
           <div className="flex items-center space-x-4">
             {isAuthenticated ? (
               <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Avatar className="cursor-pointer">
+                <DropdownMenuTrigger tabIndex={0} asChild>
+                  <Avatar 
+                  className="cursor-pointer"
+                  >
                     {session && (
                       <>
                         <AvatarImage src={session.user?.image || ''} alt={session.user?.name || 'User'} />
@@ -100,14 +116,28 @@ export default function Header({ onCollaboratorAdded }: HeaderComponentProps) {
                     )}
                   </Avatar>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <AuthButtons />
+                <DropdownMenuContent tabIndex={0} align="end">
+                  <DropdownMenuItem asChild>
+                    <Link href="/profile">
+                      Profile
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/auth/signout">
+                      Sign out
+                    </Link>
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <Link href="/auth/signin">
-                <Button>Login</Button>
-              </Link>
+              <Button
+                className="bg-secondary text-background px-6 py-3 rounded-lg text-lg font-semibold transition-colors"
+                tabIndex={0}
+                onKeyDown={(e) => handleKeyDown(e, "/auth/signin")}
+                onClick={() => router.push("/auth/signin")}
+              >
+                Login
+              </Button>
             )}
             {isNotePage && <LayoutComponent onCollaboratorAdded={onCollaboratorAdded} />}
           </div>
