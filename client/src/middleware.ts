@@ -31,7 +31,7 @@ export async function middleware(request: NextRequest) {
 
     // Make a request to your backend to check if the user owns this note
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}notes/${noteId}/check`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}notes/${noteId}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${session.user?.id}`
