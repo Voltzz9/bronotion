@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 import useNoteId from "@/app/hooks/useNoteId"
+import { useSession } from "next-auth/react"
 
 const URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -30,11 +31,19 @@ export function CollaboratorPopup({ onCollaboratorAdded }: CollaboratorPopupProp
   const [searchResults, setSearchResults] = useState<User[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const noteId = useNoteId()
+  const { data: session } = useSession();
 
   const fetchSearchResults = useCallback(async (query: string) => {
     setIsLoading(true);
     try {
-      const response = await fetch(URL + `users/search?query=${encodeURIComponent(query)}&prefix=true`);
+      const response = await fetch(URL + `users/search?query=${encodeURIComponent(query)}&prefix=true`,
+        {
+          headers: {
+            'Authorization': `Bearer ${session?.user?.id}`,
+          },
+        }
+      );
+
       if (!response.ok) {
         throw new Error('Failed to fetch Users');
       }
@@ -45,7 +54,7 @@ export function CollaboratorPopup({ onCollaboratorAdded }: CollaboratorPopupProp
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [session]);
 
   useEffect(() => {
     const debounceTimer = setTimeout(() => {
@@ -91,6 +100,7 @@ export function CollaboratorPopup({ onCollaboratorAdded }: CollaboratorPopupProp
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.user?.id}`,
         },
         body: JSON.stringify(selectedCollaboratorPostInfo),
       });
