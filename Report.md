@@ -105,3 +105,19 @@ The backend of the Bronotion project is designed to handle data storage, authent
 ## 6. A high-level description of design patterns for the client and API
 
 ## 7. Additional Features
+
+### 1. Host application on public-facing server: [bronotion.co.za](http://bronotion.co.za).
+
+We deployed the Bronotion application on a public-facing server using DigitalOcean. We also purchased the domain name bronotion.co.za for this deployment.
+
+### 2. Lost passwords reset via email, email notification sent when note shared.
+
+If a user forgets their password, they can enter their email address and request a password reset email to be sent to them. From this email, they can access a specific webpage to  reset their password. When users share their notes, email notifications are sent to the recipients, along with a link to view the shared note.
+
+### 3. PDF download of markdown notes.
+
+Users can download a PDF version of their markdown notes directly to their device from their dashboard.
+
+### 4. Google and GitHub OAuth signin.
+
+We implemented OAuth-based sign-in options for both Google and GitHub. This allows users to swiftly signin to the webapp without needing to create a new account. Allowing for both GitHub and Google sign-in expands the possible user base and makes the app more accessible.
