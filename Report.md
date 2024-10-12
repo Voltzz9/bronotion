@@ -104,6 +104,13 @@ The backend of the Bronotion project is designed to handle data storage, authent
 
 ## 6. A high-level description of design patterns for the client and API
 
+For the client-side architecture, we employed the approach of a modular component-based design. This ensured an organized codebase along with keeping our pages modular. The reposity was also structured into separate backend and client directories which divided the codebase up logically. 
+
+We focused on ensuring our backend API was secure, with authorization checks being performed through middleware functions. Certain endpoints marked with [Auth Req] in the API Documentation ensures that users have the correct access rights for endpoints. We put ensuring the API is RESTful at the forefront of our design.
+
+#### TODO ADD MORE
+
+
 ## 7. Additional Features
 
 ### 1. Host application on public-facing server: [bronotion.co.za](http://bronotion.co.za).
