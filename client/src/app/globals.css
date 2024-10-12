@@ -74,7 +74,8 @@ footer {
   color: var(--foreground);
   padding: 1rem 0;
 }
-.arrow { 
+
+.arrow {
   color: var(--foreground)
 }
 

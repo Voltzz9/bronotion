@@ -7,6 +7,7 @@ import { ChevronUp, ChevronDown } from 'lucide-react'
 import useNoteId from '@/app/hooks/useNoteId'
 import Image from 'next/image'
 import { useSocket } from '@/hooks/useSocket'
+import { useSession } from 'next-auth/react'
 
 const URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -23,12 +24,19 @@ interface FloatingCollaboratorsProps {
   current_userId: string
 }
 
-const FloatingCollaborators = forwardRef<{ fetchCollaborators: () => void }, FloatingCollaboratorsProps>(({ current_userId }, ref) => {
+const FloatingCollaborators = forwardRef<{ fetchCollaborators: () => void }, FloatingCollaboratorsProps>(({ }, ref) => {
   const [isExpanded, setIsExpanded] = useState(false)
+  const [current_userId, setCurrentUserId] = useState('')
   const [collaborators, setCollaborators] = useState<Collaborator[]>([])
   const noteId = useNoteId()
   const [connectedUsers, setConnectedUsers] = useState<string[]>([])
   const { socket, isConnected, joinNote, leaveNote } = useSocket()
+  const { data: session } = useSession();
+
+  useEffect(() => {
+    if (session?.user?.id)
+      setCurrentUserId(session.user.id)
+  }, [session])
 
   useEffect(() => {
     if (noteId !== null && noteId !== undefined) {
@@ -119,8 +127,7 @@ const FloatingCollaborators = forwardRef<{ fetchCollaborators: () => void }, Flo
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="fixed left-8 bottom-20 w-32 bg-background shadow-lg overflow-hidden rounded-lg"
-    >
+      className="fixed left-8 bottom-8 w-32 bg-background shadow-lg overflow-hidden rounded-lg">
       <div
         className="text-center w-full bg-primary px-0 py-0 rounded-lg text-primary-foreground flex justify-between items-center cursor-pointer"
         onClick={() => setIsExpanded(!isExpanded)}
