@@ -70,10 +70,10 @@
                             <div class="col-md-6 col-xs-12">
                                 <div class="api-information">
                                     <div class="collection-name">
-                                        <p>WebDev</p>
+                                        <p>Bronotion API Documentation</p>
                                     </div>
                                     <div class="collection-description">
-                                        <p></p>
+                                        <p>Group 37 CS343 Stellenbosch University </p>
                                     </div>
                                 </div>
                             </div>
@@ -87,28 +87,28 @@
                                             Create Shared Note <span class="lock-icon"></span>
                                         </div>
                                      </div>
-                                    <div class="url">https://localhost:8080/notes/7/share</div>
+                                    <div class="url">https://localhost:8080/notes/:NoteId/share</div>
                                     
                                     <div class="request-body">
                                         <div class="body-heading">HEADERS</div>
                                         <hr>
                                           <div class="param row">
                                             <div class="name col-md-3 col-xs-12">Authorization</div>
-                                            <div class="value col-md-9 col-xs-12">Bearer deca2463-b678-4ee2-8772-390b4c9b5f00</div>
+                                            <div class="value col-md-9 col-xs-12">Bearer :userId</div>
                                             <div class="description col-md-9 col-xs-12"><p>None</p>
                                             </div>
                                           </div>
                                     </div>
                                     
                                     <div class="request-body">
-                                        <div class="body-heading">BODY <span class="body-type">raw</span></div>
+                                        <div class="body-heading">BODY <span class="body-type">json</span></div>
                                         <hr>
                                             <div class="raw-body code-snippet">
                                               <pre class="body-block click-to-expand-wrapper is-snippet-wrapper " data-title="Create Shared Note">
                                                   <code>
                                                     
 {
-  "sharedWithUserId": "211fcbed-87fb-459a-82c7-d1dcd01ad367",
+  "sharedWithUserId": ":userId",
   "canEdit": true
 }
                                                   </code>
@@ -146,7 +146,7 @@
 POST https://localhost:8080/notes/7/share
 
 {
-  "sharedWithUserId": "211fcbed-87fb-459a-82c7-d1dcd01ad367",
+  "sharedWithUserId": "deca2463-b678-4ee2-8772-390b4c9b5f00",
   "canEdit": true
 }</code>
                                             </pre>
@@ -162,13 +162,13 @@ POST https://localhost:8080/notes/7/share
                                      <div class="heading">
                                         <div class="name">
                                             <span class="GET method" >GET</span>
-                                            Get All Shared Notes with a User <span class="lock-icon"></span>
+                                            Get All Shared Notes with a User [Auth Req] <span class="lock-icon"></span>
                                         </div>
                                      </div>
-                                    <div class="url">https://localhost:8080/users/0326b901-5fcc-4a1a-9c5b-8b627a34824d/shared-notes</div>
+                                    <div class="url">https://localhost:8080/users/:userId/shared-notes</div>
                                     
                                     <div class="request-body">
-                                        <div class="body-heading">BODY <span class="body-type">raw</span></div>
+                                        <div class="body-heading">BODY <span class="body-type">json</span></div>
                                         <hr>
                                             <div class="raw-body code-snippet">
                                               <pre class="body-block click-to-expand-wrapper is-snippet-wrapper " data-title="Get All Shared Notes with a User">
@@ -210,7 +210,7 @@ POST https://localhost:8080/notes/7/share
                                         <div>
                                             <pre class="click-to-expand-wrapper is-snippet-wrapper " data-title="Get All Shared Notes with a User">
                                                 <code class="is-highlighted">
-GET https://localhost:8080/users/0326b901-5fcc-4a1a-9c5b-8b627a34824d/shared-notes
+GET https://localhost:8080/users/deca2463-b678-4ee2-8772-390b4c9b5f00/shared-notes
 
 {
   "title": "Updated Note Title",
@@ -239,14 +239,14 @@ GET https://localhost:8080/users/0326b901-5fcc-4a1a-9c5b-8b627a34824d/shared-not
                                         <hr>
                                           <div class="param row">
                                             <div class="name col-md-3 col-xs-12">Authorization</div>
-                                            <div class="value col-md-9 col-xs-12">Bearer deca2463-b678-4ee2-8772-390b4c9b5f00</div>
+                                            <div class="value col-md-9 col-xs-12">Bearer :userId</div>
                                             <div class="description col-md-9 col-xs-12"><p>None</p>
                                             </div>
                                           </div>
                                     </div>
                                     
                                     <div class="request-body">
-                                        <div class="body-heading">BODY <span class="body-type">raw</span></div>
+                                        <div class="body-heading">BODY <span class="body-type">json</span></div>
                                         <hr>
                                             <div class="raw-body code-snippet">
                                               <pre class="body-block click-to-expand-wrapper is-snippet-wrapper " data-title="Get all Users for a Shared Note">
@@ -307,7 +307,7 @@ GET https://localhost:8080/notes/4/shared-users
                                      <div class="heading">
                                         <div class="name">
                                             <span class="PUT method" >PUT</span>
-                                            Update Shared Notes Permission <span class="lock-icon"></span>
+                                            Update Shared Notes Permission [Auth Req]<span class="lock-icon"></span>
                                         </div>
                                      </div>
                                     <div class="url">https://localhost:8080/notes/5/permissions</div>
@@ -317,14 +317,14 @@ GET https://localhost:8080/notes/4/shared-users
                                         <hr>
                                           <div class="param row">
                                             <div class="name col-md-3 col-xs-12">Authorization</div>
-                                            <div class="value col-md-9 col-xs-12">Bearer deca2463-b678-4ee2-8772-390b4c9b5f00</div>
+                                            <div class="value col-md-9 col-xs-12">Bearer :userId</div>
                                             <div class="description col-md-9 col-xs-12"><p>None</p>
                                             </div>
                                           </div>
                                     </div>
                                     
                                     <div class="request-body">
-                                        <div class="body-heading">BODY <span class="body-type">raw</span></div>
+                                        <div class="body-heading">BODY <span class="body-type">json</span></div>
                                         <hr>
                                             <div class="raw-body code-snippet">
                                               <pre class="body-block click-to-expand-wrapper is-snippet-wrapper " data-title="Update Shared Notes Permission">
@@ -385,7 +385,7 @@ PUT https://localhost:8080/notes/5/permissions
                                      <div class="heading">
                                         <div class="name">
                                             <span class="DELETE method" >DELETE</span>
-                                            Delete Shared Notes <span class="lock-icon"></span>
+                                            Delete Shared Notes [Auth Req]<span class="lock-icon"></span>
                                         </div>
                                      </div>
                                     <div class="url">https://localhost:8080/shared-notes/6</div>
@@ -395,21 +395,21 @@ PUT https://localhost:8080/notes/5/permissions
                                         <hr>
                                           <div class="param row">
                                             <div class="name col-md-3 col-xs-12">Authorization</div>
-                                            <div class="value col-md-9 col-xs-12">Bearer deca2463-b678-4ee2-8772-390b4c9b5f00</div>
+                                            <div class="value col-md-9 col-xs-12">Bearer :userId</div>
                                             <div class="description col-md-9 col-xs-12"><p>None</p>
                                             </div>
                                           </div>
                                     </div>
                                     
                                     <div class="request-body">
-                                        <div class="body-heading">BODY <span class="body-type">raw</span></div>
+                                        <div class="body-heading">BODY <span class="body-type">json</span></div>
                                         <hr>
                                             <div class="raw-body code-snippet">
                                               <pre class="body-block click-to-expand-wrapper is-snippet-wrapper " data-title="Delete Shared Notes">
                                                   <code>
                                                     
 {
-    "sharedWithUserId": "0326b901-5fcc-4a1a-9c5b-8b627a34824d"
+    "sharedWithUserId": ":userId"
 }
                                                   </code>
                                               </pre>
@@ -446,7 +446,7 @@ PUT https://localhost:8080/notes/5/permissions
 DELETE https://localhost:8080/shared-notes/6
 
 {
-    "sharedWithUserId": "0326b901-5fcc-4a1a-9c5b-8b627a34824d"
+    "sharedWithUserId": "deca2463-b678-4ee2-8772-390b4c9b5f00"
 }</code>
                                             </pre>
                                         </div>
@@ -467,7 +467,7 @@ DELETE https://localhost:8080/shared-notes/6
                                     <div class="url">https://localhost:8080/tags</div>
                                     
                                     <div class="request-body">
-                                        <div class="body-heading">BODY <span class="body-type">raw</span></div>
+                                        <div class="body-heading">BODY <span class="body-type">json</span></div>
                                         <hr>
                                             <div class="raw-body code-snippet">
                                               <pre class="body-block click-to-expand-wrapper is-snippet-wrapper " data-title="Create Tags">
@@ -532,7 +532,7 @@ POST https://localhost:8080/tags
                                     <div class="url">https://localhost:8080/tags</div>
                                     
                                     <div class="request-body">
-                                        <div class="body-heading">BODY <span class="body-type">raw</span></div>
+                                        <div class="body-heading">BODY <span class="body-type">json</span></div>
                                         <hr>
                                             <div class="raw-body code-snippet">
                                               <pre class="body-block click-to-expand-wrapper is-snippet-wrapper " data-title="Get Tags">
@@ -593,7 +593,7 @@ GET https://localhost:8080/tags
                                     <div class="url">https://localhost:8080/tags/88eef3dd-da64-4369-aedc-a8cf038927bc</div>
                                     
                                     <div class="request-body">
-                                        <div class="body-heading">BODY <span class="body-type">raw</span></div>
+                                        <div class="body-heading">BODY <span class="body-type">json</span></div>
                                         <hr>
                                             <div class="raw-body code-snippet">
                                               <pre class="body-block click-to-expand-wrapper is-snippet-wrapper " data-title="Get Tags for User">
@@ -654,7 +654,7 @@ GET https://localhost:8080/tags/88eef3dd-da64-4369-aedc-a8cf038927bc
                                     <div class="url">https://localhost:8080/tagnames/Work</div>
                                     
                                     <div class="request-body">
-                                        <div class="body-heading">BODY <span class="body-type">raw</span></div>
+                                        <div class="body-heading">BODY <span class="body-type">json</span></div>
                                         <hr>
                                             <div class="raw-body code-snippet">
                                               <pre class="body-block click-to-expand-wrapper is-snippet-wrapper " data-title="Get TagID from Tag Name">
@@ -715,7 +715,7 @@ GET https://localhost:8080/tagnames/Work
                                     <div class="url">https://localhost:8080/tags/1</div>
                                     
                                     <div class="request-body">
-                                        <div class="body-heading">BODY <span class="body-type">raw</span></div>
+                                        <div class="body-heading">BODY <span class="body-type">json</span></div>
                                         <hr>
                                             <div class="raw-body code-snippet">
                                               <pre class="body-block click-to-expand-wrapper is-snippet-wrapper " data-title="Update Tag">
@@ -780,7 +780,7 @@ PUT https://localhost:8080/tags/1
                                     <div class="url">https://localhost:8080/tags/2</div>
                                     
                                     <div class="request-body">
-                                        <div class="body-heading">BODY <span class="body-type">raw</span></div>
+                                        <div class="body-heading">BODY <span class="body-type">json</span></div>
                                         <hr>
                                             <div class="raw-body code-snippet">
                                               <pre class="body-block click-to-expand-wrapper is-snippet-wrapper " data-title="Delete a Tag">
@@ -845,7 +845,7 @@ DELETE https://localhost:8080/tags/2
                                     <div class="url">https://localhost:8080/notes/8/tags</div>
                                     
                                     <div class="request-body">
-                                        <div class="body-heading">BODY <span class="body-type">raw</span></div>
+                                        <div class="body-heading">BODY <span class="body-type">json</span></div>
                                         <hr>
                                             <div class="raw-body code-snippet">
                                               <pre class="body-block click-to-expand-wrapper is-snippet-wrapper " data-title="Add Tag to Note">
@@ -910,7 +910,7 @@ POST https://localhost:8080/notes/8/tags
                                     <div class="url">https://localhost:8080/notes/5/tags</div>
                                     
                                     <div class="request-body">
-                                        <div class="body-heading">BODY <span class="body-type">raw</span></div>
+                                        <div class="body-heading">BODY <span class="body-type">json</span></div>
                                         <hr>
                                             <div class="raw-body code-snippet">
                                               <pre class="body-block click-to-expand-wrapper is-snippet-wrapper " data-title="Delete a Tag from Note">
@@ -975,7 +975,7 @@ DELETE https://localhost:8080/notes/5/tags
                                     <div class="url">https://localhost:8080/tags/9/notes</div>
                                     
                                     <div class="request-body">
-                                        <div class="body-heading">BODY <span class="body-type">raw</span></div>
+                                        <div class="body-heading">BODY <span class="body-type">json</span></div>
                                         <hr>
                                             <div class="raw-body code-snippet">
                                               <pre class="body-block click-to-expand-wrapper is-snippet-wrapper " data-title="Get Notes with Tag">
@@ -1078,7 +1078,7 @@ GET https://localhost:8080/tags/9/notes
                                     <div class="url">https://localhost:8080/notes</div>
                                     
                                     <div class="request-body">
-                                        <div class="body-heading">BODY <span class="body-type">raw</span></div>
+                                        <div class="body-heading">BODY <span class="body-type">json</span></div>
                                         <hr>
                                             <div class="raw-body code-snippet">
                                               <pre class="body-block click-to-expand-wrapper is-snippet-wrapper is-expandable" data-title="Create Note">
@@ -1141,24 +1141,24 @@ POST https://localhost:8080/notes
                                      <div class="heading">
                                         <div class="name">
                                             <span class="POST method" >POST</span>
-                                            Get User Notes <span class="lock-icon"></span>
+                                            Get User Notes [Auth Req]<span class="lock-icon"></span>
                                         </div>
                                      </div>
-                                    <div class="url">https://localhost:8080/users/deca2463-b678-4ee2-8772-390b4c9b5f00/notes</div>
+                                    <div class="url">https://localhost:8080/users/:userId/notes</div>
                                     
                                     <div class="request-body">
                                         <div class="body-heading">HEADERS</div>
                                         <hr>
                                           <div class="param row">
                                             <div class="name col-md-3 col-xs-12">Authorization</div>
-                                            <div class="value col-md-9 col-xs-12">Bearer deca2463-b678-4ee2-8772-390b4c9b5f00</div>
+                                            <div class="value col-md-9 col-xs-12">Bearer :userId</div>
                                             <div class="description col-md-9 col-xs-12"><p>None</p>
                                             </div>
                                           </div>
                                     </div>
                                     
                                     <div class="request-body">
-                                        <div class="body-heading">BODY <span class="body-type">raw</span></div>
+                                        <div class="body-heading">BODY <span class="body-type">json</span></div>
                                         <hr>
                                             <div class="raw-body code-snippet">
                                               <pre class="body-block click-to-expand-wrapper is-snippet-wrapper " data-title="Get User Notes">
@@ -1199,7 +1199,7 @@ POST https://localhost:8080/notes
                                         <div>
                                             <pre class="click-to-expand-wrapper is-snippet-wrapper " data-title="Get User Notes">
                                                 <code class="is-highlighted">
-POST https://localhost:8080/users/deca2463-b678-4ee2-8772-390b4c9b5f00/notes
+POST https://localhost:8080/users/:userId/notes
 
 {
     "includeShared": true
@@ -1217,24 +1217,24 @@ POST https://localhost:8080/users/deca2463-b678-4ee2-8772-390b4c9b5f00/notes
                                      <div class="heading">
                                         <div class="name">
                                             <span class="GET method" >GET</span>
-                                            Get Single Note <span class="lock-icon"></span>
+                                            Get Single Note [Auth Req]<span class="lock-icon"></span>
                                         </div>
                                      </div>
-                                    <div class="url">https://localhost:8080/notes/7</div>
+                                    <div class="url">https://localhost:8080/notes/:NoteId</div>
                                     
                                     <div class="request-body">
                                         <div class="body-heading">HEADERS</div>
                                         <hr>
                                           <div class="param row">
                                             <div class="name col-md-3 col-xs-12">Authorization</div>
-                                            <div class="value col-md-9 col-xs-12">Bearer 0326b901-5fcc-4a1a-9c5b-8b627a34824d</div>
+                                            <div class="value col-md-9 col-xs-12">Bearer :userId</div>
                                             <div class="description col-md-9 col-xs-12"><p>None</p>
                                             </div>
                                           </div>
                                     </div>
                                     
                                     <div class="request-body">
-                                        <div class="body-heading">BODY <span class="body-type">raw</span></div>
+                                        <div class="body-heading">BODY <span class="body-type">json</span></div>
                                         <hr>
                                             <div class="raw-body code-snippet">
                                               <pre class="body-block click-to-expand-wrapper is-snippet-wrapper " data-title="Get Single Note">
@@ -1297,24 +1297,24 @@ GET https://localhost:8080/notes/7
                                      <div class="heading">
                                         <div class="name">
                                             <span class="PUT method" >PUT</span>
-                                            Update Note <span class="lock-icon"></span>
+                                            Update Note [Auth Req]<span class="lock-icon"></span>
                                         </div>
                                      </div>
-                                    <div class="url">https://localhost:8080/notes/7</div>
+                                    <div class="url">https://localhost:8080/notes/:NoteId</div>
                                     
                                     <div class="request-body">
                                         <div class="body-heading">HEADERS</div>
                                         <hr>
                                           <div class="param row">
                                             <div class="name col-md-3 col-xs-12">Authorization</div>
-                                            <div class="value col-md-9 col-xs-12">Bearer 0326b901-5fcc-4a1a-9c5b-8b627a34824d</div>
+                                            <div class="value col-md-9 col-xs-12">Bearer :userId</div>
                                             <div class="description col-md-9 col-xs-12"><p>None</p>
                                             </div>
                                           </div>
                                     </div>
                                     
                                     <div class="request-body">
-                                        <div class="body-heading">BODY <span class="body-type">raw</span></div>
+                                        <div class="body-heading">BODY <span class="body-type">json</span></div>
                                         <hr>
                                             <div class="raw-body code-snippet">
                                               <pre class="body-block click-to-expand-wrapper is-snippet-wrapper " data-title="Update Note">
@@ -1375,7 +1375,7 @@ PUT https://localhost:8080/notes/7
                                      <div class="heading">
                                         <div class="name">
                                             <span class="DELETE method" >DELETE</span>
-                                            Soft Delete Note <span class="lock-icon"></span>
+                                            Soft Delete Note [Auth Req] <span class="lock-icon"></span>
                                         </div>
                                      </div>
                                     <div class="url">https://localhost:8080/notes/4</div>
@@ -1385,14 +1385,14 @@ PUT https://localhost:8080/notes/7
                                         <hr>
                                           <div class="param row">
                                             <div class="name col-md-3 col-xs-12">Authorization</div>
-                                            <div class="value col-md-9 col-xs-12">Bearer deca2463-b678-4ee2-8772-390b4c9b5f00</div>
+                                            <div class="value col-md-9 col-xs-12">Bearer :userId</div>
                                             <div class="description col-md-9 col-xs-12"><p>None</p>
                                             </div>
                                           </div>
                                     </div>
                                     
                                     <div class="request-body">
-                                        <div class="body-heading">BODY <span class="body-type">raw</span></div>
+                                        <div class="body-heading">BODY <span class="body-type">json</span></div>
                                         <hr>
                                             <div class="raw-body code-snippet">
                                               <pre class="body-block click-to-expand-wrapper is-snippet-wrapper " data-title="Soft Delete Note">
@@ -1450,14 +1450,14 @@ DELETE https://localhost:8080/notes/4
                                             User Note Search by Title <span class="lock-icon"></span>
                                         </div>
                                      </div>
-                                    <div class="url">https://localhost:8080/users/deca2463-b678-4ee2-8772-390b4c9b5f00/notes/search?query=New</div>
+                                    <div class="url">https://localhost:8080/users/:userId/notes/search?query=New</div>
                                     
                                     <div class="request-body">
                                         <div class="body-heading">HEADERS</div>
                                         <hr>
                                           <div class="param row">
                                             <div class="name col-md-3 col-xs-12">Authorization</div>
-                                            <div class="value col-md-9 col-xs-12">Bearer deca2463-b678-4ee2-8772-390b4c9b5f00</div>
+                                            <div class="value col-md-9 col-xs-12">Bearer :userId</div>
                                             <div class="description col-md-9 col-xs-12"><p>None</p>
                                             </div>
                                           </div>
@@ -1484,7 +1484,7 @@ DELETE https://localhost:8080/notes/4
                                     <div class="responses-index">
                                         <div class="dropdown response-name">
                                             <button class="btn   responses-dropdown truncate" type="button" id="f678f251-1750-4e3a-b5d8-05b4c6b0fb37_dropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
-                                              <span id="selected" class="response-name-label">User Note Search by Title</span>
+                                              <span id="selected" class="response-name-label">User Note Search by Title [Auth Req]</span>
                                                 <span class="caret"></span>
 
                                             </button>
@@ -1514,17 +1514,17 @@ GET https://localhost:8080/users/deca2463-b678-4ee2-8772-390b4c9b5f00/notes/sear
                                      <div class="heading">
                                         <div class="name">
                                             <span class="GET method" >GET</span>
-                                            Get User Notes with Tags <span class="lock-icon"></span>
+                                            Get User Notes with Tags [Auth Req] <span class="lock-icon"></span>
                                         </div>
                                      </div>
-                                    <div class="url">https://localhost:8080/users/deca2463-b678-4ee2-8772-390b4c9b5f00/tags/notes</div>
+                                    <div class="url">https://localhost:8080/users/:userId/tags/notes</div>
                                     
                                     <div class="request-body">
                                         <div class="body-heading">HEADERS</div>
                                         <hr>
                                           <div class="param row">
                                             <div class="name col-md-3 col-xs-12">Authorization</div>
-                                            <div class="value col-md-9 col-xs-12">Bearer deca2463-b678-4ee2-8772-390b4c9b5f00</div>
+                                            <div class="value col-md-9 col-xs-12">Bearer :userId</div>
                                             <div class="description col-md-9 col-xs-12"><p>None</p>
                                             </div>
                                           </div>
@@ -1576,7 +1576,7 @@ GET https://localhost:8080/users/deca2463-b678-4ee2-8772-390b4c9b5f00/tags/notes
                                     <div class="url">https://localhost:8080/login</div>
                                     
                                     <div class="request-body">
-                                        <div class="body-heading">BODY <span class="body-type">raw</span></div>
+                                        <div class="body-heading">BODY <span class="body-type">json</span></div>
                                         <hr>
                                             <div class="raw-body code-snippet">
                                               <pre class="body-block click-to-expand-wrapper is-snippet-wrapper " data-title="Login">
@@ -1823,7 +1823,7 @@ GET https://localhost:8080/users/email/alice@example.com</code>
                                     <div class="url">https://localhost:8080/create_user</div>
                                     
                                     <div class="request-body">
-                                        <div class="body-heading">BODY <span class="body-type">raw</span></div>
+                                        <div class="body-heading">BODY <span class="body-type">json</span></div>
                                         <hr>
                                             <div class="raw-body code-snippet">
                                               <pre class="body-block click-to-expand-wrapper is-snippet-wrapper is-expandable" data-title="CreateUser">
@@ -1969,7 +1969,7 @@ GET https://localhost:8080/users/search?query=al&prefix=true</code>
                                     </div>
                                     
                                     <div class="request-body">
-                                        <div class="body-heading">BODY <span class="body-type">raw</span></div>
+                                        <div class="body-heading">BODY <span class="body-type">json</span></div>
                                         <hr>
                                             <div class="raw-body code-snippet">
                                               <pre class="body-block click-to-expand-wrapper is-snippet-wrapper " data-title="password-reset-request">
@@ -2030,7 +2030,7 @@ POST https://localhost:8080/password-reset-request
                                     <div class="url">https://localhost:8080/password-reset</div>
                                     
                                     <div class="request-body">
-                                        <div class="body-heading">BODY <span class="body-type">raw</span></div>
+                                        <div class="body-heading">BODY <span class="body-type">json</span></div>
                                         <hr>
                                             <div class="raw-body code-snippet">
                                               <pre class="body-block click-to-expand-wrapper is-snippet-wrapper " data-title="password-reset">
@@ -2096,7 +2096,7 @@ POST https://localhost:8080/password-reset
     <script src="js/bootstrap-treeview.min.js"></script>
     <script src="js/main.min.js"></script>
     <script type="application/javascript">
-        var data = [{'text': 'Shared Notes', 'nodes': [{'text': 'Create Shared Note', 'href': '#1', 'method': 'POST'}, {'text': 'Get All Shared Notes with a User', 'href': '#2', 'method': 'GET'}, {'text': 'Get all Users for a Shared Note', 'href': '#3', 'method': 'GET'}, {'text': 'Update Shared Notes Permission', 'href': '#4', 'method': 'PUT'}, {'text': 'Delete Shared Notes', 'href': '#5', 'method': 'DELETE'}], 'icon': 'fas fa-folder', 'selectable': 'false'}, {'text': 'Tags', 'nodes': [{'text': 'Create Tags', 'href': '#6', 'method': 'POST'}, {'text': 'Get Tags', 'href': '#7', 'method': 'GET'}, {'text': 'Get Tags for User', 'href': '#8', 'method': 'GET'}, {'text': 'Get TagID from Tag Name', 'href': '#9', 'method': 'GET'}, {'text': 'Update Tag', 'href': '#10', 'method': 'PUT'}, {'text': 'Delete a Tag', 'href': '#11', 'method': 'DELETE'}, {'text': 'Add Tag to Note', 'href': '#12', 'method': 'POST'}, {'text': 'Delete a Tag from Note', 'href': '#13', 'method': 'DELETE'}, {'text': 'Get Notes with Tag', 'href': '#14', 'method': 'GET'}, {'text': 'Get Tag Names and Notes for user id', 'href': '#15', 'method': 'GET'}], 'icon': 'fas fa-folder', 'selectable': 'false'}, {'text': 'Notes', 'nodes': [{'text': 'Create Note', 'href': '#16', 'method': 'POST'}, {'text': 'Get User Notes', 'href': '#17', 'method': 'POST'}, {'text': 'Get Single Note', 'href': '#18', 'method': 'GET'}, {'text': 'Update Note', 'href': '#19', 'method': 'PUT'}, {'text': 'Soft Delete Note', 'href': '#20', 'method': 'DELETE'}, {'text': 'User Note Search by Title', 'href': '#21', 'method': 'GET'}, {'text': 'Get User Notes with Tags', 'href': '#22', 'method': 'GET'}], 'icon': 'fas fa-folder', 'selectable': 'false'}, {'text': 'Users', 'nodes': [{'text': 'Login', 'href': '#23', 'method': 'POST'}, {'text': 'userInfo', 'href': '#24', 'method': 'GET'}, {'text': 'Get Users', 'href': '#25', 'method': 'GET'}, {'text': 'Enable OAuth For User', 'href': '#26', 'method': 'POST'}, {'text': 'Get User ID from Email', 'href': '#27', 'method': 'GET'}, {'text': 'CreateUser', 'href': '#28', 'method': 'POST'}, {'text': 'Searching for users', 'href': '#29', 'method': 'GET'}, {'text': 'password-reset-request', 'href': '#30', 'method': 'POST'}, {'text': 'password-reset', 'href': '#31', 'method': 'POST'}], 'icon': 'fas fa-folder', 'selectable': 'false'}]
+        var data = [{'text': 'Shared Notes', 'nodes': [{'text': 'Create Shared Note', 'href': '#1', 'method': 'POST'}, {'text': 'Get All Shared Notes with a User [Auth Req]', 'href': '#2', 'method': 'GET'}, {'text': 'Get all Users for a Shared Note', 'href': '#3', 'method': 'GET'}, {'text': 'Update Shared Notes Permission [Auth Req]', 'href': '#4', 'method': 'PUT'}, {'text': 'Delete Shared Notes [Auth Req]', 'href': '#5', 'method': 'DELETE'}], 'icon': 'fas fa-folder', 'selectable': 'false'}, {'text': 'Tags', 'nodes': [{'text': 'Create Tags', 'href': '#6', 'method': 'POST'}, {'text': 'Get Tags', 'href': '#7', 'method': 'GET'}, {'text': 'Get Tags for User', 'href': '#8', 'method': 'GET'}, {'text': 'Get TagID from Tag Name', 'href': '#9', 'method': 'GET'}, {'text': 'Update Tag', 'href': '#10', 'method': 'PUT'}, {'text': 'Delete a Tag', 'href': '#11', 'method': 'DELETE'}, {'text': 'Add Tag to Note', 'href': '#12', 'method': 'POST'}, {'text': 'Delete a Tag from Note', 'href': '#13', 'method': 'DELETE'}, {'text': 'Get Notes with Tag', 'href': '#14', 'method': 'GET'}, {'text': 'Get Tag Names and Notes for user id', 'href': '#15', 'method': 'GET'}], 'icon': 'fas fa-folder', 'selectable': 'false'}, {'text': 'Notes', 'nodes': [{'text': 'Create Note', 'href': '#16', 'method': 'POST'}, {'text': 'Get User Notes [Auth Req]', 'href': '#17', 'method': 'POST'}, {'text': 'Get Single Note [Auth Req]', 'href': '#18', 'method': 'GET'}, {'text': 'Update Note [Auth Req]', 'href': '#19', 'method': 'PUT'}, {'text': 'Soft Delete Note [Auth Req]', 'href': '#20', 'method': 'DELETE'}, {'text': 'User Note Search by Title [Auth Req]', 'href': '#21', 'method': 'GET'}, {'text': 'Get User Notes with Tags [Auth Req]', 'href': '#22', 'method': 'GET'}], 'icon': 'fas fa-folder', 'selectable': 'false'}, {'text': 'Users', 'nodes': [{'text': 'Login', 'href': '#23', 'method': 'POST'}, {'text': 'userInfo', 'href': '#24', 'method': 'GET'}, {'text': 'Get Users', 'href': '#25', 'method': 'GET'}, {'text': 'Enable OAuth For User', 'href': '#26', 'method': 'POST'}, {'text': 'Get User ID from Email', 'href': '#27', 'method': 'GET'}, {'text': 'CreateUser', 'href': '#28', 'method': 'POST'}, {'text': 'Searching for users', 'href': '#29', 'method': 'GET'}, {'text': 'password-reset-request', 'href': '#30', 'method': 'POST'}, {'text': 'password-reset', 'href': '#31', 'method': 'POST'}], 'icon': 'fas fa-folder', 'selectable': 'false'}]
         $('#tree').treeview({
             data: data,
             levels: 10,
