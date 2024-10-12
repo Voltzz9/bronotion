@@ -5,8 +5,8 @@
 
 | **Name**          | **Student Number** |
 |-------------------|--------------------|
-| Justin Dietrich   |                    |
-| Jonathan Donald   |                    |
+| Justin Dietrich   | 25924958           |
+| Jonathan Donald   | 25957848           |
 | James Milne       | 25917307           |
 | Kellen Mossner    | 26024284           |
 | David Nicolay     | 26296918           |
