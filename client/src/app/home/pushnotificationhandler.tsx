@@ -20,20 +20,16 @@ export function PushNotificationHandler() {
     const { data: session } = useSession();
     useEffect(() => {
         if ("serviceWorker" in navigator) {
-            console.log("Service Worker found...");
             const handleServiceWorker = async () => {
                 const register = await navigator.serviceWorker.register("/sw.js");
-                console.log(process.env.VAPID_PUBLIC_KEY)
                 const subscription = await register.pushManager.subscribe({
                     userVisibleOnly: true,
                     applicationServerKey: urlBase64ToUint8Array(process.env.VAPID_PUBLIC_KEY || "BG-iCoGsGvQ4B6R5GL--aerOPJHKj-EyFkEZjgP2w-HIvhjqMEVo4W-oGTt7_Ok1YuH_tegUtiahMkUzuVMT6xk"),
 
                 });
-                console.log("Subscription object created...");
                 if (session?.user?.id) {
                     const id = session.user.id;
-                    console.log(id)
-                    const res = await fetch("https://localhost:8080/subscribe", {
+                    await fetch("https://localhost:8080/subscribe", {
                         method: "POST",
                         body: JSON.stringify({
                             subscription: subscription,
@@ -43,11 +39,8 @@ export function PushNotificationHandler() {
                             "content-type": "application/json",
                         },
                     });
-                    console.log("Subscription object and id sent");
-                    console.log(res);
 
                 } else {
-                    console.log("errorr reras");
                     return
                 }
 

@@ -69,7 +69,6 @@ export function LayoutComponent({ onCollaboratorAdded }: LayoutComponentProps) {
         throw new Error('Invalid data format for tags');
       }
       setTagsWithNotes(tagsData);
-      console.log('Fetched tags and notes:', tagsWithNotes);
     } catch (error) {
       console.error('Failed to fetch notes and tags:', error);
     }
@@ -98,7 +97,6 @@ export function LayoutComponent({ onCollaboratorAdded }: LayoutComponentProps) {
       }
 
       const data: Note[] = await response.json();
-      console.log('Search results:', data);
       setSearchResults(data);
     } catch (error) {
       console.error('Error fetching search results:', error);
@@ -120,8 +118,7 @@ export function LayoutComponent({ onCollaboratorAdded }: LayoutComponentProps) {
     return () => clearTimeout(debounceTimer); // Clean up debounce
   }, [session, searchQuery]);
 
-  const handleNoteSelect = (noteId: number) => {
-    console.log('Selected note:', noteId);
+  const handleNoteSelect = () => {
     // Close the sidepanel
     setIsSidepanelOpen(false);
   };
@@ -179,7 +176,7 @@ export function LayoutComponent({ onCollaboratorAdded }: LayoutComponentProps) {
                             className={`cursor-pointer p-2 rounded-md ${currentNoteID && Number(currentNoteID) === result.note_id ? 'bg-purple-200' : ''
                               } hover:bg-accent`} // Conditional class for highlighting
                             onMouseDown={(e) => e.preventDefault()} // Prevent default mouse down behavior
-                            onClick={() => handleNoteSelect(result.note_id)} // Hide the side panel on click
+                            onClick={() => handleNoteSelect()} // Hide the side panel on click
                           >
                             <FileText className="inline-block mr-2 h-4 w-4" />
                             {result.title}
@@ -220,14 +217,14 @@ export function LayoutComponent({ onCollaboratorAdded }: LayoutComponentProps) {
                               tabIndex={0}
                               onKeyDown={(e) => {
                               if (e.key === 'Enter') {
-                                handleNoteSelect(tag.noteIds[index]);
+                                handleNoteSelect();
                                 window.location.href = `/notes/${tag.noteIds[index]}`;
                               }
                               }}
                               className={`cursor-pointer p-2 rounded-md ${currentNoteID && Number(currentNoteID) === tag.noteIds[index] ? 'bg-purple-200' : ''
                               } hover:bg-accent`} // Conditional class for highlighting
                               onMouseDown={(e) => e.preventDefault()} // Prevent default mouse down behavior
-                              onClick={() => handleNoteSelect(tag.noteIds[index])} // Hide the side panel on click
+                              onClick={() => handleNoteSelect()} // Hide the side panel on click
                             >
                               <FileText className="inline-block mr-2 h-4 w-4" />
                               {noteTitle}

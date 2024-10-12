@@ -13,7 +13,6 @@ export function useSocket() {
       return
     }
 
-    console.log("Connecting to:", URL)
     const newSocket = io(URL, {
       transports: ['websocket'],
       autoConnect: true,
@@ -23,31 +22,26 @@ export function useSocket() {
     })
 
     newSocket.on('connect', () => {
-      console.log('Socket connected')
       setIsConnected(true)
     })
 
     newSocket.on('disconnect', () => {
-      console.log('Socket disconnected')
       setIsConnected(false)
     })
 
-    newSocket.on('connect_error', (error) => {
-      console.error('Socket connection error:', error)
+    newSocket.on('connect_error', () => {
       setIsConnected(false)
     })
 
     setSocket(newSocket)
 
     return () => {
-      console.log('Disconnecting socket')
       newSocket.disconnect()
     }
   }, [])
 
   const joinNote = useCallback((noteId: string, userId: string) => {
     if (socket && isConnected) {
-      console.log(`Joining note: ${noteId} for user: ${userId}`)
       socket.emit('join-note', { noteId, userId })
     } else {
       console.error('Socket is not connected. Unable to join note.')
@@ -56,7 +50,6 @@ export function useSocket() {
 
   const leaveNote = useCallback((noteId: string, userId: string) => {
     if (socket && isConnected) {
-      console.log(`Leaving note: ${noteId} for user: ${userId}`)
       socket.emit('leave-note', { noteId, userId })
     } else {
       console.error('Socket is not connected. Unable to leave note.')

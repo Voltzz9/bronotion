@@ -86,7 +86,6 @@ export default function Notes() {
 
   const sendAddCollabUpdate = () => {
     if (socket) {
-      console.log("test")
       socket.emit('update-collaborators-send', (noteId));
     }
   }
@@ -163,7 +162,6 @@ export default function Notes() {
           console.error('Failed to fetch User Info')
           return
         }
-        console.log("Logged in username:", data.username)
         setUserId(data.id)
       }
 
@@ -208,15 +206,15 @@ export default function Notes() {
       const data: Note = await response.json();
       setNote(data.content);
       setNoteTitle(data.title);
-      console.log(data.updated_at);
+
       if (data.created_at) {
         setLastEdited(data.created_at.toString());
       }
-      console.log(lastEdited);
+
     } catch (error) {
       console.error('Error fetching note:', error)
     }
-  }, [noteId, router, setNote, setNoteTitle, setLastEdited, lastEdited, session?.user?.id]);
+  }, [noteId, router, setNote, setNoteTitle, setLastEdited, session?.user?.id]);
 
 
   useEffect(() => {

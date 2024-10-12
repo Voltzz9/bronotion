@@ -9,7 +9,6 @@ import { useRouter } from 'next/navigation';
 const URL = process.env.NEXT_PUBLIC_API_URL;
 
 async function deleteAccount(userId: string) {
-  console.log('Deleting account');
   try {
     const response = await fetch(`${URL}users/${userId}`, {
       method: 'DELETE',
@@ -20,7 +19,6 @@ async function deleteAccount(userId: string) {
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-    console.log('Account deleted');
     // Log out the user
     await signOut({ callbackUrl: '/' });
   } catch (error) {

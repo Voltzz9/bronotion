@@ -54,14 +54,11 @@ const FloatingCollaborators = forwardRef<{ fetchCollaborators: () => void }, Flo
           }
           const data: Collaborator[] = await response.json()
           // Remove the current user from the list of collaborators
-          console.log("Before:" + data)
           const currentUser = data.findIndex((collaborator) => collaborator.id === current_userId)
           if (currentUser > -1) {
             data.splice(currentUser, 1)
           }
-          console.log(data)
           setCollaborators(data)
-          console.log(data)
         } catch (error) {
           console.error('Error fetching users:', error)
         }
@@ -91,14 +88,11 @@ const FloatingCollaborators = forwardRef<{ fetchCollaborators: () => void }, Flo
       }
       const data: Collaborator[] = await response.json()
       // Remove the current user from the list of collaborators
-      console.log("Before:" + data)
       const currentUser = data.findIndex((collaborator) => collaborator.id === current_userId)
       if (currentUser > -1) {
         data.splice(currentUser, 1)
       }
-      console.log(data)
       setCollaborators(data)
-      console.log(data)
     } catch (error) {
       console.error('Error fetching users:', error)
     }
@@ -110,12 +104,10 @@ const FloatingCollaborators = forwardRef<{ fetchCollaborators: () => void }, Flo
       joinNote(noteId, current_userId)
 
       const handleUserConnected = (usersInNote: string[]) => {
-        console.log("User connected event received:", usersInNote)
         setConnectedUsers(usersInNote)
       }
 
       const handleUserDisconnected = (usersInNote: string[]) => {
-        console.log("User disconnected event received:", usersInNote)
         setConnectedUsers(usersInNote)
       }
 

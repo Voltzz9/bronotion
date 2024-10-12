@@ -26,7 +26,6 @@ export async function getUserById(userId: string): Promise<User | null> {
       throw new Error('Error fetching user');
     }
     const data: User = await response.json();
-    console.log('User data:', data);
     return data;
   } catch (error) {
     console.error('Error fetching user:', error);
@@ -46,7 +45,6 @@ export async function enableOAuth(userId: string): Promise<User> {
       throw new Error('Error enabling OAuth');
     }
     const data: User = await response.json();
-    console.log('OAuth enabled:', data);
     return data;
   } catch (error) {
     console.error('Error enabling OAuth:', error);
@@ -78,7 +76,6 @@ export async function createUser(user: User): Promise<User> {
       ...user,
       username: user.username || user.email.split('@')[0],
     };
-    console.log('Creating user:', userData);
     const response = await fetch(`${API_BASE_URL}create_user`, {
       method: 'POST',
       headers: {
@@ -101,7 +98,6 @@ export async function createUser(user: User): Promise<User> {
 
 export async function loginUser(email: string, password: string): Promise<User> {
   try {
-      console.log('Logging in user:'+email+' password:'+password); // TODO remove
       const response = await fetch(`${API_BASE_URL}login`, {
       method: 'POST',
       headers: {
@@ -114,7 +110,6 @@ export async function loginUser(email: string, password: string): Promise<User> 
       throw new Error(`Error logging in: ${response.status} ${response.statusText}. ${JSON.stringify(errorData)}`);
       }
       const data: User = await response.json();
-      console.log('User logged in:', data);
       return data;
   }
   catch (error) {

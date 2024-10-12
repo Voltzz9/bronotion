@@ -8,8 +8,6 @@ export default function InlineSearchBar() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    // Here you would typically handle the search action
-    console.log('Searching for:', query)
   }
 
   return (
