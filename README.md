@@ -7,7 +7,7 @@ Stellenbosch University CS343 Project 2 Group 37
 | James Milne       | 25917307           |
 | Kellen Mossner    | 26024284           |
 | David Nicolay     | 26296918           |
-# Database Setup
+## Database Setup
 FIRST TIME SETUP:
 1. Ensure PostgreSQL is installed on your machine AND PostgreSQL is RUNNING on your machine.
 2. Create a database called `bronotion` with the following command:
@@ -37,7 +37,7 @@ npx prisma migrate dev --name init
 psql -U admin -d bronotion -a -f ./sql/DML.sql;
 ```
 
-
+# Running the web application
 ## Running the database
 1. Ensure PostgreSQL is running on your machine.
 2. `cd` into the `backend` directory.
