@@ -7,6 +7,11 @@ Stellenbosch University CS343 Project 2 Group 37
 | James Milne       | 25917307           |
 | Kellen Mossner    | 26024284           |
 | David Nicolay     | 26296918           |
+
+
+- For a detailed report on the project, please refer to the [Report.md](Report.md) file.
+- For API documentation, please refer view the webpage `API_Documentation` folder.
+
 ## Database Setup
 FIRST TIME SETUP:
 1. Ensure PostgreSQL is installed on your machine AND PostgreSQL is RUNNING on your machine.
