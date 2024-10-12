@@ -420,7 +420,7 @@ app.get('/users', async (req, res) => {
 });
 
 // Create a new user (for OAuth)
-app.post('/create_user', async (req, res) => {
+app.post('/users', async (req, res) => {
   try {
     const { id, username, password, email, image, auth_method, provider_account_id } = req.body;
 
@@ -451,8 +451,9 @@ app.post('/create_user', async (req, res) => {
     }
 
     // if auth_method not defined, it is manual
-    const auth = auth_method || 'credentials';
+    const auth = auth_method;
 
+    console.log(auth);
     // Create user with associated records
     // Hash the password before storing it in the database
     let hashedPassword = '';

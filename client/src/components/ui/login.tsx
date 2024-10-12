@@ -81,7 +81,7 @@ export default function Component() {
     }
 
     try {
-      const response = await fetch(`${URL}create_user`, {
+      const response = await fetch(`${URL}users`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -91,7 +91,7 @@ export default function Component() {
           username,
           email,
           password,
-          auth_method: 'manual',
+          auth_method: 'credentials',
         }),
       })
 
