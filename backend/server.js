@@ -1314,10 +1314,43 @@ app.get('/notes/:noteId/check', async (req, res) => {
 
 // Share a note with another user
 app.post('/notes/:noteId/share', async (req, res) => {
-  //TODO: Currently users can share note with themselves.
   try {
     const noteId = parseInt(req.params.noteId); // Note IDs are integers
     const { sharedWithUserId, canEdit } = req.body; // User IDs are strings
+
+    const authHeader = req.headers['authorization']; // Lowercase 'authorization' for case sensitivity issues.
+    const userId = authHeader && authHeader.split(' ')[1]; // Extract the token part after "Bearer"
+
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    // If userId is the same as sharedWithUserId, return an error
+    if (userId === sharedWithUserId) {
+      return res.status(400).json({ error: 'Cannot share note with yourself' });
+    }
+
+    // Check if user has access to the note
+    const note2 = await prisma.note.findUnique({
+      where: { note_id: noteId },
+      select: {
+        user_id: true,
+      },
+    });
+    const sharedNote = await prisma.sharedNote.findFirst({
+      where: {
+        note_id: noteId,
+        shared_with_user_id: userId,
+      },
+    });
+
+    if (userId !== note2.user_id && !sharedNote) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    if (!note2 && !sharedNote) {
+      return res.status(404).json({ error: 'Note not found' });
+    }
 
     // Check if the note has already been shared with this user
     const existingShare = await prisma.sharedNote.findFirst({
