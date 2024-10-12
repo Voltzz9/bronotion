@@ -12,7 +12,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       name: "Credentials",
       credentials: {
         email: { label: "Email", type: "text", placeholder: "admin@example.com" },
-        password: { label: "Password", type: "password" }, 
+        password: { label: "Password", type: "password" },
         remember: { label: "Remember Me", type: "checkbox" },
       },
       async authorize(credentials: Partial<Record<"email" | "password" | "remember", unknown>>) {
@@ -21,10 +21,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           return null;
         }
         try {
-          // User login logic
-          const user = await loginUser(credentials.email as string, credentials.password as string);
+          const user = await loginUser(credentials.email as string, credentials.password as string, credentials.remember as boolean);
           if (user) {
-            return {...user, remember: credentials.remember} ; // Make sure the user object returned contains the ID
+            return {...user, remember: credentials.remember};
           }
           console.error('User not found');
           return null;
@@ -61,17 +60,25 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         } else {
           token.id = existingUser.id;
         }
+        if (account.provider === 'credentials') {
+        token.expires = user.token.expires;
+        } else {
+          await fetch(`${process.env.NEXT_PUBLIC_API_URL}login`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+          },
+            body: JSON.stringify({ email: token.email, remember: true, oauth: true }),
+          });
+          token.expires = Date.now() + 10 * 60 * 1000; // 10 minutes
+        }
+
       }
-      
-      token.expires = Date.now() + 60 * 1000; // 30 minutes in milliseconds
       return token;
     }
   },
   session: {
     strategy: "jwt",
-    maxAge: 30 * 60, // 30 minutes in seconds
-  },
-  jwt: {
-   
-  },
+    maxAge: 10 * 60, // 30 minutes in seconds
+  }
 });

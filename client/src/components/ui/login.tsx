@@ -96,9 +96,6 @@ export default function Component() {
       })
 
       const result = await response.json()
-
-      console.log(result)
-
       if (response.ok) {
         const signInResult = await signIn('credentials', {
           redirect: false,

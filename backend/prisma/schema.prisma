@@ -80,7 +80,7 @@ model Account {
 
 model Session {
   id           Int      @id @default(autoincrement())
-  user_id      String
+  user_id      String   @unique
   expires      DateTime
   sessionToken String   @unique
 

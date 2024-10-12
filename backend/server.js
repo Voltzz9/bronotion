@@ -114,7 +114,6 @@ const sendPushNotif = async (userId, title) => {
     const payload = JSON.stringify({ title, body: "A note has been shared with you" });
 
     const result = await push.sendNotification(subscription, payload);
-    console.log("Push notification sent successfully:", result);
     return result;
   } catch (error) {
     console.error("Error sending push notification:", error);
@@ -132,7 +131,6 @@ async function sendEmail(to, subject, bodyHtml) {
       subject: subject,
       bodyHtml: bodyHtml
     });
-    console.log('Email sent successfully');
     return { success: true, message: 'Email sent successfully' };
   } catch (error) {
     console.error('Error sending email:', error);
@@ -164,10 +162,9 @@ async function sendEmailShareNote(to, noteId) {
     </html> 
     `
     });
-    console.log('Email sent successfully');
     return { success: true, message: 'Email sent succesfully' };
   } catch (error) {
-    console.log('Error sending email:', error);
+    console.error('Error sending email:', error);
     return { success: false, error: 'Error sending email' }
   }
 }
@@ -185,7 +182,7 @@ async function sendPasswordReset(to, token) {
           <p style="color: #312359;">Hello,</p>
           <p style="color: #312359;">You have requested to reset your password for <strong style="color: #3c005a;">Bronotion</strong>.</p>
           <p style="color: #312359;">Click the button below to reset your password:</p>
-          <a href="https://localhost:8080/password-reset?token=${token}" style="display: inline-block; background-color: #3c005a; color: #FFFFFF; padding: 10px 20px; text-decoration: none; border-radius: 4px;">Reset Password</a>
+          <a href="https://bronotion.co.za/password-reset?token=${token}" style="display: inline-block; background-color: #3c005a; color: #FFFFFF; padding: 10px 20px; text-decoration: none; border-radius: 4px;">Reset Password</a>
           <p style="color: #312359;">If you did not request this, please ignore this email.</p>
           <p style="color: #ceb2ff; font-size: 12px;">Thank you for using Bronotion!</p>
         </div>
@@ -193,10 +190,9 @@ async function sendPasswordReset(to, token) {
     </html> 
     `
     });
-    console.log('Email sent successfully');
     return { success: true, message: 'Email sent successfully' };
   } catch (error) {
-    console.log('Error sending email:', error);
+    console.error('Error sending email:', error);
     return { success: false, error: 'Error sending email' }
   }
 }
@@ -204,8 +200,6 @@ async function sendPasswordReset(to, token) {
 app.post('/password-reset', async (req, res) => {
   try {
     const { token, password } = req.body;
-    console.log(token)
-
     const resetToken = await prisma.passwordResetToken.findUnique({
       where: {
         token: token,
@@ -261,7 +255,6 @@ app.post('/password-reset-request', async (req, res) => {
     }
 
     const token = generateToken();
-    console.log(token)
     const tokenExpiry = new Date(Date.now() + 3600000); // Token expiry set to 1 hour from now
 
     // Save token in the database
@@ -299,7 +292,6 @@ app.use('/uploads', express.static(UPLOAD_DIR));
 async function ensureUploadDir() {
   try {
     await fsPromises.mkdir(UPLOAD_DIR, { recursive: true });
-    console.log(`Upload directory created: ${UPLOAD_DIR}`);
   } catch (error) {
     console.error('Error creating upload directory:', error);
   }
@@ -323,8 +315,6 @@ const io = new SocketIOServer(server, {
 
 // Socket.IO connection handling
 io.on('connection', (socket) => {
-  console.log('A user connected');
-
   let currentNoteId = null;
   let currentUserId = null;
 
@@ -338,19 +328,14 @@ io.on('connection', (socket) => {
     }
   
     connectedUsers.get(noteId).add(userId);
-    console.log(`User ${userId} joined note ${noteId}`);
-    console.log('User IDs connected to note', noteId, ':', Array.from(connectedUsers.get(noteId)));
     io.to(noteId).emit('user-connected', Array.from(connectedUsers.get(noteId)));
   });
 
   socket.on('update-collaborators-send', (noteId) => {
-    console.log("recieved collab update socket")
-    console.log(noteId)
     io.in(noteId).emit('update-collaborators-rec');
   })
 
   socket.on('update-note', (data) => {
-    console.log(data.noteId)
     socket.to(data.noteId).emit('note-updated', data.content);
   });
 
@@ -367,14 +352,11 @@ io.on('connection', (socket) => {
   function handleUserLeave(noteId, userId) {
     if (connectedUsers.has(noteId)) {
       connectedUsers.get(noteId).delete(userId);
-      console.log(`User ${userId} left note ${noteId}`);
       if (connectedUsers.get(noteId).size === 0) {
         connectedUsers.delete(noteId);
       } else {
         io.to(noteId).emit('user-disconnected', Array.from(connectedUsers.get(noteId)));
       }
-      console.log('User IDs still connected to note', noteId, ':', 
-        connectedUsers.has(noteId) ? Array.from(connectedUsers.get(noteId)) : 'None');
     }
     if (noteId === currentNoteId) {
       currentNoteId = null;
@@ -413,7 +395,7 @@ app.get('/users', async (req, res) => {
 });
 
 // Create a new user
-app.post('/create_user', async (req, res) => {
+app.post('/users', async (req, res) => {
   try {
     const { id, username, password, email, image, auth_method, provider_account_id } = req.body;
 
@@ -446,7 +428,6 @@ app.post('/create_user', async (req, res) => {
     // if auth_method not defined, it is manual
     const auth = auth_method;
 
-    console.log(auth);
     // Create user with associated records
     // Hash the password before storing it in the database
     let hashedPassword = '';
@@ -652,8 +633,7 @@ app.get('/users/:userId', async (req, res) => {
 // Login user manually
 app.post('/login', async (req, res) => {
   try {
-    const { email, password } = req.body;
-
+    const { email, password, remember, oauth } = req.body;
     const user = await prisma.user.findFirst({
       where: {
         email: email,
@@ -664,17 +644,96 @@ app.post('/login', async (req, res) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    // Compare the password with the hashed password in the database
-    const passwordMatch = await bcrypt.compare(password, user.password_hash);
-    if (!passwordMatch) {
-      return res.status(401).json({ error: 'Invalid password' });
-    }
 
-    res.json({ message: 'Login successful', id: user.id, username: user.username, email: user.email, image: user.image });
+    // Compare the password with the hashed password in the database
+    if (!oauth){
+      const passwordMatch = await bcrypt.compare(password, user.password_hash);
+      if (!passwordMatch) {
+        return res.status(401).json({ error: 'Invalid password' });
+      }
+    };
+
+    let sessionToken = await prisma.session.findFirst({
+      where: {
+        user_id: user.id,
+      },
+      select: {
+        expires: true,
+        user_id: true,
+        sessionToken: true,
+      },
+    });
+
+    if (!sessionToken) {
+      if (remember) {
+       sessionToken = await prisma.session.create({
+          data: {
+            user_id: user.id,
+            expires: new Date(Date.now() + 1000 * 60 * 60 * 24), // 7 days
+            sessionToken: uuidv4(),
+          }
+        });
+      } else {
+        sessionToken = await prisma.session.create({
+          data: {
+            user_id: user.id,
+            expires: new Date(Date.now() + 1000 * 60 * 60), // 1 hour
+            sessionToken: uuidv4(),
+          },
+        });
+      }
+    }
+    if (sessionToken.expires < new Date(Date.now())) {
+      await prisma.session.delete({
+        where: {
+          user_id: user.id,
+        },
+      })};
+
+    res.json({ message: 'Login successful', id: user.id, username: user.username, email: user.email, image: user.image, token: sessionToken });
   } catch (error) {
     console.error('Error logging in:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
+});
+
+app.get('/session', async (req, res) => { 
+  try {
+    const authHeader = req.headers['authorization'];
+    const user_id = authHeader.split(' ')[1];
+    if (!user_id) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    const session = await prisma.session.findFirst({
+      where: {
+        user_id: user_id,
+      },
+      select: {
+        expires: true,
+        user_id: true,
+        sessionToken: true,
+      },
+    });
+
+    if (!session) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    if (session.expires < new Date(Date.now())) {
+      await prisma.session.delete({
+        where: {
+          user_id: session.user_id,
+        },
+      });
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    res.json({ message: 'Session is valid', session: session });
+  } catch (error) {
+    console.error('Error checking session:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+
 });
 
 // Delete user
@@ -1294,13 +1353,13 @@ app.post('/notes/:noteId/share', async (req, res) => {
     try {
       sendEmailToSharie(emailAddr)
     } catch (error) {
-      console.log("Error sending email notification")
+      console.error("Error sending email notification")
     }
 
     try {
       sendPushNotif(userId, "Title of note")
     } catch (error) {
-      console.log("Error sending web push notification")
+      console.error("Error sending web push notification")
     }
 
     res.status(201).json({
@@ -1821,6 +1880,3 @@ app.get('/tag-ids/:userId', async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
-//https.createServer(options, app).listen(PORT, () => {
-//  console.log(`Server is running on https://localhost:${PORT}`);
-//});
