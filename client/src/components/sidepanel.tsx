@@ -54,6 +54,7 @@ export function LayoutComponent({ onCollaboratorAdded }: LayoutComponentProps) {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.user?.id}`,
         },
       };
 
@@ -87,6 +88,7 @@ export function LayoutComponent({ onCollaboratorAdded }: LayoutComponentProps) {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.user?.id}`,
         },
       };
 

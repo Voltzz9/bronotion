@@ -126,6 +126,7 @@ export default function Notes() {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.user?.id}`,
         },
         body: JSON.stringify({ content }),
       })
@@ -146,6 +147,51 @@ export default function Notes() {
     });
   }
 
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!session?.user?.id) {
+        return
+      } else {
+        const resp = await fetch(`${URL}users/${session.user.id}`
+          ,{
+            headers: {
+              'Authorization': `Bearer ${session.user.id}`,
+            }
+        })
+        const data = await resp.json()
+        if (!resp.ok) {
+          console.error('Failed to fetch User Info')
+          return
+        }
+        console.log("Logged in username:", data.username)
+        setUserId(data.id)
+      }
+
+      if (noteId) {
+        const fetchNote = async () => {
+          try {
+            const response = await fetch(`${URL}notes/${noteId}`,
+              {
+                headers: {
+                  'Authorization': `Bearer ${session?.user?.id}`,
+              }
+            })
+            if (response.status === 404) {
+              router.push('/404')
+              return
+            }
+            const data: Note = await response.json()
+            setNote(data.content)
+          } catch (error) {
+            console.error('Error fetching note:', error)
+          }
+        }
+        fetchNote()
+      }
+    }
+
+    fetchData()
+  }, [noteId, router, session?.user?.id])
   const fetchNote = useCallback(async () => {
     try {
       const response = await fetch(`${URL}notes/${noteId}`)

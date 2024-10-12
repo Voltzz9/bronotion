@@ -42,7 +42,13 @@ const FloatingCollaborators = forwardRef<{ fetchCollaborators: () => void }, Flo
     if (noteId !== null && noteId !== undefined) {
       const fetchCollaborators = async () => {
         try {
-          const response = await fetch(URL + `notes/${noteId}/shared-users`)
+          const response = await fetch(URL + `notes/${noteId}/shared-users`,
+            {
+              headers: {
+                'Authorization': `Bearer ${session?.user?.id}`,
+              },
+            }
+          )
           if (!response.ok) {
             throw new Error('Failed to fetch Users')
           }
@@ -62,7 +68,7 @@ const FloatingCollaborators = forwardRef<{ fetchCollaborators: () => void }, Flo
       }
       fetchCollaborators()
     }
-  }, [noteId, current_userId])
+  }, [noteId, current_userId, session])
 
 
   useImperativeHandle(ref, () => ({
@@ -73,7 +79,13 @@ const FloatingCollaborators = forwardRef<{ fetchCollaborators: () => void }, Flo
     if (noteId === null || noteId === undefined) return;
 
     try {
-      const response = await fetch(URL + `notes/${noteId}/shared-users`)
+      const response = await fetch(URL + `notes/${noteId}/shared-users`
+        ,{
+          headers: {
+            'Authorization': `Bearer ${session?.user?.id}`,
+          },
+        }
+      )
       if (!response.ok) {
         throw new Error('Failed to fetch Users')
       }
