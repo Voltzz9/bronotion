@@ -1232,6 +1232,9 @@ app.get('/notes/:noteId', async (req, res) => {
     }
 
     // Check if user has access to the note
+    if (!noteId) {
+      return res.status(400).json({ error: 'Note ID is required' });
+    }
     const note2 = await prisma.note.findUnique({
       where: { note_id: noteId },
       select: {
