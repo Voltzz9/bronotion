@@ -62,7 +62,7 @@ const FloatingCollaborators = forwardRef<{ fetchCollaborators: () => void }, Flo
       }
       fetchCollaborators()
     }
-  }, [noteId, current_userId])
+  }, [noteId, current_userId, session])
 
 
   useImperativeHandle(ref, () => ({

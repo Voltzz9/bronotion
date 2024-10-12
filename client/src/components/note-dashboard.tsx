@@ -149,7 +149,7 @@ export function NoteDashboardV2() {
     } catch (error) {
       console.error('Failed to fetch notes and tags:', error);
     }
-  }, [noteView]);
+  }, [noteView, session]);
 
   useEffect(() => {
     if (session?.user?.id) {

@@ -14,7 +14,6 @@ import { useSession } from 'next-auth/react'
 import { useSocket } from '@/hooks/useSocket'
 import { Toaster } from "@/components/ui/toaster"
 import { useToast } from "@/hooks/use-toast"
-import { headers } from 'next/headers'
 
 const URL = process.env.NEXT_PUBLIC_API_URL
 
