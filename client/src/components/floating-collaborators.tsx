@@ -23,7 +23,7 @@ interface FloatingCollaboratorsProps {
   current_userId: string
 }
 
-export const FloatingCollaborators = forwardRef<{ fetchCollaborators: () => void }, FloatingCollaboratorsProps>(({ current_userId }, ref) => {
+const FloatingCollaborators = forwardRef<{ fetchCollaborators: () => void }, FloatingCollaboratorsProps>(({ current_userId }, ref) => {
   const [isExpanded, setIsExpanded] = useState(false)
   const [collaborators, setCollaborators] = useState<Collaborator[]>([])
   const noteId = useNoteId()
@@ -164,3 +164,7 @@ export const FloatingCollaborators = forwardRef<{ fetchCollaborators: () => void
     </motion.div>
   )
 })
+
+FloatingCollaborators.displayName = 'FloatingCollaborators'
+
+export { FloatingCollaborators }

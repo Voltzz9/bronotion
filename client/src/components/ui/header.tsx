@@ -50,7 +50,7 @@ export default function Header({ onCollaboratorAdded }: HeaderComponentProps) {
     stiffness: 80,
     damping: 15,
   });
-  const logoX = useSpring(useTransform(scrollY, [0, 50], ['0%', isMobile ? '0%' : '-45%']), {
+  const logoX = useSpring(useTransform(scrollY, [0, 50], ['0%', isMobile ? '0%' : '-20%']), {
     stiffness: 80,
     damping: 15,
   });
@@ -77,10 +77,10 @@ export default function Header({ onCollaboratorAdded }: HeaderComponentProps) {
                 style={{ width: logoWidth, x: logoX }}
                 className="flex items-center"
               >
-                <span className="text-4xl font-bold text-secondary">B</span>
+                <span className="text-4xl sm:text-4xl font-bold text-secondary">B</span>
                 <motion.span
                   style={{ opacity }}
-                  className="text-4xl font-bold text-secondary"
+                  className="text-4xl sm:text-4xl font-bold text-secondary"
                 >
                   ronotion
                 </motion.span>

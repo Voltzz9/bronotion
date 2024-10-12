@@ -10,7 +10,7 @@ interface DownloadButtonProps {
   noteContent: string;
 }
 
-export function DownloadButton({ noteId, noteTitle, noteContent }: DownloadButtonProps) {
+export function DownloadButton({ noteTitle, noteContent }: DownloadButtonProps) {
   const handleDownload = async () => {
     try {
       // Parse the markdown
@@ -50,7 +50,7 @@ export function DownloadButton({ noteId, noteTitle, noteContent }: DownloadButto
           case 'list':
             pdf.setFontSize(12);
             pdf.setFont('', 'normal');
-            token.items.forEach((item: any, index: number) => {
+            token.items.forEach((item: { text: string }, index: number) => {
               if (yOffset > pdf.internal.pageSize.height - margin) {
                 pdf.addPage();
                 yOffset = margin;

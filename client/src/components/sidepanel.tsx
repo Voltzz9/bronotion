@@ -173,7 +173,7 @@ export function LayoutComponent({ onCollaboratorAdded }: LayoutComponentProps) {
                       {searchResults.map((result, index) => (
                         <Link href={`/notes/${result.note_id}`} key={index} passHref>
                           <div
-                            className={`cursor-pointer p-2 rounded-md ${currentNoteID && currentNoteID === result.note_id ? 'bg-purple-200' : ''
+                            className={`cursor-pointer p-2 rounded-md ${currentNoteID && Number(currentNoteID) === result.note_id ? 'bg-purple-200' : ''
                               } hover:bg-accent`} // Conditional class for highlighting
                             onMouseDown={(e) => e.preventDefault()} // Prevent default mouse down behavior
                             onClick={() => handleNoteSelect(result.note_id)} // Hide the side panel on click
@@ -213,7 +213,7 @@ export function LayoutComponent({ onCollaboratorAdded }: LayoutComponentProps) {
                         tag.noteTitles.map((noteTitle: string, index: number) => (
                           <Link href={`/notes/${tag.noteIds[index]}`} key={index} passHref>
                             <div
-                              className={`cursor-pointer p-2 rounded-md ${currentNoteID && currentNoteID === tag.noteIds[index] ? 'bg-purple-200' : ''
+                              className={`cursor-pointer p-2 rounded-md ${currentNoteID && Number(currentNoteID) === tag.noteIds[index] ? 'bg-purple-200' : ''
                                 } hover:bg-accent`} // Conditional class for highlighting
                               onMouseDown={(e) => e.preventDefault()} // Prevent default mouse down behavior
                               onClick={() => handleNoteSelect(tag.noteIds[index])} // Hide the side panel on click
