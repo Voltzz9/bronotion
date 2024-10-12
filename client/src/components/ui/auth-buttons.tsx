@@ -1,6 +1,5 @@
 import Link from 'next/link'
 import { handleSignOut } from "@/app/server/serverActions"
-import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 
 const AuthButtons = () => {

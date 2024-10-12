@@ -7,8 +7,6 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { useSession } from 'next-auth/react';
 import { LayoutComponent } from '@/components/sidepanel';
-import AuthButtons from './auth-buttons';
-import { handleSignOut } from "@/app/server/serverActions"
 import { usePathname, useRouter } from 'next/navigation';
 
 interface HeaderComponentProps {
