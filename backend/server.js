@@ -1375,9 +1375,37 @@ app.get('/users/:userId/shared-notes', async (req, res) => {
 
 // Get all users a note has been shared with
 // Important: Must use the note id not the shared note id
+// User needs to have access to the note
 app.get('/notes/:noteId/shared-users', async (req, res) => {
   try {
+    const authHeader = req.headers['authorization']; // Lowercase 'authorization' for case sensitivity issues.
+    const userId = authHeader && authHeader.split(' ')[1]; // Extract the token part after "Bearer"
     const noteId = parseInt(req.params.noteId);
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    // Check if user has access to the note
+    const note2 = await prisma.note.findUnique({
+      where: { note_id: noteId },
+      select: {
+        user_id: true,
+      },
+    });
+    const sharedNote = await prisma.sharedNote.findFirst({
+      where: {
+        note_id: noteId,
+        shared_with_user_id: userId,
+      },
+    });
+
+    if (userId !== note2.user_id && !sharedNote) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    if (!note2 && !sharedNote) {
+      return res.status(404).json({ error: 'Note not found' });
+    }
 
     // Fetch shared notes with user information
     const sharedNotes = await prisma.sharedNote.findMany({
