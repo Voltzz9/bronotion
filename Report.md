@@ -103,3 +103,5 @@ The backend of the Bronotion project is designed to handle data storage, authent
 ## 5. Authentication
 
 ## 6. A high-level description of design patterns for the client and API
+
+## 7. Additional Features
