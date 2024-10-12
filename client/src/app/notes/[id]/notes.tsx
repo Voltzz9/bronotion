@@ -59,7 +59,7 @@ export default function Notes() {
     };
 
     fetchEmojis();
-  }, []);
+  }, [octokit.rest.emojis]);
 
   useEffect(() => {
     if (socket && noteId && session?.user?.id) {
