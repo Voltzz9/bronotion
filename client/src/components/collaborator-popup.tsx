@@ -98,7 +98,6 @@ export function CollaboratorPopup({ onCollaboratorAdded }: CollaboratorPopupProp
       if (onCollaboratorAdded) {
         onCollaboratorAdded(selectedCollaborator);
       }
-      console.log(result); // Handle the response
     } catch (error) {
       console.error('Error sending POST request:', error);
     }
