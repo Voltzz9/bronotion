@@ -27,12 +27,6 @@ const options = {
   cert: fs.readFileSync('server.cert'), // Path to your certificate file
 };
 
-// Load SSL certificate and key
-//const options = {
-//  key: fs.readFileSync('server.key'), // Path to your key file
-//  cert: fs.readFileSync('server.cert'), // Path to your certificate file
-//};
-
 app.use(cors({
   origin: 'https://localhost:3000',
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
@@ -1087,8 +1081,38 @@ app.delete('/notes/:noteId', async (req, res) => {
 // Fetch a single note
 app.get('/notes/:noteId', async (req, res) => {
   try {
-    console.log("Tried to fetch")
+    
+    const authHeader = req.headers['authorization']; // Lowercase 'authorization' for case sensitivity issues.
+    const userId = authHeader && authHeader.split(' ')[1]; // Extract the token part after "Bearer"
     const noteId = parseInt(req.params.noteId);
+    console.log("Auth check in progress, userID: ", userId)
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    // Check if user has access to the note
+    const note2 = await prisma.note.findUnique({
+      where: { note_id: noteId },
+      select: {
+        user_id: true,
+      },
+    });
+    const sharedNote = await prisma.sharedNote.findFirst({
+      where: {
+        note_id: noteId,
+        shared_with_user_id: userId,
+      },
+    });
+
+    if (userId !== note2.user_id && !sharedNote) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    if (!note2 && !sharedNote) {
+      return res.status(404).json({ error: 'Note not found' });
+    }
+    
+    // Finally, fetch the note and all its data
     const note = await prisma.note.findUnique({
       where: { note_id: noteId },
       select: {
@@ -1102,10 +1126,6 @@ app.get('/notes/:noteId', async (req, res) => {
       },
     });
 
-    if (!note) {
-      return res.status(404).json({ error: 'Note not found' });
-    }
-
     res.json(note);
   } catch (error) {
     console.error('Error fetching note:', error);
@@ -1116,7 +1136,6 @@ app.get('/notes/:noteId', async (req, res) => {
 app.get('/notes/:noteId/check', async (req, res) => {
 
   try {
-    console.log("tried to auth")
     const authHeader = req.headers['authorization']; // Lowercase 'authorization' for case sensitivity issues.
     const userId = authHeader && authHeader.split(' ')[1]; // Extract the token part after "Bearer"
     const noteId = parseInt(req.params.noteId, 10);
