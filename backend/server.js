@@ -403,7 +403,6 @@ app.get('/users', async (req, res) => {
       select: {
         id: true,       // Change made here
         username: true,
-        email: true,
       },
     });
     res.json(users);
@@ -1462,6 +1461,34 @@ app.put('/notes/:noteId/permissions', async (req, res) => {
     const noteId = parseInt(req.params.noteId);
     const { sharedWithUserId, canEdit } = req.body;
 
+    const authHeader = req.headers['authorization']; // Lowercase 'authorization' for case sensitivity issues.
+    const userId = authHeader && authHeader.split(' ')[1]; // Extract the token part after "Bearer"
+    
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    // Check if user has access to the note
+    const note2 = await prisma.note.findUnique({
+      where: { note_id: noteId },
+      select: {
+        user_id: true,
+      },
+    });
+    const sharedNote = await prisma.sharedNote.findFirst({
+      where: {
+        note_id: noteId,
+        shared_with_user_id: userId,
+      },
+    });
+
+    if (userId !== note2.user_id && !sharedNote) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    if (!note2 && !sharedNote) {
+      return res.status(404).json({ error: 'Note not found' });
+    }
+
     if (!sharedWithUserId || typeof canEdit !== 'boolean') {
       return res.status(400).json({ error: 'Invalid input. Both shared_with_user_id and canEdit are required.' });
     }
@@ -1486,11 +1513,40 @@ app.put('/notes/:noteId/permissions', async (req, res) => {
 });
 
 // Remove shared access to a note
-// Important: Must use the shared note id not the note id (Open to suggestions on better endpoint)
+// Important: Must use the shared note id not the note id
 app.delete('/shared-notes/:sharedNoteId', async (req, res) => {
   try {
     const sharedNoteId = parseInt(req.params.sharedNoteId);
     const { sharedWithUserId } = req.body;
+
+    const authHeader = req.headers['authorization']; // Lowercase 'authorization' for case sensitivity issues.
+    const userId = authHeader && authHeader.split(' ')[1]; // Extract the token part after "Bearer"
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const sharedNote = await prisma.sharedNote.findFirst({
+      where: {
+        shared_note_id: sharedNoteId,
+      },
+      select: {
+        note_id: true,
+      },
+    });
+    if (!sharedNote) {
+      return res.status(404).json({ error: 'Shared note not found or not shared with the specified user.' });
+    }
+    // Get the owner of the note
+    const noteOriginal = await prisma.note.findUnique({
+      where: { note_id: sharedNote.note_id },
+      select: {
+        user_id: true,
+      },
+    });
+
+    if (userId !== noteOriginal.user_id && !sharedNote) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
 
     // Check if the shared note exists
     const existingShare = await prisma.sharedNote.findFirst({
