@@ -27,7 +27,7 @@ interface TagComboboxProps {
   handleCreateTag: (tag: string) => void;
 }
 
-export const TagCombobox: React.FC<TagComboboxProps> = ({ initTags, selectedTags, noteId, onTagToggle, handleCreateTag }) => {
+export const TagCombobox: React.FC<TagComboboxProps> = ({ initTags, selectedTags, onTagToggle, handleCreateTag }) => {
   const [open, setOpen] = React.useState(false)
   const [tags, setTags] = React.useState(initTags)
   const [inputValue, setInputValue] = React.useState("")
