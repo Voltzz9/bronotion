@@ -17,6 +17,7 @@ const geistMono = localFont({
 export const metadata: Metadata = {
   title: "Bronotion",
   description: "Collaborate on notes in real-time",
+  icons: '/favicon.png',
 };
 
 export default function RootLayout({
