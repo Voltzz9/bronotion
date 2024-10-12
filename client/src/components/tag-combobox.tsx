@@ -23,8 +23,8 @@ interface TagComboboxProps {
   initTags: string[];
   selectedTags: string[];
   noteId: string;
-  onTagToggle: (noteId: string, tagName: string) => void;
-  handleCreateTag: (tag: string, noteId:string) => void;
+  onTagToggle: (tagName: string, tagId?: string) => void;
+  handleCreateTag: (tag: string) => void;
 }
 
 export const TagCombobox: React.FC<TagComboboxProps> = ({ initTags, selectedTags, noteId, onTagToggle, handleCreateTag }) => {
@@ -34,14 +34,14 @@ export const TagCombobox: React.FC<TagComboboxProps> = ({ initTags, selectedTags
 
   const createTag = (label: string) => {
     if (label.trim() === "") return
-    handleCreateTag(label.trim(), noteId)
+    handleCreateTag(label.trim())
     setInputValue("")
     setOpen(false)
   }
 
-  React.useEffect (() => {
+  React.useEffect(() => {
     setTags(initTags)
-  } , [initTags, tags])
+  }, [initTags])
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -64,26 +64,30 @@ export const TagCombobox: React.FC<TagComboboxProps> = ({ initTags, selectedTags
           />
           <CommandList>
             {inputValue.trim() && (
-                <CommandEmpty>
-                  <Button
-                    variant="ghost"
-                    className="w-full justify-start"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      createTag(inputValue);}}
-                  >
-                    <Plus className="mr-2 h-4 w-4" />
-                    Create &quot;{inputValue}&quot;
-                  </Button>
-                </CommandEmpty>
-              )}
+              <CommandEmpty>
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    createTag(inputValue);
+                  }}
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Create &quot;{inputValue}&quot;
+                </Button>
+              </CommandEmpty>
+            )}
             <CommandGroup heading="Existing tags">
               {tags.map((tag) => (
                 <CommandItem
                   key={tag}
                   value={tag}
-                  onSelect={() => onTagToggle(noteId, tag)}
+                  onSelect={() => {
+                    onTagToggle(tag);
+                    setOpen(false);
+                  }}
                 >
                   <Check
                     className={cn(
