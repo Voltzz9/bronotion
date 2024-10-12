@@ -45,6 +45,11 @@ export default function Component() {
     }, 300)
   }
 
+  const handleForgotPassword = async () => {
+    router.push('/forgot-password')
+
+  }
+
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setIsLoading(true)
@@ -218,11 +223,14 @@ export default function Component() {
           </Button>
         </form>
         {showForgotPassword && (
-          <div className="text-center">
-            <a href={`${URL}forgot-password`} className="text-blue-500 hover:underline text-sm">
+            <div className="text-center">
+            <a 
+              className="text-blue-500 hover:underline text-sm cursor-pointer"
+              onClick={handleForgotPassword}
+            >
               Have you forgotten your password?
             </a>
-          </div>
+            </div>
         )}
         <GitHubSignInForm />
         <GoogleSignInButton />
