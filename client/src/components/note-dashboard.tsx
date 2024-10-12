@@ -219,7 +219,7 @@ export function NoteDashboardV2() {
 
     const newNote = {
       title: 'New Note',
-      content: "# This is a sample note \n\nYou can edit this note using Markdown syntax.",
+      content: "# Note Title\n\nStart writing your note here...",
       userId: session.user.id,
     };
 
