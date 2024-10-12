@@ -129,6 +129,7 @@ export function LayoutComponent({ onCollaboratorAdded }: LayoutComponentProps) {
   return (
     <>
       <button
+        tabIndex={0}
         id="burger"
         className={isSidepanelOpen ? "open" : ""}
         onClick={toggleSidepanel}
@@ -213,10 +214,18 @@ export function LayoutComponent({ onCollaboratorAdded }: LayoutComponentProps) {
                     <div className="pl-4 py-2 space-y-2">
                       {Array.isArray(tag.noteTitles) && tag.noteTitles.length > 0 ? (
                         tag.noteTitles.map((noteTitle: string, index: number) => (
-                          <Link href={`/notes/${tag.noteIds[index]}`} key={index} passHref>
+                          <Link 
+                          href={`/notes/${tag.noteIds[index]}`} key={index} passHref>
                             <div
+                              tabIndex={0}
+                              onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                handleNoteSelect(tag.noteIds[index]);
+                                window.location.href = `/notes/${tag.noteIds[index]}`;
+                              }
+                              }}
                               className={`cursor-pointer p-2 rounded-md ${currentNoteID && Number(currentNoteID) === tag.noteIds[index] ? 'bg-purple-200' : ''
-                                } hover:bg-accent`} // Conditional class for highlighting
+                              } hover:bg-accent`} // Conditional class for highlighting
                               onMouseDown={(e) => e.preventDefault()} // Prevent default mouse down behavior
                               onClick={() => handleNoteSelect(tag.noteIds[index])} // Hide the side panel on click
                             >
