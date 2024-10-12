@@ -7,6 +7,7 @@ import { ChevronUp, ChevronDown } from 'lucide-react'
 import useNoteId from '@/app/hooks/useNoteId'
 import Image from 'next/image'
 import { useSocket } from '@/hooks/useSocket'
+import { useSession } from "next-auth/react"
 
 const URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -29,12 +30,19 @@ const FloatingCollaborators = forwardRef<{ fetchCollaborators: () => void }, Flo
   const noteId = useNoteId()
   const [connectedUsers, setConnectedUsers] = useState<string[]>([])
   const { socket, isConnected, joinNote, leaveNote } = useSocket()
+  const { data: session } = useSession();
 
   useEffect(() => {
     if (noteId !== null && noteId !== undefined) {
       const fetchCollaborators = async () => {
         try {
-          const response = await fetch(URL + `notes/${noteId}/shared-users`)
+          const response = await fetch(URL + `notes/${noteId}/shared-users`,
+            {
+              headers: {
+                'Authorization': `Bearer ${session?.user?.id}`,
+              },
+            }
+          )
           if (!response.ok) {
             throw new Error('Failed to fetch Users')
           }
@@ -65,7 +73,13 @@ const FloatingCollaborators = forwardRef<{ fetchCollaborators: () => void }, Flo
     if (noteId === null || noteId === undefined) return;
 
     try {
-      const response = await fetch(URL + `notes/${noteId}/shared-users`)
+      const response = await fetch(URL + `notes/${noteId}/shared-users`
+        ,{
+          headers: {
+            'Authorization': `Bearer ${session?.user?.id}`,
+          },
+        }
+      )
       if (!response.ok) {
         throw new Error('Failed to fetch Users')
       }

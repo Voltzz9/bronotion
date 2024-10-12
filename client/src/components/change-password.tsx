@@ -33,7 +33,12 @@ async function changePassword(userId: string, formData: FormData) {
 
 async function getUserAuthMethods(userId: string) {
   try {
-    const response = await fetch(`${URL}users/${userId}`);
+    const response = await fetch(`${URL}users/${userId}`
+      ,{
+        headers: {
+          'Authorization': `Bearer ${userId}`,
+        },}
+    );
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }

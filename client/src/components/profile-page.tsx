@@ -19,8 +19,16 @@ import React from "react"
 const URL = process.env.NEXT_PUBLIC_API_URL
 
 async function getUserProfile(userId: string) {
+  
+
   try {
-    const response = await fetch(`${URL}users/${userId}`)
+    const response = await fetch(`${URL}users/${userId}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${userId}`,
+        },
+      }
+    )
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`)
     }
@@ -134,6 +142,9 @@ function ProfilePage() {
       const response = await fetch(`${URL}users/${session.user.id}`, {
         method: 'POST',
         body: formData,
+        headers: {
+          'Authorization': `Bearer ${session.user.id}`,
+        },
       })
   
       if (!response.ok) {

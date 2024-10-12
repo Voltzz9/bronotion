@@ -98,6 +98,7 @@ export function NoteDashboardV2() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.user?.id}`,
         },
         body: JSON.stringify({ includeShared: true }), // Default to includeShared: true
       };
@@ -110,6 +111,7 @@ export function NoteDashboardV2() {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session?.user?.id}`,
           },
         };
       }
@@ -226,6 +228,7 @@ export function NoteDashboardV2() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.user.id}`,
         },
         body: JSON.stringify(newNote),
         credentials: 'include'
@@ -385,6 +388,7 @@ export function NoteDashboardV2() {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.user.id}`,
         },
         body: JSON.stringify({ title: editingTitle }),
         credentials: 'include'
@@ -416,6 +420,7 @@ export function NoteDashboardV2() {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.user.id}`,
         },
         credentials: 'include'
       });

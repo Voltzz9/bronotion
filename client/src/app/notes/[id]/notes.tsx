@@ -14,6 +14,7 @@ import { useSession } from 'next-auth/react'
 import { useSocket } from '@/hooks/useSocket'
 import { Toaster } from "@/components/ui/toaster"
 import { useToast } from "@/hooks/use-toast"
+import { headers } from 'next/headers'
 
 const URL = process.env.NEXT_PUBLIC_API_URL
 
@@ -132,6 +133,7 @@ export default function Notes() {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.user?.id}`,
         },
         body: JSON.stringify({ content }),
       })
@@ -157,7 +159,12 @@ export default function Notes() {
       if (!session?.user?.id) {
         return
       } else {
-        const resp = await fetch(`${URL}users/${session.user.id}`)
+        const resp = await fetch(`${URL}users/${session.user.id}`
+          ,{
+            headers: {
+              'Authorization': `Bearer ${session.user.id}`,
+            }
+        })
         const data = await resp.json()
         if (!resp.ok) {
           console.error('Failed to fetch User Info')
@@ -170,7 +177,12 @@ export default function Notes() {
       if (noteId) {
         const fetchNote = async () => {
           try {
-            const response = await fetch(`${URL}notes/${noteId}`)
+            const response = await fetch(`${URL}notes/${noteId}`,
+              {
+                headers: {
+                  'Authorization': `Bearer ${session?.user?.id}`,
+              }
+            })
             if (response.status === 404) {
               router.push('/404')
               return
