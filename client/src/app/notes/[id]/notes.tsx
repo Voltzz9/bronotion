@@ -1,9 +1,10 @@
-//Notes.tsx
-'use client'
+"use client"
 
 import React, { useEffect, useState, useRef } from 'react'
 import Header from '@/components/ui/header'
 import { marked } from 'marked'
+import { markedEmoji } from "marked-emoji"
+import { Octokit } from "@octokit/rest"
 import DOMPurify from 'dompurify'
 import { FloatingCollaborators } from '@/components/floating-collaborators'
 import useNoteId from '@/app/hooks/useNoteId'
@@ -35,10 +36,30 @@ export default function Notes() {
   const noteId = useNoteId();
   const router = useRouter();
   const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
-  const [userName, setUsername] = useState("");
   const floatingCollaboratorsRef = useRef<{ fetchCollaborators: () => void } | null>(null);
   const { toast } = useToast();
+  const octokit = new Octokit();
 
+  useEffect(() => {
+    const fetchEmojis = async () => {
+      try {
+        const res = await octokit.rest.emojis.get();
+        const emojis = res.data;
+        
+        const options = {
+          emojis,
+          renderer: (token: { name: string; emoji: string }) => 
+            `<img alt="${token.name}" src="${token.emoji}" class="inline-emoji" style="display: inline-block; height: 1em; width: 1em; margin: 0 .05em 0 .1em; vertical-align: -0.1em;">`
+        };
+
+        marked.use(markedEmoji(options));
+      } catch (error) {
+        console.error('Error fetching emojis:', error);
+      }
+    };
+
+    fetchEmojis();
+  }, []);
 
   useEffect(() => {
     if (socket && noteId && session?.user?.id) {
@@ -64,7 +85,6 @@ export default function Notes() {
         if (floatingCollaboratorsRef.current) {
           floatingCollaboratorsRef.current.fetchCollaborators();
         }
-        console.log("TODO")
       })
 
       return () => {
@@ -168,10 +188,8 @@ export default function Notes() {
     fetchData()
   }, [noteId, router, session?.user?.id])
 
-  // Scroll to bottom with an extra offset when the note content changes
   useEffect(() => {
     if (textAreaRef.current) {
-      // Adding an offset of 10px to ensure there is no space left at the bottom
       textAreaRef.current.scrollTop = textAreaRef.current.scrollHeight + 10;
     }
   }, [note]);
