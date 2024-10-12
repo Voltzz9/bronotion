@@ -194,7 +194,13 @@ export default function Notes() {
   }, [noteId, router, session?.user?.id])
   const fetchNote = useCallback(async () => {
     try {
-      const response = await fetch(`${URL}notes/${noteId}`)
+      const response = await fetch(`${URL}notes/${noteId}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${session?.user?.id}`,
+          }
+        }
+      )
       if (response.status === 404) {
         router.push('/404')
         return
@@ -210,7 +216,7 @@ export default function Notes() {
     } catch (error) {
       console.error('Error fetching note:', error)
     }
-  }, [noteId, router, setNote, setNoteTitle, setLastEdited, lastEdited]);
+  }, [noteId, router, setNote, setNoteTitle, setLastEdited, lastEdited, session?.user?.id]);
 
 
   useEffect(() => {
