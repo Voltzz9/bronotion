@@ -39,7 +39,7 @@ A summary of Git practices, including branching strategies and individual contri
 ### Deployment
 //TODO: justin please explain how we deployed on digital ocean.
 
-### Tech Stack
+### Tech Stack:
 #### Frontend
 The frontend of the Bronotion project is built using modern web development technologies to ensure a responsive and interactive user experience. Here are the key components:
 
@@ -61,7 +61,7 @@ The backend of the Bronotion project is designed to handle data storage, authent
 - Prisma: An ORM (Object-Relational Mapping) tool that simplifies database access and management with a type-safe API.
 - OAuth: An open standard for access delegation, used for secure authorization with third-party services like Google and GitHub.
 
-### Major dependencies
+### Major dependencies:
 #### Frontend
 1. @auth/core: Core authentication library.
 2. @babel/core: Babel compiler core.
