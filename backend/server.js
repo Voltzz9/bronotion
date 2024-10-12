@@ -1308,7 +1308,6 @@ app.get('/users/:userId/shared-notes', async (req, res) => {
       user: sharedNote.note.user ? { id: sharedNote.note.user.id, username: sharedNote.note.user.username, image: sharedNote.note.user.image } : { id: '', username: '', image: '' },
       tags: sharedNote.note.tags.map(noteTag => noteTag.tag.name),
       shared_notes: [], // Add empty array for shared_notes
-      active_editors: [], // Add empty array for active_editors
     }));
 
     res.json(formattedSharedNotes);
@@ -1434,114 +1433,6 @@ app.delete('/shared-notes/:sharedNoteId', async (req, res) => {
     res.json({ message: 'Shared access removed successfully' });
   } catch (error) {
     console.error('Error removing shared access:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
-});
-
-// ********************************* Collaboration Routes *********************************
-
-// Add active editor to a note
-app.post('/notes/:noteId/active-editors', async (req, res) => {
-  try {
-    const noteId = parseInt(req.params.noteId);
-    const { userId } = req.body;
-
-    const result = await prisma.activeEditor.upsert({
-      where: {
-        note_id_user_id: {
-          note_id: noteId,
-          user_id: userId,
-        },
-      },
-      update: { last_active: new Date() },
-      create: {
-        note_id: noteId,
-        user_id: userId,
-        is_active: false,
-      },
-      select: {
-        active_editor_id: true,
-      },
-    });
-
-    res.status(201).json({ message: 'Active editor added successfully', activeEditorId: result.active_editor_id });
-  } catch (error) {
-    console.error('Error adding active editor:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
-});
-
-// Update active editor last active time
-app.put('/notes/:noteId/active-editors', async (req, res) => {
-  try {
-    const noteId = parseInt(req.params.noteId);
-    const { userId, active } = req.body;
-    
-    const result = await prisma.activeEditor.updateMany({
-      where: {
-        note_id: noteId,
-        user_id: userId,
-      },
-      data: { is_active: active},
-    });
-
-    if (result.count === 0) {
-      res.status(404).json({ error: 'Active editor not found' });
-    }
-
-    res.json({ message: 'Active editor updated successfully' });
-  } catch (error) {
-    console.error('Error updating active editor:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
-});
-
-// Get active editors for a note
-app.get('/notes/:noteId/active-editors', async (req, res) => {
-  try {
-    const noteId = parseInt(req.params.noteId);
-    const activeEditors = await prisma.activeEditor.findMany({
-      where: { note_id: noteId },
-      include: {
-        user: {
-          select: {
-            id: true,
-            username: true,
-          },
-        },
-      },
-    });
-
-    // Extract user information from active editors
-    const editors = activeEditors.map(editor => editor.user);
-
-    res.json(editors);
-  } catch (error) {
-    console.error('Error fetching active editors:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
-});
-
-// Remove active editor from a note
-app.delete('/notes/:noteId/active-editors', async (req, res) => {
-  try {
-    const noteId = parseInt(req.params.noteId);
-    const { userId } = req.body;
-
-    const result = await prisma.activeEditor.deleteMany({
-      where: {
-        note_id: noteId,
-        user_id: userId,
-      },
-    });
-
-    if (result.count === 0) {
-      res.status(404).json({ error: 'Active editor not found' });
-    } else {
-      res.json({ message: 'Active editor removed successfully' });
-    }
-  } catch (error) {
-    console.error('Error removing active editor:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });

@@ -18,7 +18,6 @@ model User {
   image         String?
 
   // Relations
-  active_editors     ActiveEditor[]
   auth_methods       UserAuthMethod[]     @relation("UserAuthMethods")
   accounts           Account[]            @relation("UserAccounts") // Added relation
   sessions           Session[]            @relation("UserSessions") // Added relation
@@ -120,7 +119,6 @@ model Note {
   user           User           @relation("UserNotes", fields: [user_id], references: [id], onDelete: Cascade)
   tags           NoteTag[]
   shared_notes   SharedNote[]
-  active_editors ActiveEditor[]
 }
 
 model NoteTag {
@@ -144,17 +142,4 @@ model SharedNote {
   // Relations
   note             Note @relation(fields: [note_id], references: [note_id], onDelete: Cascade)
   shared_with_user User @relation("UserSharedNotes", fields: [shared_with_user_id], references: [id], onDelete: Cascade)
-}
-
-model ActiveEditor {
-  active_editor_id Int      @id @default(autoincrement())
-  note_id          Int
-  user_id          String
-  is_active        Boolean  @default(false)
-
-  // Relations
-  note Note @relation(fields: [note_id], references: [note_id], onDelete: Cascade)
-  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
-
-  @@unique([note_id, user_id])
 }
