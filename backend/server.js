@@ -851,8 +851,18 @@ app.post('/notes', async (req, res) => {
 
 app.post('/users/:userId/notes', async (req, res) => {
   try {
-    const userId = req.params.userId;
+    const userId2 = req.params.userId;
     const { includeShared, sortLastedited, tags } = req.body;// Default to false if not provided
+
+    // Auth check
+    const authHeader = req.headers['authorization']; // Lowercase 'authorization' for case sensitivity issues.
+    const userId = authHeader && authHeader.split(' ')[1]; // Extract the token part after "Bearer"
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    if (userId !== userId2) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
 
     // Fetch the user's own notes
     const userNotes = await prisma.note.findMany({
