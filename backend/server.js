@@ -1043,6 +1043,34 @@ app.put('/notes/:noteId', async (req, res) => {
     const noteId = parseInt(req.params.noteId);
     const { title, content } = req.body;
 
+    const authHeader = req.headers['authorization']; // Lowercase 'authorization' for case sensitivity issues.
+    const userId = authHeader && authHeader.split(' ')[1]; // Extract the token part after "Bearer"
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    // Check if user has access to the note
+    const note2 = await prisma.note.findUnique({
+      where: { note_id: noteId },
+      select: {
+        user_id: true,
+      },
+    });
+    const sharedNote = await prisma.sharedNote.findFirst({
+      where: {
+        note_id: noteId,
+        shared_with_user_id: userId,
+      },
+    });
+
+    if (userId !== note2.user_id && !sharedNote) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    if (!note2 && !sharedNote) {
+      return res.status(404).json({ error: 'Note not found' });
+    }
+
     const note = await prisma.note.update({
       where: { note_id: noteId },
       data: {
@@ -1085,7 +1113,6 @@ app.get('/notes/:noteId', async (req, res) => {
     const authHeader = req.headers['authorization']; // Lowercase 'authorization' for case sensitivity issues.
     const userId = authHeader && authHeader.split(' ')[1]; // Extract the token part after "Bearer"
     const noteId = parseInt(req.params.noteId);
-    console.log("Auth check in progress, userID: ", userId)
     if (!userId) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
