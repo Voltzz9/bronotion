@@ -10,13 +10,13 @@ interface NoteSelectorProps {
 export function NoteSelector({ value, onChange }: NoteSelectorProps) {
   return (
     <Select value={value} onValueChange={onChange}>
-      <SelectTrigger className="w-[180px]">
+      <SelectTrigger className="w-[180px]" tabIndex={0} >
         <SelectValue placeholder="Select notes to view" />
       </SelectTrigger>
       <SelectContent>
-        <SelectItem value="all">All Notes</SelectItem>
-        <SelectItem value="own">My Notes</SelectItem>
-        <SelectItem value="shared">Shared with Me</SelectItem>
+        <SelectItem className="focus:bg-gray-200" tabIndex={0} value="all">All Notes</SelectItem>
+        <SelectItem className="focus:bg-gray-200" tabIndex={0} value="own">My Notes</SelectItem>
+        <SelectItem className="focus:bg-gray-200" tabIndex={0} value="shared">Shared with Me</SelectItem>
       </SelectContent>
     </Select>
   )
