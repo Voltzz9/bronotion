@@ -1,3 +1,12 @@
+# Bronotion
+Stellenbosch University CS343 Project 2 Group 37
+| **Name**          | **Student Number** |
+|-------------------|--------------------|
+| Justin Dietrich   | 25924958           |
+| Jonathan Donald   | 25957848           |
+| James Milne       | 25917307           |
+| Kellen Mossner    | 26024284           |
+| David Nicolay     | 26296918           |
 # Database Setup
 FIRST TIME SETUP:
 1. Ensure PostgreSQL is installed on your machine AND PostgreSQL is RUNNING on your machine.
@@ -30,15 +39,20 @@ psql -U admin -d bronotion -a -f ./sql/DML.sql;
 
 
 ## Running the database
-1. Ensure PostgreSQL is RUNNING on your machine.
-2. Start the database with the following command in a seperate terminal:
+1. Ensure PostgreSQL is running on your machine.
+2. `cd` into the `backend` directory.
+3. Ensure all dependencies are installed with the following command:
+```bash
+yarn install
+```
+4. Start the database with the following command in a seperate terminal:
 ```bash
 yarn start:server
 ```
 This will start the database on port 8080 (because 5432 is the actual PostreSQL database).
 
 ## Run the frontend
-1. Ensure everything is installed with the following command:
+1. Ensure everything is installed with the following command in the `client` directory:
 ```bash
 yarn install
 ```
@@ -50,10 +64,10 @@ openssl req -x509 -newkey rsa:4096 -nodes -keyout localhost-key.pem -out localho
 ```bash
 yarn dev
 ```
-This will start the frontend on port 3000.
+This will start the frontend on port 3000 (with **https**).
 
 
-## Running the Docker
+## Running the Docker (old)
 
 ### Prerequisites
 
@@ -73,7 +87,7 @@ Before you can run the project in Docker, you need to have the following install
 3. **Start Docker Desktop**:
    - After installation, launch Docker Desktop. Make sure it's running before proceeding. (Ensure that you have created an account and logged in to Docker Desktop).
 
-## Running the Project
+## Running the Project with Docker
 
 To run the Docker container for this project, follow these steps:
 
@@ -100,24 +114,3 @@ Don't forget to have docker desktop running and ensure you have logged in!
    - Once the script has completed, you can access the application at the following URL:
      - [http://localhost:3000](http://localhost:3000)
      - Or you can follow the port "3000:3000" which is highlighted blue under the Ports column in Docker Desktop. 
-<br>
-<hr>
-<br>
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
