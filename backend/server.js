@@ -419,8 +419,8 @@ app.get('/users', async (req, res) => {
   }
 });
 
-// Create a new user (for OAuth)
-app.post('/users', async (req, res) => {
+// Create a new user
+app.post('/create_user', async (req, res) => {
   try {
     const { id, username, password, email, image, auth_method, provider_account_id } = req.body;
 
