@@ -4,10 +4,11 @@ import Link from 'next/link';
 import { motion, useScroll, useSpring, useTransform } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { useSession } from 'next-auth/react';
 import { LayoutComponent } from '@/components/sidepanel';
 import AuthButtons from './auth-buttons';
+import { handleSignOut } from "@/app/server/serverActions"
 import { usePathname, useRouter } from 'next/navigation';
 
 interface HeaderComponentProps {
@@ -103,10 +104,9 @@ export default function Header({ onCollaboratorAdded }: HeaderComponentProps) {
           <div className="flex items-center space-x-4">
             {isAuthenticated ? (
               <DropdownMenu>
-                <DropdownMenuTrigger asChild>
+                <DropdownMenuTrigger tabIndex={0} asChild>
                   <Avatar 
                   className="cursor-pointer"
-                  tabIndex={0}
                   >
                     {session && (
                       <>
@@ -116,8 +116,17 @@ export default function Header({ onCollaboratorAdded }: HeaderComponentProps) {
                     )}
                   </Avatar>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <AuthButtons />
+                <DropdownMenuContent tabIndex={0} align="end">
+                  <DropdownMenuItem asChild>
+                    <Link href="/profile">
+                      Profile
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/auth/signout">
+                      Sign out
+                    </Link>
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (

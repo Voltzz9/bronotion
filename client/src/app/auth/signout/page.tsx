@@ -1,14 +1,14 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { handleSignOut } from '@/app/server/serverActions';
 
 const SignOutPage = () => {
-  const router = useRouter();
+
 
   useEffect(() => {
-    router.push('/');
-  }, [router]);
+    handleSignOut();
+  }, []);
 
   return null;
 };
