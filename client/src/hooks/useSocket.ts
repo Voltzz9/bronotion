@@ -58,7 +58,6 @@ export function useSocket() {
 
   const updateNote = useCallback((noteId: string, content: string) => {
     if (socket && isConnected) {
-      console.log(`Updating note: ${noteId}`)
       socket.emit('update-note', { noteId, content })
     } else {
       console.error('Socket is not connected. Unable to update note.')
