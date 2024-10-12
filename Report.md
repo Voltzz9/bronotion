@@ -5,11 +5,11 @@
 
 | **Name**          | **Student Number** |
 |-------------------|--------------------|
-| David Nicolay     | 26296918           |
-| James Milne       | 25917307           |
-| Jonty Donald      |                    |
 | Justin Dietrich   |                    |
+| Jonathan Donald   |                    |
+| James Milne       | 25917307           |
 | Kellen Mossner    | 26024284           |
+| David Nicolay     | 26296918           |
 
 ---
 
@@ -18,6 +18,8 @@
 ### 1. Introduction
 
 ### 2. Use case diagram
+
+![Use Case Diagram](resources/use-case-diagram-tp.png)
 
 ### 3. Operating Environment and major dependencies
 
