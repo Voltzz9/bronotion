@@ -72,7 +72,7 @@ export function NoteDashboardV2() {
       const dateA = new Date(a.updated_at).getTime();
       const dateB = new Date(b.updated_at).getTime();
 
-      return order === 'asc' ? dateA - dateB : dateB - dateA;
+      return order === 'desc' ? dateA - dateB : dateB - dateA;
     });
 
     setNotes(sortedNotes);
@@ -105,7 +105,6 @@ export function NoteDashboardV2() {
       if (noteView === 'own') {
         requestOptions.body = JSON.stringify({ includeShared: false });
       } else if (noteView === 'shared') {
-        console.log('Fetching shared notes for user:', userId);
         fetchUrl = `${URL}users/${userId}/shared-notes`;
         requestOptions = {
           method: 'GET',
@@ -152,15 +151,12 @@ export function NoteDashboardV2() {
 
   useEffect(() => {
     if (session?.user?.id) {
-      console.log('Session User ID:', session.user.id);
       fetchNotesAndTags(session.user.id);
     }
   }, [session, noteView, fetchNotesAndTags]);
 
   const removeTag = async (tag: string, noteId: string) => {
     if (!session?.user?.id) return;
-
-    console.log('Removing tag from note:', tag, noteId);
 
     try {
       // fetch the tag id from the tag name by calling API
@@ -184,31 +180,40 @@ export function NoteDashboardV2() {
         throw new Error(`HTTP error! status: ${response2.status}`);
       }
 
-      // update the tags state with the new tag
-      const userId = session?.user?.id;
-      if (userId) {
-        setTimeout(() => fetchNotesAndTags(userId), 1000);
-      }
-      fetchNotesAndTags(session.user.id);
+      // Update the notes state
+      setNotes(prevNotes => prevNotes.map(note => 
+        note.note_id.toString() === noteId
+          ? { ...note, tags: note.tags.filter(t => t !== tag) }
+          : note
+      ));
 
-      // update UI of note with removed tag
-      const noteIndex = notes.findIndex((note) => note.note_id.toString() === noteId);
-      if (noteIndex >= 0) {
-        const updatedNotes = [...notes];
-        updatedNotes[noteIndex].tags = updatedNotes[noteIndex].tags.filter(t => t !== tag);
-        setNotes(updatedNotes);
-      }
+      // Update allTags and selectedTags
+      updateTagsAfterRemoval();
+
     } catch (error) {
       console.error('Failed to remove tag:', error);
     }
   }
 
+  const updateTagsAfterRemoval = useCallback(() => {
+    // Get all unique tags from all notes
+    const uniqueTags = Array.from(new Set(notes.flatMap(note => note.tags)));
+    
+    // Update allTags
+    setAllTags(uniqueTags);
+
+    // Update selectedTags, removing any that no longer exist in any note
+    setSelectedTags(prevSelected => prevSelected.filter(tag => uniqueTags.includes(tag)));
+  }, [notes]);
+
+  useEffect(() => {
+    updateTagsAfterRemoval();
+  }, [notes, updateTagsAfterRemoval]);
+
   const addNewNote = async () => {
     if (!session?.user?.id) return;
 
     setIsAddingNote(true);
-
-    console.log('Adding new note for user:', session.user.id);
 
     const newNote = {
       title: 'New Note',
@@ -308,7 +313,6 @@ export function NoteDashboardV2() {
   }
 
   const addTagToNote = async (noteId: string, tagName: string, tagId?: string) => {
-    console.log('Adding tag to note:', noteId, tagName, tagId);
     if (!session?.user?.id) return;
 
     if (!tagId) {
@@ -432,6 +436,11 @@ export function NoteDashboardV2() {
     }
   };
 
+  function truncateText(text: string, maxLength: number): string {
+    if (text.length <= maxLength) return text;
+    return text.slice(0, maxLength) + '...';
+  }
+
   return (
     <div className="container mx-auto p-4">
       <Card className="w-full max-w-4xl mx-auto">
@@ -494,18 +503,17 @@ export function NoteDashboardV2() {
                   variants={noteVariants}
                   transition={{ duration: 0.2 }}
                 >
-
-                  <Card className={`flex flex-col cursor-pointer h-52 relative`}>
-
+                  <Card className="flex flex-col cursor-pointer h-52 relative">
                     <CardHeader className="flex-grow pb-2">
                       <div className="flex justify-between items-start">
-                        <div className="flex">
-                          <CardTitle className="mt-1 text-lg text-secondary">
+                        <div className="flex flex-grow items-start mr-16"> {/* Added mr-16 for right margin */}
+                          <CardTitle className="mt-1 text-lg text-secondary truncate">
                             {editingNoteId !== note.note_id ? (
-                              <Link href={`/notes/${note.note_id}`} passHref className="cursor-pointer">
-                                {note.title}
+                              <Link href={`/notes/${note.note_id}`} passHref className="cursor-pointer inline-block max-w-full">
+                                <span className="truncate inline-block max-w-full" title={note.title}>
+                                  {truncateText(note.title, 30)}
+                                </span>
                               </Link>
-
                             ) : (
                               <Input
                                 value={editingTitle}
@@ -530,33 +538,34 @@ export function NoteDashboardV2() {
                               size="icon"
                               className="ml-2 text-muted-foreground hover:bg-muted-foreground/20"
                               onClick={(e) => {
-                                e.preventDefault(); // Prevent default button behavior
-                                e.stopPropagation(); // Prevent link navigation
+                                e.preventDefault();
+                                e.stopPropagation();
                                 handleEditClick(note);
                               }}
                             >
                               <Pencil className="h-4 w-4" />
                             </Button>
                           )}
-
                         </div>
-                        <DownloadButton
-                        noteId={note.note_id}
-                        noteTitle={note.title}
-                        noteContent={note.content || ''}
-                      />
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="absolute top-6 right-2 text-gray-400 hover:text-red-500 hover:bg-muted-foreground/20 transition-colors"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          deleteNote(note.note_id);
-                        }}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                        <div className="flex items-center absolute top-6 right-4">
+                          <DownloadButton
+                            noteId={note.note_id}
+                            noteTitle={note.title}
+                            noteContent={note.content || ''}
+                          />
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="ml-2 text-gray-400 hover:text-red-500 hover:bg-muted-foreground/20 transition-colors"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              deleteNote(note.note_id);
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
                       <ScrollArea className="h-12 w-full overflow-x-auto rounded-md">
                         <div className="flex flex-nowrap gap-2 mt-2">

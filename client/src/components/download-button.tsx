@@ -80,7 +80,7 @@ export function DownloadButton({ noteId, noteTitle, noteContent }: DownloadButto
     <Button
       variant="ghost"
       size="icon"
-      className="absolute top-6 right-12 text-gray-400 hover:text-blue-500 hover:bg-muted-foreground/20 transition-colors"
+      className="absolute right-10 text-gray-400 hover:text-green-500 hover:bg-muted-foreground/20 transition-colors"
       onClick={(e) => {
         e.preventDefault();
         e.stopPropagation();

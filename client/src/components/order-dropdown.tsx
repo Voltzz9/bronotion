@@ -20,13 +20,13 @@ export function OrderDropdown({ onValueChange }: OrderDropdownProps) {
       >
         <div className="justify-start">
           <SelectItem
-            value="edited_asc"
+            value="asc"
             className="text-left text-xs py-1.5 rounded-sm focus:bg-gray-300 focus:text-gray-700 data-[state=checked]:bg-gray-300 data-[state=checked]:text-gray-700"
           >
             Edited New
           </SelectItem>
           <SelectItem
-            value="edited_desc"
+            value="desc"
             className="text-left text-xs py-1.5 rounded-sm focus:bg-gray-300 focus:text-gray-700 data-[state=checked]:bg-gray-300 data-[state=checked]:text-gray-700"
           >
             Edited Old
