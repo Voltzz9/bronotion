@@ -943,6 +943,15 @@ app.get('/users/:userId/notes/search', async (req, res) => {
     const userId = req.params.userId;
     const { query } = req.query;
 
+    const authHeader = req.headers['authorization']; // Lowercase 'authorization' for case sensitivity issues.
+    const userIdCheck = authHeader && authHeader.split(' ')[1]; // Extract the token part after "Bearer"
+    if (!userIdCheck) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    if (userId !== userIdCheck) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
     // Check if the query is provided and not empty.
     if (query !== undefined && query.trim() !== '') {
       let whereClause = {
@@ -971,6 +980,15 @@ app.get('/users/:userId/notes/search', async (req, res) => {
 app.get('/users/:userId/tags/notes', async (req, res) => {
   try {
     const userId = req.params.userId;
+    const authHeader = req.headers['authorization']; // Lowercase 'authorization' for case sensitivity issues.
+    const userIdCheck = authHeader && authHeader.split(' ')[1]; // Extract the token part after "Bearer"
+    if (!userIdCheck) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    if (userId !== userIdCheck) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
 
     // Fetch the tag IDs for the user
     const tags = await prisma.tag.findMany({
