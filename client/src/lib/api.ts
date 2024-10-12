@@ -76,7 +76,7 @@ export async function createUser(user: User): Promise<User> {
       ...user,
       username: user.username || user.email.split('@')[0],
     };
-    const response = await fetch(`${API_BASE_URL}create_user`, {
+    const response = await fetch(`${API_BASE_URL}users`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -96,14 +96,14 @@ export async function createUser(user: User): Promise<User> {
   }
 }
 
-export async function loginUser(email: string, password: string): Promise<User> {
+export async function loginUser(email: string, password: string, remember: boolean): Promise<User> {
   try {
       const response = await fetch(`${API_BASE_URL}login`, {
       method: 'POST',
       headers: {
           'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email, password, remember }),
       });
       if (!response.ok) {
       const errorData = await response.json();

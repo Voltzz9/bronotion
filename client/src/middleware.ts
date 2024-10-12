@@ -8,11 +8,23 @@ export async function middleware(request: NextRequest) {
   // Check session only once
   const session = await auth();
 
-  // Session expiration check
-  // if (session && new Date(session.expires) < new Date()) {
-  //   console.log('Session expired');
-  //   return NextResponse.redirect(new URL('/auth/signout', request.url));
-  // }
+  //Session expiration check
+  const sessionToken = await fetch(`${process.env.NEXT_PUBLIC_API_URL}session`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${session?.user?.id}`
+    }
+  });
+
+  if (!sessionToken.ok) {
+    return NextResponse.redirect(new URL('/auth/signin', request.url));
+  }
+
+  const sessionData = await sessionToken.json();
+  if (sessionData.session.expires < Date.now()) {
+    return NextResponse.redirect(new URL('/auth/signin', request.url));
+  }
+
 
   // Check if the path is for a specific note
   if (pathname.startsWith('/notes/')) {
