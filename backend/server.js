@@ -1,4 +1,3 @@
-const client = createClient(process.env.WAYPOINT_API_KEY_USERNAME, process.env.WAYPOINT_API_KEY_PASSWORD);
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
@@ -18,6 +17,7 @@ import PushNotifications from "node-pushnotifications";
 dotenv.config();
 
 const prisma = new PrismaClient();
+const client = createClient(process.env.WAYPOINT_API_USERNAME, process.env.WAYPOINT_API_PASSWORD);
 const app = express();
 const PORT = process.env.PORT || 8080;
 const UPLOAD_DIR = path.join(process.cwd(), 'public', 'uploads');
@@ -132,7 +132,6 @@ async function sendEmail(to, subject, bodyHtml) {
       subject: subject,
       bodyHtml: bodyHtml
     });
-    console.log('Email sent successfully');
     return { success: true, message: 'Email sent successfully' };
   } catch (error) {
     console.error('Error sending email:', error);
@@ -145,7 +144,7 @@ async function sendEmail(to, subject, bodyHtml) {
 
 async function sendEmailShareNote(to, noteId) {
   try {
-    await client.emailMessages.createTemplated({
+    const res = await client.emailMessages.createTemplated({
       to: to,
       subject: "NOTE HAS BEEN SHARED WITH YOU",
       bodyHtml: `
@@ -164,7 +163,6 @@ async function sendEmailShareNote(to, noteId) {
     </html> 
     `
     });
-    console.log('Email sent successfully');
     return { success: true, message: 'Email sent succesfully' };
   } catch (error) {
     console.log('Error sending email:', error);
@@ -1291,8 +1289,9 @@ app.post('/notes/:noteId/share', async (req, res) => {
         shared_note_id: true,
       },
     });
+
     try {
-      sendEmailToSharie(emailAddr)
+      sendEmailToSharie(sharedWithUserId)
     } catch (error) {
       console.log("Error sending email notification")
     }
@@ -1313,17 +1312,16 @@ app.post('/notes/:noteId/share', async (req, res) => {
   }
 });
 
-async function sendEmailToSharie(username) {
+async function sendEmailToSharie(id) {
   const sharieEmail = await prisma.user.findUnique({
     where: {
-      username: username,
+      id: id,
     },
     select: {
       email: true,
     },
   });
-
-  sendEmailShareNote(sharieEmail)
+  sendEmailShareNote(sharieEmail.email)
 }
 
 // Get all notes shared with a user
