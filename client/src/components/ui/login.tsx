@@ -221,7 +221,7 @@ export default function Component() {
         </form>
         {showForgotPassword && (
           <div className="text-center">
-            <a href="https://localhost:3000/forgot-password" className="text-blue-500 hover:underline text-sm">
+            <a href={`${URL}/forgot-password`} className="text-blue-500 hover:underline text-sm">
               Have you forgotten your password?
             </a>
           </div>
