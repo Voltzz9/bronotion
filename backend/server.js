@@ -100,6 +100,7 @@ const sendPushNotif = async (userId, title) => {
     });
 
     if (!dbresults) {
+      // Subscribe the user to push notifications
       throw new Error(`No push notification subscription found for user ${userId}`);
     }
 
@@ -1393,11 +1394,11 @@ app.post('/notes/:noteId/share', async (req, res) => {
       console.error("Error sending email notification")
     }
 
-    try {
-      sendPushNotif(userId, "Title of note")
-    } catch (error) {
-      console.error("Error sending web push notification")
-    }
+    // try {
+    //   sendPushNotif(userId, "Title of note")
+    // } catch (error) {
+    //   console.error("Error sending web push notification")
+    // }
 
     res.status(201).json({
       message: 'Note shared successfully',
