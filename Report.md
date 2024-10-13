@@ -60,7 +60,7 @@ The backend of the Bronotion project is designed to handle data storage, authent
 -Express.js: A minimal and flexible Node.js web application framework that provides a robust set of features for web and mobile applications.
 - PostgreSQL: A powerful, open-source relational database system that supports advanced data types and performance optimization.
 - Prisma: An ORM (Object-Relational Mapping) tool that simplifies database access and management with a type-safe API.
-- OAuth: An open standard for access delegation, used for secure authorization with third-party services like Google and GitHub.
+- OAuth: An open standard for access delegation, used for secure authorization with third-party services, in our case, Google and GitHub.
 
 ### Major dependencies:
 #### Frontend
@@ -105,12 +105,15 @@ The backend of the Bronotion project is designed to handle data storage, authent
 
 ## 6. A high-level description of design patterns for the client and API
 
-For the client-side architecture, we employed the approach of a modular component-based design. This ensured an organized codebase along with keeping our pages modular. The reposity was also structured into separate backend and client directories which divided the codebase up logically. 
+For the client-side architecture, we employed the approach of a modular component-based design. This ensured an organized codebase along with keeping our pages modular. The reposity is structured into separate backend and client directories which divided the codebase up logically. Enabling collaboration in real-time was setup with socket.io's websocket tools, the front end then contacts the backend to connect to a session for a note. Users can also conviniently view the editors which are currently editing through the floating collaborator list in the bottom left of the screen. The web app is responsive to various screen sizes and devices, ensuring a consistent user experience and enabling a wider audience.
+Accesiblity was seriously considered at all points of development, specifically allowing users to be able to navigate the app using only a keyboard. This caters to individuals with motor impairments who may not be able to use a mouse. 
+The colour scheme is also setup to be accesible to colour blind individuals.
 
-We focused on ensuring our backend API was secure, with authorization checks being performed through middleware functions. Certain endpoints marked with [Auth Req] in the API Documentation ensures that users have the correct access rights for endpoints. We put ensuring the API is RESTful at the forefront of our design.
+![Bronotion Frontend Ecosystem](resources/frontend-ecosystem.png)
 
-#### TODO ADD MORE
+We focused on ensuring our backend API was secure, with authorization checks being performed through middleware functions. Certain endpoints marked with [Auth Req] in the API Documentation ensures that users have the correct access rights for endpoints. We put ensuring the API is RESTful at the forefront of our design. This ensures that the database operations are clean, consistent, and predictable. The API is rather extensive, with several endpoint extensions that allow for extra functionality such as searching for notes. The API also interacts with a email service to send send which is a separate entity (Waypoint) that outsources the managing and sending of the actual emails.
 
+![Bronotion Backend Ecosystem](resources/backend-ecosystem.png)
 
 ## 7. Additional Features
 

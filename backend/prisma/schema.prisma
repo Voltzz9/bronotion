@@ -24,12 +24,12 @@ model User {
   notes              Note[]               @relation("UserNotes") // Added relation
   shared_notes       SharedNote[]         @relation("UserSharedNotes") // Added relation
   PasswordResetToken PasswordResetToken[] @relation("UserPasswordResetToken")
-  push_notifications UserPushNoti[]       @relation("UserPushNoti")
+  push_notifications UserPushNoti?        @relation("UserPushNoti")
 }
 
 model UserPushNoti {
   id       String @id @default(uuid())
-  user_id  String
+  user_id  String @unique
   endpoint String
   p256dh   String
   auth     String
@@ -116,9 +116,9 @@ model Note {
   is_deleted Boolean  @default(false)
 
   // Relations
-  user           User           @relation("UserNotes", fields: [user_id], references: [id], onDelete: Cascade)
-  tags           NoteTag[]
-  shared_notes   SharedNote[]
+  user         User         @relation("UserNotes", fields: [user_id], references: [id], onDelete: Cascade)
+  tags         NoteTag[]
+  shared_notes SharedNote[]
 }
 
 model NoteTag {

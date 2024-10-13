@@ -12,7 +12,7 @@ import { v4 as uuidv4 } from 'uuid';
 import formidable from 'formidable';
 import { createClient } from '@usewaypoint/client';
 import crypto from 'node:crypto';
-import PushNotifications from "node-pushnotifications";
+import webpush from 'web-push';
 
 dotenv.config();
 
@@ -57,18 +57,28 @@ app.post("/subscribe", async (req, res) => {
       return res.status(400).json({ error: "Invalid subscription object" });
     }
 
-    const newUserPushNoti = await prisma.userPushNoti.create({
-      data: {
-        endpoint,
-        p256dh: keys.p256dh,
-        auth: keys.auth,
-        user: {
-          connect: { id }
-        }
+    const endpointVal = endpoint;
+    const p256dhVal = keys.p256dh;
+    const authVal = keys.auth;
+
+    const updatedPushNoti = await prisma.userPushNoti.upsert({
+      where: { user_id: id },
+      update: {
+        endpoint: endpointVal,
+        p256dh: p256dhVal,
+        auth: authVal
+      },
+      create: {
+        user_id: id,
+        endpoint: endpointVal,
+        p256dh: p256dhVal,
+        auth: authVal,
       }
     });
 
-    res.status(201).json({ message: "Subscription created successfully", data: newUserPushNoti });
+    console.log("New user")
+    console.log(updatedPushNoti)
+    res.status(201).json({ message: "Subscription created successfully", data: updatedPushNoti });
   } catch (error) {
     console.error("Error in /subscribe endpoint:", error);
     res.status(500).json({ error: "Internal server error" });
@@ -77,22 +87,14 @@ app.post("/subscribe", async (req, res) => {
 
 const sendPushNotif = async (userId, title) => {
   try {
-    const settings = {
-      web: {
-        vapidDetails: {
-          subject: "mailto:jonty09090@gmail.com",
-          publicKey: vapidKeys.publicKey,
-          privateKey: vapidKeys.privateKey,
-        },
-        gcmAPIKey: "gcmkey",
-        TTL: 2419200,
-        contentEncoding: "aes128gcm",
-        headers: {},
-      },
-      isAlwaysUseFCM: false,
-    };
 
-    const push = new PushNotifications(settings);
+    webpush.setVapidDetails(
+      'mailto:jonty09090@gmail.com',
+      vapidKeys.publicKey,
+      vapidKeys.privateKey
+    );
+
+
 
     const dbresults = await prisma.userPushNoti.findFirst({
       where: { user_id: userId },
@@ -100,8 +102,8 @@ const sendPushNotif = async (userId, title) => {
     });
 
     if (!dbresults) {
-      // Subscribe the user to push notifications
-      throw new Error(`No push notification subscription found for user ${userId}`);
+      console.log("No push user found")
+      return
     }
 
     const subscription = {
@@ -112,32 +114,17 @@ const sendPushNotif = async (userId, title) => {
       }
     };
 
-    const payload = JSON.stringify({ title, body: "A note has been shared with you" });
+    const payload = JSON.stringify({ title: "Bronotion", body: "A note has been shared with you", icon: "https://ibb.co/GC8LCMN" });
 
-    const result = await push.sendNotification(subscription, payload);
+    const result = await webpush.sendNotification(subscription, payload);
     return result;
   } catch (error) {
     console.error("Error sending push notification:", error);
-    throw error;
   }
 };
 
 // ********************************* Emails **************************************
 
-
-async function sendEmail(to, subject, bodyHtml) {
-  try {
-    await client.emailMessages.createTemplated({
-      to: to,
-      subject: subject,
-      bodyHtml: bodyHtml
-    });
-    return { success: true, message: 'Email sent successfully' };
-  } catch (error) {
-    console.error('Error sending email:', error);
-    return { success: false, error: 'Error sending email' };
-  }
-}
 
 
 // Send email for share notification
@@ -323,11 +310,11 @@ io.on('connection', (socket) => {
     currentNoteId = noteId;
     currentUserId = userId;
     socket.join(noteId);
-  
+
     if (!connectedUsers.has(noteId)) {
       connectedUsers.set(noteId, new Set());
     }
-  
+
     connectedUsers.get(noteId).add(userId);
     io.to(noteId).emit('user-connected', Array.from(connectedUsers.get(noteId)));
   });
@@ -647,7 +634,7 @@ app.post('/login', async (req, res) => {
 
 
     // Compare the password with the hashed password in the database
-    if (!oauth){
+    if (!oauth) {
       const passwordMatch = await bcrypt.compare(password, user.password_hash);
       if (!passwordMatch) {
         return res.status(401).json({ error: 'Invalid password' });
@@ -667,7 +654,7 @@ app.post('/login', async (req, res) => {
 
     if (!sessionToken) {
       if (remember) {
-       sessionToken = await prisma.session.create({
+        sessionToken = await prisma.session.create({
           data: {
             user_id: user.id,
             expires: new Date(Date.now() + 1000 * 60 * 60 * 24), // 7 days
@@ -689,7 +676,8 @@ app.post('/login', async (req, res) => {
         where: {
           user_id: user.id,
         },
-      })};
+      })
+    };
 
     res.json({ message: 'Login successful', id: user.id, username: user.username, email: user.email, image: user.image, token: sessionToken });
   } catch (error) {
@@ -698,7 +686,7 @@ app.post('/login', async (req, res) => {
   }
 });
 
-app.get('/session', async (req, res) => { 
+app.get('/session', async (req, res) => {
   try {
     const authHeader = req.headers['authorization'];
     const user_id = authHeader.split(' ')[1];
@@ -1224,7 +1212,7 @@ app.delete('/notes/:noteId', async (req, res) => {
 // Fetch a single note
 app.get('/notes/:noteId', async (req, res) => {
   try {
-    
+
     const authHeader = req.headers['authorization']; // Lowercase 'authorization' for case sensitivity issues.
     const userId = authHeader && authHeader.split(' ')[1]; // Extract the token part after "Bearer"
     const noteId = parseInt(req.params.noteId);
@@ -1256,7 +1244,7 @@ app.get('/notes/:noteId', async (req, res) => {
     if (!note2 && !sharedNote) {
       return res.status(404).json({ error: 'Note not found' });
     }
-    
+
     // Finally, fetch the note and all its data
     const note = await prisma.note.findUnique({
       where: { note_id: noteId },
@@ -1394,11 +1382,11 @@ app.post('/notes/:noteId/share', async (req, res) => {
       console.error("Error sending email notification")
     }
 
-    // try {
-    //   sendPushNotif(userId, "Title of note")
-    // } catch (error) {
-    //   console.error("Error sending web push notification")
-    // }
+    try {
+      sendPushNotif(sharedWithUserId, "Title of note")
+    } catch (error) {
+      console.error("Error sending web push notification")
+    }
 
     res.status(201).json({
       message: 'Note shared successfully',
@@ -1559,7 +1547,7 @@ app.put('/notes/:noteId/permissions', async (req, res) => {
 
     const authHeader = req.headers['authorization']; // Lowercase 'authorization' for case sensitivity issues.
     const userId = authHeader && authHeader.split(' ')[1]; // Extract the token part after "Bearer"
-    
+
     if (!userId) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
