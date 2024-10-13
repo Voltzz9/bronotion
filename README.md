@@ -12,7 +12,9 @@ Stellenbosch University CS343 Project 2 Group 37
 - For a detailed report on the project, please refer to the [Report.md](Report.md) file.
 - For API documentation, please refer view the webpage `API_Documentation` folder.
 
-## Database Setup
+## Development
+
+### Database Setup
 FIRST TIME SETUP:
 1. Ensure PostgreSQL is installed on your machine AND PostgreSQL is RUNNING on your machine.
 2. Create a database called `bronotion` with the following command:
@@ -42,8 +44,7 @@ npx prisma migrate dev --name init
 psql -U admin -d bronotion -a -f ./sql/DML.sql;
 ```
 
-# Running the web application
-## Running the database
+### Running the database
 1. Ensure PostgreSQL is running on your machine.
 2. `cd` into the `backend` directory.
 3. Ensure all dependencies are installed with the following command:
@@ -54,9 +55,9 @@ yarn install
 ```bash
 yarn start:server
 ```
-This will start the database on port 8080 (because 5432 is the actual PostreSQL database).
+This will start the database on [**localhost:8080**](https://localhost:8080)
 
-## Run the frontend
+### Run the frontend
 1. Ensure everything is installed with the following command in the `client` directory:
 ```bash
 yarn install
@@ -69,53 +70,8 @@ openssl req -x509 -newkey rsa:4096 -nodes -keyout localhost-key.pem -out localho
 ```bash
 yarn dev
 ```
-This will start the frontend on port 3000 (with **https**).
+This will start the frontend on [**localhost:3000**](https://localhost:3000)
 
+## Deployment
 
-## Running the Docker (old)
-
-### Prerequisites
-
-Before you can run the project in Docker, you need to have the following installed:
-
-- **Docker Desktop**: Ensure you have Docker Desktop installed on your machine. You can download it from [Docker's official website](https://www.docker.com/products/docker-desktop). 
-
-### Installation Steps for Docker Desktop
-
-1. **Download Docker Desktop**:
-   - Go to [Docker Desktop](https://www.docker.com/products/docker-desktop) and download the appropriate version for your operating system (Windows/Mac).
-   - Check this video if using WSL2: [Docker Desktop with WSL2](https://www.youtube.com/watch?v=5RQbdMn04Oc).
-  
-2. **Install Docker Desktop**:
-   - Follow the installation instructions specific to your operating system.
-
-3. **Start Docker Desktop**:
-   - After installation, launch Docker Desktop. Make sure it's running before proceeding. (Ensure that you have created an account and logged in to Docker Desktop).
-
-## Running the Project with Docker
-
-To run the Docker container for this project, follow these steps:
-
-Don't forget to have docker desktop running and ensure you have logged in!
-
-1. **In the Terminal**: Make sure that you are in the root directory of the project.
-
-2. **Grant Permissions for the Run Script**:
-
-        chmod +x ./run.sh
-
-3. **Execute the Run Script**: <br>
-   **NOTE THIS SHOULD ONLY BE RUN WHEN U HAVE PULLED A BRANCH Else you can run (press the play buttons) the container folder "group-37" in Docker Desktop.**
-
-        ./run.sh [dev|prod] [clean]
-
-   **The clean arguement is optional and will delete all containers, images and volumes.**
-
-4. **Viewing and Manipulating the Database**:
-   - You can view the database using the Prisma Studio. To do this, you need to run the Prisma Studio container. You can do this by running the "prisma-studio" container in Docker Desktop. Once the database container is running, you can access the Prisma Studio in your browser by clicking the link "5555:5555" which is highlighted blue under the Ports column in Docker Desktop.
-   - ***NOTE: You can only access the Prisma Studio when the database container is running.***
-
-5. **Access the Application**:
-   - Once the script has completed, you can access the application at the following URL:
-     - [http://localhost:3000](http://localhost:3000)
-     - Or you can follow the port "3000:3000" which is highlighted blue under the Ports column in Docker Desktop. 
+The deployed application is available at [**bronotion.co.za**](https://bronotion.co.za)

@@ -38,7 +38,21 @@ A summary of Git practices, including branching strategies and individual contri
 
 ## 4. Operating Environment and major dependencies
 ### Deployment
-//TODO: justin please explain how we deployed on digital ocean.
+Process for the Web Development Project deployment on DigitalOcean
+- **Cloning the Repository**: The team initiated the deployment process by downloading the repository from GitLab, ensuring that the latest commit on the main branch was utilized.
+
+- **Creating a Personal GitHub Repository**: Following the download, the codebase was uploaded to a personal GitHub repository. This step was essential to enable DigitalOcean to access and deploy both the frontend and backend components of the project.
+
+- **Enabling Continuous Deployment**: The team enabled continuous deployment from the GitHub repository on DigitalOcean, allowing for automatic updates to the application whenever changes were made to the codebase.
+
+- **Database Initialization**: To set up the database, the team employed Prisma's migration feature to initialize the database schema, ensuring the creation of all necessary tables and structures.
+
+- **Domain Acquisition**: The team secured the domain [**bronotion.co.za**](https://bronotion.co.za) to provide a publicly accessible address for the deployed application.
+
+- **SSL Certificate Management**: In order to facilitate secure connections, manual adjustments were made to ensure that both the client and backend components of the application do not utilize the SSL certificates initially created. Instead, they were configured to use the valid SSL certificates provided by DigitalOcean.
+
+- **Final Deployment**: With the codebase in place, the database initialized, and the domain configured, the application was successfully deployed on DigitalOcean, allowing access to the website at **bronotion.co.za**.
+
 
 ### Tech Stack:
 #### Frontend
@@ -57,7 +71,7 @@ The frontend of the Bronotion project is built using modern web development tech
 The backend of the Bronotion project is designed to handle data storage, authentication, and business logic. It leverages robust and scalable technologies:
 
 - Node.js: A JavaScript runtime built on Chrome's V8 engine, used for building fast and scalable server-side applications.
--Express.js: A minimal and flexible Node.js web application framework that provides a robust set of features for web and mobile applications.
+- Express.js: A minimal and flexible Node.js web application framework that provides a robust set of features for web and mobile applications.
 - PostgreSQL: A powerful, open-source relational database system that supports advanced data types and performance optimization.
 - Prisma: An ORM (Object-Relational Mapping) tool that simplifies database access and management with a type-safe API.
 - OAuth: An open standard for access delegation, used for secure authorization with third-party services, in our case, Google and GitHub.
@@ -69,26 +83,17 @@ The backend of the Bronotion project is designed to handle data storage, authent
 3. @babel/runtime: Babel runtime helpers.
 4. @next/env: Next.js environment configuration.
 5. @next/eslint-plugin-next: ESLint plugin for Next.js.
-6. @radix-ui/react-alert-dialog: Radix UI component for alert dialogs.
-7. @radix-ui/react-avatar: Radix UI component for avatars.
-8. @radix-ui/react-checkbox: Radix UI component for checkboxes.
-9. @radix-ui/react-dialog: Radix UI component for dialogs.
-10. @radix-ui/react-dropdown-menu: Radix UI component for dropdown menus.
-11. @radix-ui/react-popover: Radix UI component for popovers.
-12. @radix-ui/react-scroll-area: Radix UI component for scroll areas.
-13. @radix-ui/react-select: Radix UI component for select dropdowns.
-14. @radix-ui/react-tabs: Radix UI component for tabs.
-15. @radix-ui/react-toast: Radix UI component for toasts.
-16. axios: Promise-based HTTP client for the browser and Node.js.
-17. clsx: Utility for constructing className strings conditionally.
-18. cors: Middleware for enabling Cross-Origin Resource Sharing.
-19. date-fns: Modern JavaScript date utility library.
-20. dotenv: Module for loading environment variables from a .env file.
-21. eslint: Pluggable JavaScript linter.
-22. next: React framework for server-side rendering and static site generation.
-23. react: JavaScript library for building user interfaces.
-24. react-dom: Entry point of the DOM-related rendering paths.
-25. typescript: Statically typed superset of JavaScript.
+6. @radix-ui
+7. axios: Promise-based HTTP client for the browser and Node.js.
+8. clsx: Utility for constructing className strings conditionally.
+9. cors: Middleware for enabling Cross-Origin Resource Sharing.
+10. date-fns: Modern JavaScript date utility library.
+11. dotenv: Module for loading environment variables from a .env file.
+12. eslint: Pluggable JavaScript linter.
+13. next: React framework for server-side rendering and static site generation.
+14. react: JavaScript library for building user interfaces.
+15. react-dom: Entry point of the DOM-related rendering paths.
+16. typescript: Statically typed superset of JavaScript.
 
 #### Backend
 1. @prisma/client: ORM for database access and management.
@@ -102,6 +107,28 @@ The backend of the Bronotion project is designed to handle data storage, authent
 9. prisma: ORM tool for database access and management.
 
 ## 5. Authentication
+
+The Bronotion application uses NextAuth v5 for its authentication system. This library is currently available as a beta. It gives support to OAuth sign-in for GitHub and Google and has options for credentials-based sign-ins, therefore improving the user experience while increasing security.
+
+### Authentication (AuthN)
+
+NextAuth enables the easy use of OAuth by providing out-of-the-box support for most well-known identity providers such as GitHub and Google. Thus, users are able to sign in with existing credentials, enhancing usability because this reduces the account creation barrier.
+
+We create an HTTPS API request for either a new user creation or logging into the already existing user for sign-ins. Throughout this process, user passwords are matched against their hashed-salted versions stored in the database. The bcrypt library is used for this, which is one of the most commonly used password hashing functions that embeds a different salt for each password. This means even if two users have the same password, the hashes stored will be different, resulting in improved security. 
+
+bcrypt is designed to be computationally intensive on purpose, which makes brute-force attacks harder by taking longer to determine passwords. On top of that, bcrypt allows for the variability of hashing complexity, allowing the time it takes to hash to increase with hardware to preserve the security of the hashing process by increasing the cost factor.
+
+Once a user is authenticated, either by OAuth or through credentials-based sign-in, they are issued with a session token by the JSON Web Token strategy.
+
+The session token is then stored in the database along with the user's session data, which enables the application to handle session expiration accordingly. Defaulted to expire after an hour, sessions allow users who have chosen the "Remember Me" option at credential sign-in or logged in using OAuth to have the session last for seven days.
+
+![Auth process](resources/auth-process.png)
+
+### Authorization (AuthZ)
+
+Authorization is one of the important parts in keeping an application secure, for it ensures what a user can and cannot do, or what resources they may or may not access within the application. For example, when the session of a user has expired, middleware automatically gets invoked to log out to force a re-sign-in. This is elementary in securing user accounts and information.
+
+The application applies middleware to ensure the security of sensitive client routes concerning `/home`, `/notes`, and `/profile`. Such routes are therefore secure, verifying if a user session has expired using the session information stored in the database. Speaking about API security, a session token is of great significance since the user needs it to perform authorization. Every request in the API should be cross-checked with the session token to ensure that only authenticated users retrieve their data and perform some other actions inside the application. Strong authorization like this is important for guaranteeing the protection of the users' information, proper control over access, and integrity of applications.
 
 ## 6. A high-level description of design patterns for the client and API
 
@@ -132,3 +159,7 @@ Users can download a PDF version of their markdown notes directly to their devic
 ### 4. Google and GitHub OAuth signin.
 
 We implemented OAuth-based sign-in options for both Google and GitHub. This allows users to swiftly signin to the webapp without needing to create a new account. Allowing for both GitHub and Google sign-in expands the possible user base and makes the app more accessible.
+
+### 5. Push notifications
+
+The application features push notifications to alert users when a note has been shared with them. This ensures users stay informed about shared content in real-time.
