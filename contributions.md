@@ -149,3 +149,7 @@ The components from the `shadcn/ui` library are used under the terms of the libr
 
 ### User profile update
 - https://v0.dev/chat/Oe901qh9XdQ
+
+## Images
+All images used in the project are sourced from [Unsplash](https://unsplash.com/license)
+ and are licensed under the Unsplash License. The images are used for illustrative purposes only and are not intended for commercial use.
