@@ -34,6 +34,7 @@ A summary of Git practices, including branching strategies and individual contri
 ![Use Case Diagram](resources/use-case-diagram-tp.png)
 
 ## 3. Data Modelling
+![Data Modelling Diagram](resources/data-modelling-tp.png)
 
 ## 4. Operating Environment and major dependencies
 ### Deployment
