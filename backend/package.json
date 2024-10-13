@@ -25,7 +25,8 @@
     "prisma": "^5.20.0",
     "socket.io": "^4.8.0",
     "uploadthing": "^7.0.2",
-    "uuid": "^10.0.0"
+    "uuid": "^10.0.0",
+    "web-push": "^3.6.7"
   },
   "devDependencies": {
     "@types/express": "^5.0.0",
