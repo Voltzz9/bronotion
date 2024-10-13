@@ -144,11 +144,53 @@ The components from the `shadcn/ui` library are used under the terms of the libr
 ### Nodejs debugging
 - https://chatgpt.com/share/670a5ad5-03dc-800f-bf3d-c4468070bbe4
 
+### Websocket debugging
+- https://chatgpt.com/share/670c39e3-841c-800c-8228-9cfdf749586e
+
 ### Download notes as PDF
 - https://v0.dev/chat/Oe901qh9XdQ
 
+### Websocket debugging
+- https://claude.ai/chat/ec30b248-80d6-4406-b29d-a8c3a3a3314e
+
+### Understanding sql schema 
+- https://claude.ai/chat/b27874f4-8f43-4d33-bc5d-8b3fee6c304a
+
 ### User profile update
 - https://v0.dev/chat/Oe901qh9XdQ
+
+### Order dropdown
+- https://v0.dev/chat/96stssjtrEG
+
+### Password reset
+- https://v0.dev/chat/pRxFBn7Xfbp
+
+### Continue button 
+- https://v0.dev/chat/QKiAfnTRBMS
+
+### Floating collaborators
+- https://v0.dev/chat/kKl8UVqohSW
+
+### Tagged Notes Panel
+- https://v0.dev/chat/ZADKEDLTYJC
+
+### Custom side panel 
+- https://v0.dev/chat/joXPP36ykVi
+
+### Custom side arrow 
+- https://v0.dev/chat/JysQEnFG1Im
+
+### Adjustable drop down menu
+- https://v0.dev/chat/6T8uVfVqOav
+
+### Multi note box
+- https://v0.dev/chat/FGO9GK8xO1c
+
+### Search pop-up confirmation
+- https://v0.dev/chat/G49RNCxthpq
+
+### Download button 
+- https://v0.dev/chat/xYiLWBQ2GOg
 
 ## Images
 All images used in the project are sourced from [Unsplash](https://unsplash.com/license)
