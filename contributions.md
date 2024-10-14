@@ -192,6 +192,15 @@ The components from the `shadcn/ui` library are used under the terms of the libr
 ### Download button 
 - https://v0.dev/chat/xYiLWBQ2GOg
 
+### useSocket hook this was used as a base from which the useSocket hook was implemented
+- https://v0.dev/chat/s4Ki9Ci5zN1
+
+### This was used as a base from which the sidepanel component was implemented
+- https://v0.dev/chat/yb8ws9yuReA
+- https://v0.dev/chat/la7wXfJhIef
+
+The files affected by the last 3 prompts are useSocket.ts, header.tsx, floating-collaborators.tsx, collaborator-popup.tsx, sidepanel.tsx, notes.tsx and server.js
+
 ## Images
 All images used in the project are sourced from [Unsplash](https://unsplash.com/license)
  and are licensed under the Unsplash License. The images are used for illustrative purposes only and are not intended for commercial use.
